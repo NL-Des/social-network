@@ -63,3 +63,27 @@
 
 - **Bouton de retour à la page d'accueil**
     * Ramène l'utilisateur sur la page d'accueil.
+
+## Page HUB
+C'est ici qu'arrive l'utilisateur lors de la validation de sa connexion.
+C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalités du Projet.
+
+- **Bouton Déconnexion**
+    * L'utilisateur est déconnecté
+    * L'utilisateur est ramené sur la page d'accueil
+
+- **Bouton Profil**
+    * L'utilisateur est amené sur la page Profil
+
+- Onglet des notifications
+    * Si il y a des notifications : changement d'état pour en avertir l'utilisateur.
+
+- Liste des groupes
+    * Si il y a un nouveau message : changement d'état pour en avertir l'utilisateur.
+    * Si il y a un nouveau post : changement d'état pour en avertir l'utilisateur.
+    * Si il y a un nouveau commentaire : changement d'état pour en avertir l'utilisateur.
+    * Si il y a un nouveau membre : changement d'état pour en avertir l'utilisateur.
+    * Si il y a un nouvel événement : changement d'état pour en avertir l'utilisateur.
+    * Si l'utilisateur est le créateur du groupe et qu'il y a une demande d'entrée : changement d'état pour en avertir l'utilisateur.
+
+- Liste des utilisateurs connectés
