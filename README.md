@@ -18,6 +18,9 @@
 - [bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt)
 - [gofrs/uuid](https://github.com/gofrs/uuid) or [google/uuid](https://github.com/google/uuid)
 
+## Conditions imposées
+- Une séparation claire dans l'architecture entre Serveur, Application et Base de Donnée.
+
  ## Le FrontEnd
  Langages autorisés : Javascript / HTML / CSS
 
