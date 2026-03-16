@@ -1,3 +1,12 @@
+## Les outils suggérés par d'autres
+- Prisma ORM
+- Demander à faire autre chose que du SQLite auprès des coach
+- Next.JS, React et TypeScript
+- Tailwind
+- ShadeCL
+- Pour les tests unitaires : Jest ?
+- Package bun, car plus rapide que npm.
+
 # social-network
  L'objectif de ce projet est de créer un équivalent du réseau social de Facebook.
  Il devra contenir les focntionnalités suivantes :
