@@ -1,3 +1,22 @@
+# Corrections à faire
+- Possibilité de quitter un groupe
+- Un utilisateur déjà intégré dans un groupe ne doit pas pouvoir envoyer une demande d'intégration dans le groupe.
+- Le créateur du groupe ne peut pas inviter une seconde fois une personne déjà acceptée dans le groupe.
+- Faire une page d'accueille avec un feed des posts et groupes à succès.
+- Faire une page d'inscription à part.
+- Symbôle du projet à reporter dans toutes les pages.
+- Si on clic sur l'utilisateur, on va sur son profil ou on lui envoit un message suivant où on clic.
+- Mettre le Chat de Groupe dans la Page Groupe.
+- Ne pas mettre les posts et commentaires présents dans les groupes, dans la page HUB.
+- Mettre la liste des utilisateurs du groupe.
+- Gérer la suppression du Post, et des commentaires affiliés.
+- Dans le groupe il faut pouvoir bannir un utilisateur. Il pourra mettre un message de justification.
+- Mettre en place un historique des bans d'un groupe, que le Créateur puisse savoir si il y a eu un antécédant. 
+- Si il y a trop de tentatives de connexions, mettre un blocage de connexion.
+- Confirmation que les degrés d'accessibilités ne sont pas à mettre dans les Posts dans les Groupes.
+
+- Faire les normes JS, Go et le reste dans une partie dédiée.
+
 # Codification :
 - **un bouton sur lequel cliquer**
 - un objet, un lien, un champs de texte,...

@@ -7,6 +7,12 @@
 - Pour les tests unitaires : Jest ?
 - Package bun, car plus rapide que npm.
 
+## Bons gestes
+- Une branche, une fonctionnalité.
+- Des codes cours.
+- Une nomenclature claire et bien dessinée.
+- Du code commenté.
+
 # social-network
  L'objectif de ce projet est de créer un équivalent du réseau social de Facebook.
  Il devra contenir les focntionnalités suivantes :
@@ -50,13 +56,13 @@ L'exercice nous suggère [le site suivant](https://caddyserver.com/docs/) pour n
 ### Application :
 
 - Authentifications : Il est attendu que nous utilisions les cookies et les sessions pour gérer les connexions des utilisateurs. L'utilisateur devra constamment rester connecté, mais pouvoir se déconnecter quant il le voudra sur n'importe quelle page.Nous devrons donc mettre en permanence à disposition un bouton de déconnexion. Les informations d'inscriptions demandées sont les suivantes. Les optionnels seront au choix de l'utilisateur si il désire remplir ou non ces champs d'informations.
-    - Email
+    - Email (adresse unique pour éviter la répétition)
     - Mot de Passe
     - Nom
     - Prénom
     - Date de naissance
     - Avatar (optionnel)
-    - Pseudo (optionnel)
+    - Pseudo (optionnel) (Pseudo unique pour éviter la répétition)
     - A propos de moi (optionnel)
 
 - Profil : Sur son Profil, l'utilisateur devra disposer d'une option pour pouvoir mettre son profil en public ou en privé. En privé, seul ces abonnés pourront accèder à ces informations de profils. En public, tout le monde pourra accèder à ces informations sans avoir besoin de Follow.
@@ -81,7 +87,7 @@ L'exercice nous suggère [le site suivant](https://caddyserver.com/docs/) pour n
     Quand le groupe est créé, le créateur doit pouvoir inviter d'autres utilisateurs, qui doivent de leur côté accepter l'invitation. Les invités pourront à leurs tours inviter d'autres utilisateurs. 
     Des non-invités devront pouvoir faire une requête pour demander l'accès au groupe. Seul le créateur du groupe pourra accepter ou refuser.
 
-    Une fois dans le groupe, un utilisateur peut créer des posts et commenter les posts existants. Ces posts et commentaires ne seront accessibles qu'aux membres du groupe.
+    Une fois dans le groupe, un utilisateur peut créer des posts et commenter les posts existants. Ces posts et commentaires ne seront accessibles qu'aux membres du groupe. L'utilisateur doit pouvoir quitter le groupe. Un utilisateur déjà intégré dans un groupe ne doit pas pouvoir envoyer une demande d'intégration dans le groupe. Le créateur du groupe ne peut pas inviter une seconde fois une personne déjà acceptée dans le groupe.
     Les chats de groupes seront communs entre les membres du groupe.
 
     Les utilisateurs du groupe pourront aussi créer des événements accessibles à tous les membres du groupe. Les membres du groupe pourront s'y inscrire ou non suivant leur désir. Ils devront avoir les informations suivantes :
