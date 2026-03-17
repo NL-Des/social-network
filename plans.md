@@ -58,6 +58,9 @@
         * Si le format n'est pas autorisé et que le poids dépasse la limite : indiquer les formats autorisés et le poids maximum. 
     - Pseudo (optionnel)
     - A propos de moi (optionnel)
+    - Voulez-vous un profil Public ou Privé ?
+        * Si c'est l'option Public qui est choisit : alors le profil de l'utilisateur doit être Public.
+        * Si c'est l'option Privé qui est choisit : alors le profil de l'utilisateur doit être Privé.
 
 - **Bouton de validation d'inscription**
     * Si l'email existe déjà dans la base de donnée : indiquer que l'adresse mail existe déjà dans la BDD.
@@ -75,8 +78,8 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
     * L'utilisateur est déconnecté
     * L'utilisateur est ramené sur la page d'accueil
 
-- **Bouton Profil**
-    * L'utilisateur est amené sur la page Profil
+- **Bouton Section Utilisateur**
+    * L'utilisateur est amené sur la page Section Utilisateur
 
 - **Bouton Liste des Groupes**
     * Si l'utilisateur clic dessus : redirection vers la page du groupe.
@@ -122,8 +125,8 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
     * L'utilisateur est déconnecté
     * L'utilisateur est ramené sur la page d'accueil
 
-- **Bouton Profil**
-    * L'utilisateur est amené sur la page Profil
+- **Bouton Section Utilisateur**
+    * L'utilisateur est amené sur la page Section Utilisateur
 
 - **Bouton Liste des Groupes**
     * Si l'utilisateur clic dessus : redirection vers la page Liste des Groupes.
@@ -175,16 +178,16 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
     * L'utilisateur est déconnecté
     * L'utilisateur est ramené sur la page d'accueil
 
-- **Bouton Profil**
-    * L'utilisateur est amené sur la page Profil
+- **Bouton Section Utilisateur**
+    * L'utilisateur est amené sur la page Section Utilisateur
 
 - **Bouton HUB**
     * Si l'utilisateur clic dessus : redirection vers la page HUB.
 
 - **Bouton Création de Groupe**
     * Si l'utilisateur clic dessus : ouverture d'un formulaire où l'utilisateur doit remplir les champs suivant :
-        * Titre du Groupe
-        * Description du Groupe
+        - Titre du Groupe
+        - Description du Groupe
         * **Bouton Créer le Groupe**
 
 - Onglet des notifications
@@ -199,7 +202,7 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
         - Date de dernière activité
         - Nombre de Membres dans le groupe
 
-## Page Profil
+## Page Section Utilisateur
 
 - **Bouton Déconnexion**
     * L'utilisateur est déconnecté
@@ -215,7 +218,7 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
     * Si l'utilisateur clic dessus : ouverture d'un formulaire où l'utilisateur doit remplir le champs suivant :
         * l'utilisateur doit écrire en toute lettre : Je veux supprimer mon compte.
         * **Bouton Supprimer mon Compte**
-            * Si l'utilisateur clic dessus et qu'il n'a pas bien rédigé la phrase précédente : message d'erreur.
+            * Si l'utilisateur clic dessus et qu'il n'a pas bien rédigé la phrase précédente : message d'erreur comme quoi la phrase est mal rédigée.
             * Si l'utilisateur clic dessus et qu'il à bien rédigé la phrase précédente : suppresion du compte.
 
 - Onglet des notifications
@@ -227,18 +230,36 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
     - Nom
     - Prénom
     - Date de naissance
+    - Date d'inscription
     - Avatar (optionnel)
     - Pseudo (optionnel)
     - A propos de moi (optionnel)
 
-## Page Post
+- Liste des personnes suivies par l'utilisateur
+    - Pseudo ou Nom et Prénom
+        * Si l'utilisateur clic dessus : redirection vers le Profil de la personne.
+    - Date d'abonnement ?
+    - Avatar
+    - A propos de la personne
+    * **Bouton Se Désabonner**
+        * Si l'utilisateur clic dessus : désabonnement de l'utilisateur avec la personne.
+
+- Réglage Public/Privé
+    * Si l'utilisateur à mis son profil en Public :
+        - **Bouton Passer le Profil en Privé**
+            * Si l'utilisateur clic dessus : passage du profil en Public.
+    * Si l'utilisateur à mis son profil en Privé :
+        - **Bouton Passer le Profil en Public**
+            *Si l'utilisateur clic dessus : passage du profil en Privé.
+
+## Page Profil
 
 - **Bouton Déconnexion**
     * L'utilisateur est déconnecté
     * L'utilisateur est ramené sur la page d'accueil
 
-- **Bouton Profil**
-    * L'utilisateur est amené sur la page Profil
+- **Bouton Section Utilisateur**
+    * L'utilisateur est amené sur la page Section Utilisateur
 
 - **Bouton Liste des Groupes**
     * Si l'utilisateur clic dessus : redirection vers la page du groupe.
@@ -248,3 +269,37 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
 
 - Onglet des notifications
     * Si il y a des notifications : changement d'état pour en avertir l'utilisateur.
+
+* Si la personne a réglé son Profil en mode Privé :
+    * Si l'utilisateur a un Pseudo : affichage du Pseudo
+    * Si l'utilisateur n'a pas de Pseudo : affichage du Nom et du Prénom
+    - Date d'inscription
+    * Si la personne à mis une image en Avatar : affichage de l'Avatar
+
+* Si la personne a réglé son Profil en mode Public :
+    * Si l'utilisateur a un Pseudo : affichage du Pseudo
+    * Si l'utilisateur n'a pas de Pseudo : affichage du Nom et du Prénom
+    - Date de naissance
+    - Date d'inscription
+    * Si la personne a mis une image en Avatar : affichage de l'Avatar
+    * Si l'utilisateur à remplis le champs de texte à propos moi : afficher à propos de moi
+
+## Page Post
+
+- **Bouton Déconnexion**
+    * L'utilisateur est déconnecté
+    * L'utilisateur est ramené sur la page d'accueil
+
+- **Bouton Section Utilisateur**
+    * L'utilisateur est amené sur la page Section Utilisateur
+
+- **Bouton Liste des Groupes**
+    * Si l'utilisateur clic dessus : redirection vers la page du groupe.
+
+- **Bouton HUB**
+    * Si l'utilisateur clic dessus : redirection vers la page HUB.
+
+- Onglet des notifications
+    * Si il y a des notifications : changement d'état pour en avertir l'utilisateur.
+
+- **Bouton Création d'un Post**
