@@ -60,7 +60,7 @@ Les informations d'inscriptions demandées sont les suivantes. Les optionnels se
         - Pseudo (optionnel)
         - A propos de moi (optionnel)
 
-- Profil : Sur son Profil, l'utilisateur devradisposer d'une option pour pouvoir mettre son profil en public ou en privé. En privé, seul ces abonnés pourront accèder à ces informations de profils. En public, tout le monde pourra accèder à ces informations sans avoir besoin de Follow.
+- Profil : Sur son Profil, l'utilisateur devra disposer d'une option pour pouvoir mettre son profil en public ou en privé. En privé, seul ces abonnés pourront accèder à ces informations de profils. En public, tout le monde pourra accèder à ces informations sans avoir besoin de Follow.
         - Le profil doit rappeler toutes les informations d'inscription, sauf le mot de passe. Et l'email ?
         - L'activité de l'utilisateur : ces posts créés.
         - Ces Followers qui le suivent.
@@ -76,9 +76,9 @@ Les informations d'inscriptions demandées sont les suivantes. Les optionnels se
             - PNG
             - GIF
     
-- Groupes : Les utilisateurs doivent pouvoir trouver une page ou un endroit qui liste les groupes existant.Un utilisateur doit pouvoir créer un groupe. Il doit fournir :
-        - Un titre
-        - Une description
+- Groupes : Les utilisateurs doivent pouvoir trouver une page ou un endroit qui liste les groupes existant. Un utilisateur doit pouvoir créer un groupe. Il doit fournir :
+    - Un titre
+    - Une description
     Quand le groupe est créé, le créateur doit pouvoir inviter d'autres utilisateurs, qui doivent de leur côté accepter l'invitation. Les invités pourront à leurs tours inviter d'autres utilisateurs. 
     Des non-invités devront pouvoir faire une requête pour demander l'accès au groupe. Seul le créateur du groupe pourra accepter ou refuser.
 

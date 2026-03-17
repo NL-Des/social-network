@@ -8,7 +8,7 @@
 ## Page de connexion
 
 - Symbole du projet
-    * Si non-connecté : le clic ramène sur la page d'acceuil.
+    * Si non-connecté : le clic ramène sur la page de connexion.
     * Si connecté : le clic amène sur la page du Hub.
 
 - Titre du Projet
@@ -38,7 +38,7 @@
 - Titre du Projet
 
 - Symbole du projet
-    * Si non-connecté : le clic ramène sur la page d'acceuil.
+    * Si non-connecté : le clic ramène sur la page de connexion.
     * Si connecté : le clic amène sur la page du Hub.
 
 - Forumlaire d'inscription :
@@ -87,3 +87,22 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
     * Si l'utilisateur est le créateur du groupe et qu'il y a une demande d'entrée : changement d'état pour en avertir l'utilisateur.
 
 - Liste des utilisateurs connectés
+    * Si l'utilisateur n'a pas d'historiques de messages : tri dans l'ordre alphabétique.
+    * Si l'utilisateur a un historique de messages : tri dans l'ordre du message le plus récent en haut, pour descendre vers les moins récents.
+    * Si il y a un nouveau message : changement d'état pour en avertir l'utilisateur.
+    * Si l'utilisateur est abonné à une personne, cette personne sera mise en bleu.
+    * Si une personne est abonnée à l'utilisateur, cette personne sera mise en vert.
+    * Si l'utilisateur et la personne sont abonnées à l'une et l'autre, alors cette personne sera mise en rouge.
+    * Si l'utilisateur clic sur une personne dont il n'est pas abonné et que cette personne n'est pas abonné à lui en retour : un message indique qu'il doit s'abonner à la personne, ou être suivit par cette personne, pour pouvoir parler avec elle.
+    * Si l'utilisateur clic sur une personne qui le suit : ouverture du chat de communication avec cette personne.
+    * Si l'utilisateur clic sur une personne dont il est abonné : ouverture du chat de communication avec cette personne.
+
+- Liste des posts
+    * Affichage dans l'ordre des posts ou des commentaires dernièrement créés (Du haut vers le bas). Les commentaires font remonter les posts où ils sont créés, mais c'est seulement le post qui est affiché ? Faisons-nous un indice pour dire que le post n'est pas nouveau mais qu'il y a un nouveau commentaire ?
+    * Si l'utilisateur est le créateur du post : mise en avant par un indice visuel.
+    * Si l'utilisateur participe au post avec au moins un commentaire : mise en avant par un indice visuel.
+    * Suivant le degré d'accessibilité :
+        * Public : aucun indice visuel
+        * Diffusion restreinte : indice visuel (un cadenas ouvert)
+        * Privé : indice visuel (un cadenas fermé)
+    * Si l'utilisateur clic sur un post quelque soit sont degré d'accessibilité : redirection vers le post et ces commentaires.
