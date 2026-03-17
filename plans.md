@@ -113,8 +113,10 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
         * Diffusion restreinte : indice visuel (un cadenas ouvert)
         * Privé : indice visuel (un cadenas fermé)
     * Si l'utilisateur clic sur un post quelque soit sont degré d'accessibilité : redirection vers le post et ces commentaires.
+    * Si le post provient d'un groupe, l'utilisateur va-t-il le retrouver ici ? Je serais plutôt pour éviter cela, que l'utilisateur doive aller dans la page groupe. Pour bien distinguer l'espace public/groupe.
 
 ## Page Groupe
+Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut accepté par le créateur du groupe, ou qu'il est le créateur du groupe, il accède à tout ce que contient le groupe.
 
 - **Bouton Déconnexion**
     * L'utilisateur est déconnecté
@@ -126,8 +128,46 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
 - **Bouton Liste des Groupes**
     * Si l'utilisateur clic dessus : redirection vers la page Liste des Groupes.
 
-- **Page HUB**
+- **Bouton HUB**
     * Si l'utilisateur clic dessus : redirection vers la page HUB.
+
+- **Bouton Administration du Groupe**
+    * Si l'utilisateur est le Créateur du Groupe : l'utilisateur peut voir le bouton.
+    * Si l'utilisateur clic dessus : ouverture d'une fenêtre d'options.
+        * **Bouton Retour**
+            * Si l'utilisateur clic dessus : retour sur la page Groupe.
+        * **Bouton Suppression du Groupe**
+            * Si l'utilisateur clic dessus : demande un message de confirmation pour la suppression du groupe.
+
+- Onglet des notifications
+    * Si il y a des notifications : changement d'état pour en avertir l'utilisateur.
+
+- Liste des groupes où l'utilisateur est inscrit.
+    * Si il y a un nouveau message : changement d'état pour en avertir l'utilisateur.
+    * Si il y a un nouveau post : changement d'état pour en avertir l'utilisateur.
+    * Si il y a un nouveau commentaire : changement d'état pour en avertir l'utilisateur.
+    * Si il y a un nouveau membre : changement d'état pour en avertir l'utilisateur.
+    * Si il y a un nouvel événement : changement d'état pour en avertir l'utilisateur.
+    * Si l'utilisateur est le créateur du groupe et qu'il y a une demande d'entrée : changement d'état pour en avertir l'utilisateur.
+    * Si l'utilisateur clic sur un groupe : redirection vers la page du groupe. Il est considéré qu'ici, que l'utilisateur ne peut voir que les groupes où il est inscrit.
+
+- Liste des utilisateurs connectés ayant accès au groupe
+    * Si l'utilisateur n'a pas d'historiques de messages : tri dans l'ordre alphabétique.
+    * Si l'utilisateur a un historique de messages : tri dans l'ordre du message le plus récent en haut, pour descendre vers les moins récents.
+    * Si il y a un nouveau message : changement d'état pour en avertir l'utilisateur.
+    * Si l'utilisateur est abonné à une personne, cette personne sera mise en bleu.
+    * Si une personne est abonnée à l'utilisateur, cette personne sera mise en vert.
+    * Si l'utilisateur et la personne sont abonnées à l'une et l'autre, alors cette personne sera mise en rouge.
+    * Si l'utilisateur clic sur une personne dont il n'est pas abonné et que cette personne n'est pas abonné à lui en retour : un message indique qu'il doit s'abonner à la personne, ou être suivit par cette personne, pour pouvoir parler avec elle.
+    * Si l'utilisateur clic sur une personne qui le suit : ouverture du chat de communication avec cette personne.
+    * Si l'utilisateur clic sur une personne dont il est abonné : ouverture du chat de communication avec cette personne.
+
+- Liste des posts
+    * Affichage dans l'ordre des posts ou des commentaires dernièrement créés (Du haut vers le bas). Les commentaires font remonter les posts où ils sont créés, mais c'est seulement le post qui est affiché ? Faisons-nous un indice pour dire que le post n'est pas nouveau, mais qu'il y a un nouveau commentaire ?
+    * Si l'utilisateur est le créateur du post : mise en avant par un indice visuel.
+    * Si l'utilisateur participe au post avec au moins un commentaire : mise en avant par un indice visuel.
+    * Le degré d'accessibilité des posts : très utile pour la partie public, je pense qu'ici ce n'est pas pertinant. Il y a déjà une restriction d'accès à l'entrée dans un groupe. Rajouter des options de limitations d'accès dans les groupes me semble de trop.
+    * Si l'utilisateur clic sur un post : redirection vers le post et ces commentaires.
 
 ## Page Liste des Groupes
 
@@ -138,8 +178,26 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
 - **Bouton Profil**
     * L'utilisateur est amené sur la page Profil
 
-- **Page HUB**
+- **Bouton HUB**
     * Si l'utilisateur clic dessus : redirection vers la page HUB.
+
+- **Bouton Création de Groupe**
+    * Si l'utilisateur clic dessus : ouverture d'un formulaire où l'utilisateur doit remplir les champs suivant :
+        * Titre du Groupe
+        * Description du Groupe
+        * **Bouton Créer le Groupe**
+
+- Onglet des notifications
+    * Si il y a des notifications : changement d'état pour en avertir l'utilisateur.
+
+- Liste des groupes existants
+    * Chaque groupe existant doit être listé pour que chaque utilisateur puisse faire une demande d'accès.
+        - Nom du Groupe
+        - Description du groupe
+        - Nom du Créateur du Groupe
+        - Date de création
+        - Date de dernière activité
+        - Nombre de Membres dans le groupe
 
 ## Page Profil
 
@@ -149,6 +207,29 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
 
 - **Bouton Liste des Groupes**
     * Si l'utilisateur clic dessus : redirection vers la page Liste des Groupes.
+
+- **Bouton HUB**
+    * Si l'utilisateur clic dessus : redirection vers la page HUB.
+
+- **Bouton Suppression de Compte**
+    * Si l'utilisateur clic dessus : ouverture d'un formulaire où l'utilisateur doit remplir le champs suivant :
+        * l'utilisateur doit écrire en toute lettre : Je veux supprimer mon compte.
+        * **Bouton Supprimer mon Compte**
+            * Si l'utilisateur clic dessus et qu'il n'a pas bien rédigé la phrase précédente : message d'erreur.
+            * Si l'utilisateur clic dessus et qu'il à bien rédigé la phrase précédente : suppresion du compte.
+
+- Onglet des notifications
+    * Si il y a des notifications : changement d'état pour en avertir l'utilisateur.
+
+- Liste des informations personnelles
+    - Email
+    - Mot de Passe
+    - Nom
+    - Prénom
+    - Date de naissance
+    - Avatar (optionnel)
+    - Pseudo (optionnel)
+    - A propos de moi (optionnel)
 
 ## Page Post
 
@@ -162,5 +243,8 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
 - **Bouton Liste des Groupes**
     * Si l'utilisateur clic dessus : redirection vers la page du groupe.
 
-- **Page HUB**
+- **Bouton HUB**
     * Si l'utilisateur clic dessus : redirection vers la page HUB.
+
+- Onglet des notifications
+    * Si il y a des notifications : changement d'état pour en avertir l'utilisateur.

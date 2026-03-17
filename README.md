@@ -49,16 +49,15 @@ L'exercice nous suggère [le site suivant](https://caddyserver.com/docs/) pour n
 
 ### Application :
 
-- Authentifications : Il est attendu que nous utilisions les cookies et les sessions pour gérer les connexions des utilisateurs. L'utilisateur devra constamment rester connecté, mais pouvoir se déconnecter quant il le voudra sur n'importe quelle page.Nous devrons donc mettre en permanence à disposition un bouton de déconnexion.
-Les informations d'inscriptions demandées sont les suivantes. Les optionnels seront au choix de l'utilisateur si il désire remplir ou non ces champs d'informations.
-        - Email
-        - Mot de Passe
-        - Nom
-        - Prénom
-        - Date de naissance
-        - Avatar (optionnel)
-        - Pseudo (optionnel)
-        - A propos de moi (optionnel)
+- Authentifications : Il est attendu que nous utilisions les cookies et les sessions pour gérer les connexions des utilisateurs. L'utilisateur devra constamment rester connecté, mais pouvoir se déconnecter quant il le voudra sur n'importe quelle page.Nous devrons donc mettre en permanence à disposition un bouton de déconnexion. Les informations d'inscriptions demandées sont les suivantes. Les optionnels seront au choix de l'utilisateur si il désire remplir ou non ces champs d'informations.
+    - Email
+    - Mot de Passe
+    - Nom
+    - Prénom
+    - Date de naissance
+    - Avatar (optionnel)
+    - Pseudo (optionnel)
+    - A propos de moi (optionnel)
 
 - Profil : Sur son Profil, l'utilisateur devra disposer d'une option pour pouvoir mettre son profil en public ou en privé. En privé, seul ces abonnés pourront accèder à ces informations de profils. En public, tout le monde pourra accèder à ces informations sans avoir besoin de Follow.
         - Le profil doit rappeler toutes les informations d'inscription, sauf le mot de passe. Et l'email ?
