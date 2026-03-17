@@ -3,6 +3,9 @@
 - un objet, un lien, un champs de texte,...
     * Si on clic dessus ou que l'on intéragie avec, que ce passe-t-il ?
 
+- Utilisateur : le mot Utilisateur désigne le point de vue de la personne qui est connectée.
+- Personne : le mot Personne désigne les autres usagers de la plateforme, et permet de ce distinguer de l'Utilisateur.
+
 # Plan de construction de Social Network
 
 ## Page de connexion
@@ -75,16 +78,20 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
 - **Bouton Profil**
     * L'utilisateur est amené sur la page Profil
 
+- **Bouton Liste des Groupes**
+    * Si l'utilisateur clic dessus : redirection vers la page du groupe.
+
 - Onglet des notifications
     * Si il y a des notifications : changement d'état pour en avertir l'utilisateur.
 
-- Liste des groupes
+- Liste des groupes où l'utilisateur est inscrit.
     * Si il y a un nouveau message : changement d'état pour en avertir l'utilisateur.
     * Si il y a un nouveau post : changement d'état pour en avertir l'utilisateur.
     * Si il y a un nouveau commentaire : changement d'état pour en avertir l'utilisateur.
     * Si il y a un nouveau membre : changement d'état pour en avertir l'utilisateur.
     * Si il y a un nouvel événement : changement d'état pour en avertir l'utilisateur.
     * Si l'utilisateur est le créateur du groupe et qu'il y a une demande d'entrée : changement d'état pour en avertir l'utilisateur.
+    * Si l'utilisateur clic sur un groupe : redirection vers la page du groupe. Il est considéré qu'ici, que l'utilisateur ne peut voir que les groupes où il est inscrit.
 
 - Liste des utilisateurs connectés
     * Si l'utilisateur n'a pas d'historiques de messages : tri dans l'ordre alphabétique.
@@ -106,3 +113,54 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
         * Diffusion restreinte : indice visuel (un cadenas ouvert)
         * Privé : indice visuel (un cadenas fermé)
     * Si l'utilisateur clic sur un post quelque soit sont degré d'accessibilité : redirection vers le post et ces commentaires.
+
+## Page Groupe
+
+- **Bouton Déconnexion**
+    * L'utilisateur est déconnecté
+    * L'utilisateur est ramené sur la page d'accueil
+
+- **Bouton Profil**
+    * L'utilisateur est amené sur la page Profil
+
+- **Bouton Liste des Groupes**
+    * Si l'utilisateur clic dessus : redirection vers la page Liste des Groupes.
+
+- **Page HUB**
+    * Si l'utilisateur clic dessus : redirection vers la page HUB.
+
+## Page Liste des Groupes
+
+- **Bouton Déconnexion**
+    * L'utilisateur est déconnecté
+    * L'utilisateur est ramené sur la page d'accueil
+
+- **Bouton Profil**
+    * L'utilisateur est amené sur la page Profil
+
+- **Page HUB**
+    * Si l'utilisateur clic dessus : redirection vers la page HUB.
+
+## Page Profil
+
+- **Bouton Déconnexion**
+    * L'utilisateur est déconnecté
+    * L'utilisateur est ramené sur la page d'accueil
+
+- **Bouton Liste des Groupes**
+    * Si l'utilisateur clic dessus : redirection vers la page Liste des Groupes.
+
+## Page Post
+
+- **Bouton Déconnexion**
+    * L'utilisateur est déconnecté
+    * L'utilisateur est ramené sur la page d'accueil
+
+- **Bouton Profil**
+    * L'utilisateur est amené sur la page Profil
+
+- **Bouton Liste des Groupes**
+    * Si l'utilisateur clic dessus : redirection vers la page du groupe.
+
+- **Page HUB**
+    * Si l'utilisateur clic dessus : redirection vers la page HUB.
