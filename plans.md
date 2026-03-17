@@ -112,13 +112,13 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
 
 - Liste des posts
     * Affichage dans l'ordre des posts ou des commentaires dernièrement créés (Du haut vers le bas). Les commentaires font remonter les posts où ils sont créés, mais c'est seulement le post qui est affiché ? Faisons-nous un indice pour dire que le post n'est pas nouveau mais qu'il y a un nouveau commentaire ?
-    * Si l'utilisateur est le créateur du post : mise en avant par un indice visuel.
-    * Si l'utilisateur à déjà participé au post avec au moins un commentaire : mise en avant par un indice visuel.
+    * Si l'utilisateur est le créateur du post : mise en avant par un indice visuel discret.
+    * Si l'utilisateur a déjà participé au post avec au moins un commentaire : mise en avant par un indice visuel discret.
     * Suivant le degré d'accessibilité :
         * Public : aucun indice visuel
         * Diffusion restreinte : indice visuel (un cadenas ouvert)
         * Privé : indice visuel (un cadenas fermé)
-    * Si l'utilisateur clic sur un post quelque soit sont degré d'accessibilité : redirection vers le post et ces commentaires. Car si il est autorisé à voir, c'est aussi qu'il est autorisé à y aller.
+    * Si l'utilisateur clic sur un post quelque soit sont degré d'accessibilité : redirection vers le post et ces commentaires. Car si il est autorisé à voir, c'est aussi qu'il est autorisé à y aller et à y participer.
     * Si le post provient d'un groupe, l'utilisateur va-t-il le retrouver ici ? Je serais plutôt pour éviter cela, que l'utilisateur doive aller dans la page groupe. Pour bien distinguer l'espace public/groupe.
 
 ## Page Groupe
@@ -144,6 +144,10 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
             * Si l'utilisateur clic dessus : retour sur la page Groupe.
         * **Bouton Suppression du Groupe**
             * Si l'utilisateur clic dessus : demande un message de confirmation pour la suppression du groupe.
+                * **Bouton Suppression du Groupe**
+                    * Si l'utilisateur clic dessus : suppression du groupe.
+                * **Bouton Retour**
+                    * Si l'utilisateur clic dessus : retour sur la page Groupe.
 
 - Onglet des notifications
     * Si il y a des notifications : changement d'état pour en avertir l'utilisateur.
@@ -288,7 +292,7 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
     * Si l'utilisateur à remplis le champs de texte à propos moi : afficher à propos de moi
 
 ## Page Post
-Un utilisateur ne peut voir que les Post où il a le droit d'intervenir.
+Un utilisateur ne peut voir que les Post où il a le droit d'aller et d'intervenir.
 
 - **Bouton Déconnexion**
     * L'utilisateur est déconnecté
