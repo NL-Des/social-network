@@ -82,7 +82,10 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
     * L'utilisateur est amené sur la page Section Utilisateur
 
 - **Bouton Liste des Groupes**
-    * Si l'utilisateur clic dessus : redirection vers la page du groupe.
+    * Si l'utilisateur clic dessus : redirection vers la page du Liste des Groupes.
+
+- **Bouton Création d'un Post**
+    *Si l'utilisateur clic dessus : redirection vers la page Post
 
 - Onglet des notifications
     * Si il y a des notifications : changement d'état pour en avertir l'utilisateur.
@@ -110,12 +113,12 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
 - Liste des posts
     * Affichage dans l'ordre des posts ou des commentaires dernièrement créés (Du haut vers le bas). Les commentaires font remonter les posts où ils sont créés, mais c'est seulement le post qui est affiché ? Faisons-nous un indice pour dire que le post n'est pas nouveau mais qu'il y a un nouveau commentaire ?
     * Si l'utilisateur est le créateur du post : mise en avant par un indice visuel.
-    * Si l'utilisateur participe au post avec au moins un commentaire : mise en avant par un indice visuel.
+    * Si l'utilisateur à déjà participé au post avec au moins un commentaire : mise en avant par un indice visuel.
     * Suivant le degré d'accessibilité :
         * Public : aucun indice visuel
         * Diffusion restreinte : indice visuel (un cadenas ouvert)
         * Privé : indice visuel (un cadenas fermé)
-    * Si l'utilisateur clic sur un post quelque soit sont degré d'accessibilité : redirection vers le post et ces commentaires.
+    * Si l'utilisateur clic sur un post quelque soit sont degré d'accessibilité : redirection vers le post et ces commentaires. Car si il est autorisé à voir, c'est aussi qu'il est autorisé à y aller.
     * Si le post provient d'un groupe, l'utilisateur va-t-il le retrouver ici ? Je serais plutôt pour éviter cela, que l'utilisateur doive aller dans la page groupe. Pour bien distinguer l'espace public/groupe.
 
 ## Page Groupe
@@ -168,7 +171,7 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
 - Liste des posts
     * Affichage dans l'ordre des posts ou des commentaires dernièrement créés (Du haut vers le bas). Les commentaires font remonter les posts où ils sont créés, mais c'est seulement le post qui est affiché ? Faisons-nous un indice pour dire que le post n'est pas nouveau, mais qu'il y a un nouveau commentaire ?
     * Si l'utilisateur est le créateur du post : mise en avant par un indice visuel.
-    * Si l'utilisateur participe au post avec au moins un commentaire : mise en avant par un indice visuel.
+    * Si l'utilisateur a déjà participé au post avec au moins un commentaire : mise en avant par un indice visuel.
     * Le degré d'accessibilité des posts : très utile pour la partie public, je pense qu'ici ce n'est pas pertinant. Il y a déjà une restriction d'accès à l'entrée dans un groupe. Rajouter des options de limitations d'accès dans les groupes me semble de trop.
     * Si l'utilisateur clic sur un post : redirection vers le post et ces commentaires.
 
@@ -285,6 +288,7 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
     * Si l'utilisateur à remplis le champs de texte à propos moi : afficher à propos de moi
 
 ## Page Post
+Un utilisateur ne peut voir que les Post où il a le droit d'intervenir.
 
 - **Bouton Déconnexion**
     * L'utilisateur est déconnecté
@@ -302,4 +306,16 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
 - Onglet des notifications
     * Si il y a des notifications : changement d'état pour en avertir l'utilisateur.
 
-- **Bouton Création d'un Post**
+- **Bouton Création d'un Commentaire**
+
+- Affichage du Post
+    * Si le Post à des Commentaires : Affichage des Commentaires.
+- Zone d'écriture d'un commentaire.
+    - Titre.
+    - Corps de Texte.
+    - **Bouton Importer une Image**
+        * Si l'utilisateur clic dessus : ouverture d'une fenêtre pour aller chercher l'image depuis l'ordinateur de l'utilisateur.
+    - Degré d'accessibilité (menu déroulant) :
+        - Public
+        - Diffusion Restreinte
+        - Privé
