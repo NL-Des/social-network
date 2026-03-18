@@ -80,7 +80,9 @@ L'exercice nous suggère [le site suivant](https://caddyserver.com/docs/) pour n
             - JPEG
             - PNG
             - GIF
-    
+
+Pour les posts et commentaires, nous devons êtres en capacités de gérer les Likes et Dislikes.
+
 - Groupes : Les utilisateurs doivent pouvoir trouver une page ou un endroit qui liste les groupes existant. Un utilisateur doit pouvoir créer un groupe. Il doit fournir :
     - Un titre
     - Une description

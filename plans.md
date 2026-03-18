@@ -11,15 +11,16 @@
 - Ne pas mettre les posts et commentaires présents dans les groupes, dans la page HUB. (Fait)
 - Mettre la liste des utilisateurs du groupe. (Fait)
 - Gérer la suppression du Post, et des commentaires affiliés. (Fait)
-- Dans le groupe il faut pouvoir bannir un utilisateur. Il pourra mettre un message de justification.
-- Mettre en place un historique des bans d'un groupe, que le Créateur puisse savoir si il y a eu un antécédant. 
-- Si il y a trop de tentatives de connexions, mettre un blocage de connexion.
-- Confirmation que les degrés d'accessibilités ne sont pas à mettre dans les Posts dans les Groupes.
-- Rajouter les likes et dislikes.
+- Dans le groupe il faut pouvoir bannir un utilisateur. (Fait)
+- Mettre en place un historique des bans d'un groupe, que le Créateur puisse savoir si il y a eu un antécédant. (Fait)
+- Confirmation que les degrés d'accessibilités ne sont pas à mettre dans les Posts dans les Groupes. (Fait)
+- Rajouter les likes et dislikes. (Fait)
 
+# Elements à anticiper pour la prochaine partie de planification
 - Faire les normes JS, Go et le reste dans une partie dédiée.
 - Faire les étapes de soumissions des fonctionnnalités et pull requests.
 - Ecrire la procédure de travail.
+- Si il y a trop de tentatives de connexions, mettre un blocage de connexion.
 
 # Codification :
 - **un bouton sur lequel cliquer**
@@ -183,6 +184,14 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
 
 - Liste des posts
     * Affichage dans l'ordre des posts dernièrement créés, ou ayant reçus des commentaires (Du haut vers le bas). Du haut vers le bas. Les Posts et commentaires de groupes ne sont pas dans ce flux.
+    - Liste des éléments présents pour chaque post :
+        - Titre du post
+        - Nombre de commentaires
+        - Pseudo ou Nom et Prénom du créateur
+        - Date et heure de création
+        - Date de dernière activité
+        - Nombre de Likes
+        - Nombre de Dislikes
     * Si l'utilisateur est le créateur du post : mise en avant par un indice visuel discret.
     * Si l'utilisateur a déjà participé au post avec au moins un commentaire : mise en avant par un indice visuel discret.
     * Suivant le degré d'accessibilité :
@@ -294,7 +303,15 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
             - Avatar
             - A propos de moi
             - Date d'inscription
-            - Déjà membre dans le passé ? (Option à discuter ensemble)
+            * Si la personne fut déjà membre du groupe dans le passé :
+                * Si la personne s'est désinscrit par lui-même :
+                    - Texte avertissant que le candidat à quitter le groupe par lui-même dans le passé.
+                * Si la personne fut bannie par le créateur du groupe :
+                    * Si l'utilisateur créateur avait remplit la zone de texte pour expliquer la raison du banissement :
+                        - Raison du banissement
+                    * Si l'utilisateur créateur du groupe n'avait pas remplit la zone de texte pour expliquer la raison du banissement :
+                        - Texte : Aucune raison indiquée pour son précédent banissement.
+
 - Onglet des notifications
     * Si il y a des notifications : changement d'état pour en avertir l'utilisateur.
 
@@ -317,22 +334,50 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
     * Si l'utilisateur clic sur une personne :
         * Si l'utilisateur ne suis pas cette personne : 
             * Apparition de deux boutons sur la case de la personne :
-                * **Bouton Suivre cette Personne**
+                - **Bouton Suivre cette Personne**
                     * Si l'utilisateur clic dessus : l'utilisateur suis maintenant cette personne.
-                * **Bouton Voir son Profil**
+                - **Bouton Voir son Profil**
                     * Si l'utilisateur clic dessus : l'utilisateur est amené sur la page du profil de la personne.
+                * Si l'utilisateur est le créateur du groupe :
+                    - **Bouton Bannir du Groupe**
+                        * Si l'utilisateur clic dessus :
+                            - Affichage d'un message de confirmation :
+                                - Texte : Voulez-vous bannir cette personne ?
+                                - Zone d'écriture de texte, Raison du Bannissement : Veuillez justifier le bannissement.
+                                - **Bouton Bannir du Groupe**
+                                    * Si l'utilisateur clic dessus : la personne est éjectée du groupe.
+                                    * Si l'utilisateur a remplit la zone de texte Raison du Bannissement : envoit dans la BDD de la raison.
+                                    * Si l'utilisateur ne remplit pas la zone de texte Raison du Bannissement : envoit du message "Aucune raison indiquée pour son précédent banissement."
+                                - **Bouton Retour**
+                                    * Si l'utilisateur clic dessus : retour sur la page groupe.
         * Si l'utilisateur suis cette personne :
             * Apparition de deux boutons sur la case de la personne :
-                * **Bouton Envoyer un Message**
+                - **Bouton Envoyer un Message**
                     * Si l'utilisateur clic dessus : l'utilisateur est amené sur la Page Chat(s)
-                * **Bouton Voir son Profil**
+                - **Bouton Voir son Profil**
                     * Si l'utilisateur clic dessus : l'utilisateur est amené sur la page du profil de la personne.
+                * Si l'utilisateur est le créateur du groupe :
+                    - **Bouton Bannir du Groupe**
+                        * Si l'utilisateur clic dessus :
+                            - Affichage d'un message de confirmation :
+                                - **Bouton Bannir du Groupe**
+                                    * Si l'utilisateur clic dessus : la personne est éjectée du groupe.
+                                - **Bouton Retour**
+                                    * Si l'utilisateur clic dessus : retour sur la page groupe.
 
 - Liste des posts du groupe
     * Affichage dans l'ordre des posts dernièrement créés, ou ayant reçus des commentaires (Du haut vers le bas). Du haut vers le bas. Les Posts et commentaires de groupes ne sont pas dans ce flux.
+    - Liste des éléments présents pour chaque post :
+        - Titre du post
+        - Nombre de commentaires
+        - Pseudo ou Nom et Prénom du créateur
+        - Date et heure de création
+        - Date de dernière activité
+        - Nombre de Likes
+        - Nombre de Dislikes
     * Si l'utilisateur est le créateur du post : mise en avant par un indice visuel.
     * Si l'utilisateur a déjà participé au post avec au moins un commentaire : mise en avant par un indice visuel.
-    * Le degré d'accessibilité des posts : très utile pour la partie public, je pense qu'ici ce n'est pas pertinant. Il y a déjà une restriction d'accès à l'entrée dans un groupe. Rajouter des options de limitations d'accès dans les groupes me semble de trop.
+    * Le degré d'accessibilité des posts : à ne pas mettre et utiliser dans les posts dans les groupes.
     * Si l'utilisateur clic sur un post : redirection vers le post et ces commentaires.
 
 - Chat du Groupe
@@ -512,6 +557,10 @@ Un utilisateur ne peut voir que les Post où il a le droit d'aller et d'interven
     - Pseudo ou Nom et Prénom du Créateur
     - Avatar du Créateur
     - Date et heure de création
+    - Nombre de Likes
+    - Nombre de Dislikes
+    - Like
+    - Dislike
     - **Bouton Suppression du Post**
         * Si l'utilisateur est le créateur du post : l'utilisateur peut voir le bouton.
         * Si l'utilisateur est le créateur du post et clic dessus : demande d'une confirmation.
@@ -532,6 +581,10 @@ Un utilisateur ne peut voir que les Post où il a le droit d'aller et d'interven
         - Pseudo ou Nom et Prénom du Créateur
         - Avatar du Créateur
         - Date et heure de création
+        - Nombre de Likes
+        - Nombre de Dislikes
+        - Like
+        - Dislike
         - **Bouton Suppression d'un commentaire**
             * Si l'utilisateur est le créateur du commentaire : l'utilisateur peut voir le bouton.
             * Si l'utilisateur est le créateur du commentaire et clic dessus : demande d'une confirmation.
