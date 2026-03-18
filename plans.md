@@ -1,12 +1,14 @@
 # Corrections à faire
-- Possibilité de quitter un groupe
-- Un utilisateur déjà intégré dans un groupe ne doit pas pouvoir envoyer une demande d'intégration dans le groupe.
-- Le créateur du groupe ne peut pas inviter une seconde fois une personne déjà acceptée dans le groupe.
-- Faire une page d'accueille avec un feed des posts et groupes à succès.
-- Faire une page d'inscription à part.
-- Symbôle du projet à reporter dans toutes les pages.
-- Si on clic sur l'utilisateur, on va sur son profil ou on lui envoit un message suivant où on clic.
+- Possibilité de quitter un groupe (Fait, seulement dans la page Groupe, pour éviter de disperser l'option)
+- Un utilisateur déjà intégré dans un groupe ne doit pas pouvoir envoyer une demande d'intégration dans le groupe. (Fait dans la page Liste des Groupes, dans la liste des groupes.)
+- Le créateur du groupe ne peut pas inviter une seconde fois une personne déjà acceptée dans le groupe. (Intégré, mais sûr de vouloir nous rajouter cette complexité ?)
+- Faire une page d'accueille pour non connectés avec un feed des posts et groupes à succès. (Fait)
+- Faire une page d'inscription à part. (Fait)
+- Symbôle du projet à reporter dans toutes les pages. (Fait)
+- Si on clic sur l'utilisateur, on va sur son profil ou on lui envoit un message suivant où on clic. (Fait)
 - Mettre le Chat de Groupe dans la Page Groupe.
+- Faire le Chat avec l'utilisateur et une personne.
+- Faire le chat entre l'utilisateur et plusieurs personnes.
 - Ne pas mettre les posts et commentaires présents dans les groupes, dans la page HUB.
 - Mettre la liste des utilisateurs du groupe.
 - Gérer la suppression du Post, et des commentaires affiliés.
@@ -14,8 +16,11 @@
 - Mettre en place un historique des bans d'un groupe, que le Créateur puisse savoir si il y a eu un antécédant. 
 - Si il y a trop de tentatives de connexions, mettre un blocage de connexion.
 - Confirmation que les degrés d'accessibilités ne sont pas à mettre dans les Posts dans les Groupes.
+- Rajouter les likes et dislikes.
 
 - Faire les normes JS, Go et le reste dans une partie dédiée.
+- Faire les étapes de soumissions des fonctionnnalités et pull requests.
+- Ecrire la procédure de travail.
 
 # Codification :
 - **un bouton sur lequel cliquer**
@@ -27,16 +32,41 @@
 
 # Plan de construction de Social Network
 
-## Page de connexion
+## Page d'accueille
 
 - Symbole du projet
     * Si non-connecté : le clic ramène sur la page de connexion.
     * Si connecté : le clic amène sur la page du Hub.
 
+- **Bouton Connexion**
+    * Si l'utilisateur clic dessus : l'amène sur la page de connexion.
+
 - Titre du Projet
 - Descriptif du projet
 
 - Des images de l'intérieur du réseau social pour attirer les utilisateurs
+
+- Feed des groupes actifs
+    - Nom du Groupe
+    - Description du groupe
+    - Nombre de membres
+
+- Feed des posts les plus actifs
+    - Nom du Post
+    - Contenu du Post
+    - Nombre de commentaires
+    - Affichage du commentaire ayant obtenu le plus de likes dans le Post
+
+- Zone de texte invitant à s'inscrire
+
+- **Bouton Inscription**
+    * Si l'utilisateur clic dessus : amène l'utilisateur sur la page d'inscription.
+
+## Page de connexion
+
+- Symbole du projet
+    * Si non-connecté : le clic ramène sur la page de connexion.
+    * Si connecté : le clic amène sur la page du Hub.
 
 - Formulaire de connexion :
     - Email ou Pseudo
@@ -45,15 +75,18 @@
     - Mot de passe
         * Si moins de 8 caractères : faire apparaître un message d'erreur.
 
-- **Bouton de connexion**
+- **Bouton Connexion**
     * Si les informations de connexion sont bonnes : amène sur le Hub
     * Si les informations de connexions sont fausses :
         * Si le nom de compte n'est pas présent dans la BDD : indique que le compte n'existe pas.
         * Si le mot de passe est faux : indique que le mot de passe est faux.
         * Si le nmo de compte et le mot de passe sont faux : indique que le compte n'existe pas.
 
-- **Bouton d'inscription**
-    * Amène l'utilisateur sur la page d'inscription.
+- **Bouton Inscription**
+    * Si l'utilisateur clic dessus : amène l'utilisateur sur la page d'inscription.
+
+- **Bouton Retour à la page d'accueille**
+    * Si l'utilisateur clic dessus : amène l'utilisateur sur la page d'accueille.
     
 ## Page d'inscription
 
@@ -86,12 +119,19 @@
     * Si le Pseudo est déjà pris : indiquer que le Pseudo est déjà pris et qu'il faut en sélectionner un autre.
     * Si dans A propos de moi, il n'y a qu'un ou plusieurs espaces ou tabulations : envoyer un message disant que le champs A propos de moi doit être vide ou doté de texte.
 
-- **Bouton de retour à la page d'accueil**
-    * Ramène l'utilisateur sur la page d'accueil.
+- **Bouton Retour à la page d'accueille**
+    * Si l'utilisateur clic dessus : amène l'utilisateur sur la page d'accueille.
+
+- **Bouton Se Connecter**
+    * Si l'utilisateur clic dessus : amène l'utilisateur à la page de connexion.
 
 ## Page HUB
 C'est ici qu'arrive l'utilisateur lors de la validation de sa connexion.
 C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalités du Projet.
+
+- Symbole du projet
+    * Si non-connecté : le clic ramène sur la page de connexion.
+    * Si connecté : le clic amène sur la page du Hub.
 
 - **Bouton Déconnexion**
     * L'utilisateur est déconnecté
@@ -118,16 +158,26 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
     * Si l'utilisateur est le créateur du groupe et qu'il y a une demande d'entrée : changement d'état pour en avertir l'utilisateur.
     * Si l'utilisateur clic sur un groupe : redirection vers la page du groupe. Il est considéré qu'ici, que l'utilisateur ne peut voir que les groupes où il est inscrit.
 
-- Liste des utilisateurs connectés
+- Liste des personnes connectées
     * Si l'utilisateur n'a pas d'historiques de messages : tri dans l'ordre alphabétique.
     * Si l'utilisateur a un historique de messages : tri dans l'ordre du message le plus récent en haut, pour descendre vers les moins récents.
     * Si il y a un nouveau message : changement d'état pour en avertir l'utilisateur.
     * Si l'utilisateur est abonné à une personne, cette personne sera mise en bleu.
     * Si une personne est abonnée à l'utilisateur, cette personne sera mise en vert.
     * Si l'utilisateur et la personne sont abonnées à l'une et l'autre, alors cette personne sera mise en rouge.
-    * Si l'utilisateur clic sur une personne dont il n'est pas abonné et que cette personne n'est pas abonné à lui en retour : un message indique qu'il doit s'abonner à la personne, ou être suivit par cette personne, pour pouvoir parler avec elle.
-    * Si l'utilisateur clic sur une personne qui le suit : ouverture du chat de communication avec cette personne.
-    * Si l'utilisateur clic sur une personne dont il est abonné : ouverture du chat de communication avec cette personne.
+    * Si l'utilisateur clic sur une personne :
+        * Si l'utilisateur ne suis pas cette personne : 
+            * Apparition de deux boutons sur la case de la personne :
+                * **Bouton Suivre cette Personne**
+                    * Si l'utilisateur clic dessus : l'utilisateur suis maintenant cette personne.
+                * **Bouton Voir son Profil**
+                    * Si l'utilisateur clic dessus : l'utilisateur est amené sur la page du profil de la personne.
+        * Si l'utilisateur suis cette personne :
+            * Apparition de deux boutons sur la case de la personne :
+                * **Bouton Envoyer un Message**
+                    * Si l'utilisateur clic dessus : l'utilisateur ouvre un chat avec cette personne.
+                * **Bouton Voir son Profil**
+                    * Si l'utilisateur clic dessus : l'utilisateur est amené sur la page du profil de la personne.
 
 - Liste des posts
     * Affichage dans l'ordre des posts ou des commentaires dernièrement créés (Du haut vers le bas). Les commentaires font remonter les posts où ils sont créés, mais c'est seulement le post qui est affiché ? Faisons-nous un indice pour dire que le post n'est pas nouveau mais qu'il y a un nouveau commentaire ?
@@ -142,6 +192,10 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
 
 ## Page Groupe
 Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut accepté par le créateur du groupe, ou qu'il est le créateur du groupe, il accède à tout ce que contient le groupe.
+
+- Symbole du projet
+    * Si non-connecté : le clic ramène sur la page de connexion.
+    * Si connecté : le clic amène sur la page du Hub.
 
 - **Bouton Déconnexion**
     * L'utilisateur est déconnecté
@@ -168,6 +222,24 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
                 * **Bouton Retour**
                     * Si l'utilisateur clic dessus : retour sur la page Groupe.
 
+- **Bouton Quitter le Groupe**
+    * Si l'utilisateur n'est pas le Créateur du Groupe : l'utilisateur peut voir le bouton.
+    * Si l'utilisateur clic dessus : ouverture d'une fenêtre d'option.
+        - **Bouton Quitter le Groupe**
+            * Si l'utilisateur clic dessus : l'utilisateur quitte définitivement le groupe.
+        - **Bouton Retour**
+            * Si l'utilisateur clic dessus : retour sur la page Groupe.
+
+- **Bouton Demandes d'accès au Groupe**
+    * Si l'utilisateur est le Créateur du Groupe : l'utilisateur peut voir le bouton.
+    * Si il y a des demandes d'accès par des personnes : changement d'état visuel pour le notifier au créateur du groupe.
+    * Si l'utilisateur clic dessus : ouverture d'une fenêtre d'options.
+        - Liste des demandes d'accès par les personnes :
+            - Pseudo ou Nom et Prénom
+            - Avatar
+            - A propos de moi
+            - Date d'inscription
+            - Déjà membre dans le passé ? (Option à discuter ensemble)
 - Onglet des notifications
     * Si il y a des notifications : changement d'état pour en avertir l'utilisateur.
 
@@ -180,25 +252,40 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
     * Si l'utilisateur est le créateur du groupe et qu'il y a une demande d'entrée : changement d'état pour en avertir l'utilisateur.
     * Si l'utilisateur clic sur un groupe : redirection vers la page du groupe. Il est considéré qu'ici, que l'utilisateur ne peut voir que les groupes où il est inscrit.
 
-- Liste des utilisateurs connectés ayant accès au groupe
+- Liste des utilisateurs connectées ayant accès au groupe
     * Si l'utilisateur n'a pas d'historiques de messages : tri dans l'ordre alphabétique.
     * Si l'utilisateur a un historique de messages : tri dans l'ordre du message le plus récent en haut, pour descendre vers les moins récents.
     * Si il y a un nouveau message : changement d'état pour en avertir l'utilisateur.
     * Si l'utilisateur est abonné à une personne, cette personne sera mise en bleu.
     * Si une personne est abonnée à l'utilisateur, cette personne sera mise en vert.
     * Si l'utilisateur et la personne sont abonnées à l'une et l'autre, alors cette personne sera mise en rouge.
-    * Si l'utilisateur clic sur une personne dont il n'est pas abonné et que cette personne n'est pas abonné à lui en retour : un message indique qu'il doit s'abonner à la personne, ou être suivit par cette personne, pour pouvoir parler avec elle.
-    * Si l'utilisateur clic sur une personne qui le suit : ouverture du chat de communication avec cette personne.
-    * Si l'utilisateur clic sur une personne dont il est abonné : ouverture du chat de communication avec cette personne.
+    * Si l'utilisateur clic sur une personne :
+        * Si l'utilisateur ne suis pas cette personne : 
+            * Apparition de deux boutons sur la case de la personne :
+                * **Bouton Suivre cette Personne**
+                    * Si l'utilisateur clic dessus : l'utilisateur suis maintenant cette personne.
+                * **Bouton Voir son Profil**
+                    * Si l'utilisateur clic dessus : l'utilisateur est amené sur la page du profil de la personne.
+        * Si l'utilisateur suis cette personne :
+            * Apparition de deux boutons sur la case de la personne :
+                * **Bouton Envoyer un Message**
+                    * Si l'utilisateur clic dessus : l'utilisateur ouvre un chat avec cette personne.
+                * **Bouton Voir son Profil**
+                    * Si l'utilisateur clic dessus : l'utilisateur est amené sur la page du profil de la personne.
 
-- Liste des posts
+- Liste des posts du groupe
     * Affichage dans l'ordre des posts ou des commentaires dernièrement créés (Du haut vers le bas). Les commentaires font remonter les posts où ils sont créés, mais c'est seulement le post qui est affiché ? Faisons-nous un indice pour dire que le post n'est pas nouveau, mais qu'il y a un nouveau commentaire ?
     * Si l'utilisateur est le créateur du post : mise en avant par un indice visuel.
     * Si l'utilisateur a déjà participé au post avec au moins un commentaire : mise en avant par un indice visuel.
     * Le degré d'accessibilité des posts : très utile pour la partie public, je pense qu'ici ce n'est pas pertinant. Il y a déjà une restriction d'accès à l'entrée dans un groupe. Rajouter des options de limitations d'accès dans les groupes me semble de trop.
     * Si l'utilisateur clic sur un post : redirection vers le post et ces commentaires.
 
+- Chat du Groupe
 ## Page Liste des Groupes
+
+- Symbole du projet
+    * Si non-connecté : le clic ramène sur la page de connexion.
+    * Si connecté : le clic amène sur la page du Hub.
 
 - **Bouton Déconnexion**
     * L'utilisateur est déconnecté
@@ -227,8 +314,16 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
         - Date de création
         - Date de dernière activité
         - Nombre de Membres dans le groupe
+        - **Bouton Demander à rejoindre le Groupe**
+            * Si l'utilisateur est déjà membre du groupe : l'utilisateur ne peut pas voir le bouton.
+            * Si l'utilisateur est le créateur du groupe : l'utilisateur ne peut pas voir le bouton.
+            * Si l'utilisateur clic dessus : envoit d'une demande d'accès au créateur du groupe.
 
 ## Page Section Utilisateur
+
+- Symbole du projet
+    * Si non-connecté : le clic ramène sur la page de connexion.
+    * Si connecté : le clic amène sur la page du Hub.
 
 - **Bouton Déconnexion**
     * L'utilisateur est déconnecté
@@ -280,6 +375,10 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
 
 ## Page Profil
 
+- Symbole du projet
+    * Si non-connecté : le clic ramène sur la page de connexion.
+    * Si connecté : le clic amène sur la page du Hub.
+
 - **Bouton Déconnexion**
     * L'utilisateur est déconnecté
     * L'utilisateur est ramené sur la page d'accueil
@@ -310,8 +409,15 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
     * Si la personne a mis une image en Avatar : affichage de l'Avatar
     * Si l'utilisateur à remplis le champs de texte à propos moi : afficher à propos de moi
 
+* **Bouton Se Désabonner**
+    * Si l'utilisateur clic dessus : désabonnement de l'utilisateur avec la personne.
+
 ## Page Post
 Un utilisateur ne peut voir que les Post où il a le droit d'aller et d'intervenir.
+
+- Symbole du projet
+    * Si non-connecté : le clic ramène sur la page de connexion.
+    * Si connecté : le clic amène sur la page du Hub.
 
 - **Bouton Déconnexion**
     * L'utilisateur est déconnecté
