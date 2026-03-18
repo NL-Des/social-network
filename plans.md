@@ -1,3 +1,19 @@
+# Table des Matières
+- Corrections à faire
+- Elements à anticiper pour la prochaine partie de planification
+- Codification
+- Plan de construction de Social Network
+    - Page d'accueille
+    - Page de connexion
+    - Page d'inscription
+    - Page HUB
+    - Page Chat(s)
+    - Page Groupe
+    - Page Liste des Groupes
+    - Page Section Utilisateur
+    - Page Profil
+    - Page Post
+
 # Corrections à faire
 - Possibilité de quitter un groupe (Fait, seulement dans la page Groupe, pour éviter de disperser l'option)
 - Un utilisateur déjà intégré dans un groupe ne doit pas pouvoir envoyer une demande d'intégration dans le groupe. (Fait dans la page Liste des Groupes, dans la liste des groupes.)
