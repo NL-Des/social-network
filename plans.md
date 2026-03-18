@@ -6,12 +6,11 @@
 - Faire une page d'inscription à part. (Fait)
 - Symbôle du projet à reporter dans toutes les pages. (Fait)
 - Si on clic sur l'utilisateur, on va sur son profil ou on lui envoit un message suivant où on clic. (Fait)
-- Mettre le Chat de Groupe dans la Page Groupe.
-- Faire le Chat avec l'utilisateur et une personne.
-- Faire le chat entre l'utilisateur et plusieurs personnes.
-- Ne pas mettre les posts et commentaires présents dans les groupes, dans la page HUB.
-- Mettre la liste des utilisateurs du groupe.
-- Gérer la suppression du Post, et des commentaires affiliés.
+- Mettre le Chat de Groupe dans la Page Groupe. (Fait)
+- Faire la page Chat avec l'utilisateur et une personne.(Fait)
+- Ne pas mettre les posts et commentaires présents dans les groupes, dans la page HUB. (Fait)
+- Mettre la liste des utilisateurs du groupe. (Fait)
+- Gérer la suppression du Post, et des commentaires affiliés. (Fait)
 - Dans le groupe il faut pouvoir bannir un utilisateur. Il pourra mettre un message de justification.
 - Mettre en place un historique des bans d'un groupe, que le Créateur puisse savoir si il y a eu un antécédant. 
 - Si il y a trop de tentatives de connexions, mettre un blocage de connexion.
@@ -158,7 +157,10 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
     * Si l'utilisateur est le créateur du groupe et qu'il y a une demande d'entrée : changement d'état pour en avertir l'utilisateur.
     * Si l'utilisateur clic sur un groupe : redirection vers la page du groupe. Il est considéré qu'ici, que l'utilisateur ne peut voir que les groupes où il est inscrit.
 
-- Liste des personnes connectées
+- Liste des personnes connectée ou non
+    - Liste des éléments présents pour chaque personne :
+        - Pseudo ou Nom et Prénom
+        - Avatar
     * Si l'utilisateur n'a pas d'historiques de messages : tri dans l'ordre alphabétique.
     * Si l'utilisateur a un historique de messages : tri dans l'ordre du message le plus récent en haut, pour descendre vers les moins récents.
     * Si il y a un nouveau message : changement d'état pour en avertir l'utilisateur.
@@ -175,12 +177,12 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
         * Si l'utilisateur suis cette personne :
             * Apparition de deux boutons sur la case de la personne :
                 * **Bouton Envoyer un Message**
-                    * Si l'utilisateur clic dessus : l'utilisateur ouvre un chat avec cette personne.
+                    * Si l'utilisateur clic dessus : l'utilisateur est amené sur la Page Chat(s)
                 * **Bouton Voir son Profil**
                     * Si l'utilisateur clic dessus : l'utilisateur est amené sur la page du profil de la personne.
 
 - Liste des posts
-    * Affichage dans l'ordre des posts ou des commentaires dernièrement créés (Du haut vers le bas). Les commentaires font remonter les posts où ils sont créés, mais c'est seulement le post qui est affiché ? Faisons-nous un indice pour dire que le post n'est pas nouveau mais qu'il y a un nouveau commentaire ?
+    * Affichage dans l'ordre des posts dernièrement créés, ou ayant reçus des commentaires (Du haut vers le bas). Du haut vers le bas. Les Posts et commentaires de groupes ne sont pas dans ce flux.
     * Si l'utilisateur est le créateur du post : mise en avant par un indice visuel discret.
     * Si l'utilisateur a déjà participé au post avec au moins un commentaire : mise en avant par un indice visuel discret.
     * Suivant le degré d'accessibilité :
@@ -189,6 +191,59 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
         * Privé : indice visuel (un cadenas fermé)
     * Si l'utilisateur clic sur un post quelque soit sont degré d'accessibilité : redirection vers le post et ces commentaires. Car si il est autorisé à voir, c'est aussi qu'il est autorisé à y aller et à y participer.
     * Si le post provient d'un groupe, l'utilisateur va-t-il le retrouver ici ? Je serais plutôt pour éviter cela, que l'utilisateur doive aller dans la page groupe. Pour bien distinguer l'espace public/groupe.
+
+## Page Chat(s)
+
+- Symbole du projet
+    * Si non-connecté : le clic ramène sur la page de connexion.
+    * Si connecté : le clic amène sur la page du Hub.
+
+- **Bouton Déconnexion**
+    * L'utilisateur est déconnecté
+    * L'utilisateur est ramené sur la page d'accueil
+
+- **Bouton Section Utilisateur**
+    * L'utilisateur est amené sur la page Section Utilisateur
+
+- **Bouton Liste des Groupes**
+    * Si l'utilisateur clic dessus : redirection vers la page Liste des Groupes.
+
+- **Bouton HUB**
+    * Si l'utilisateur clic dessus : redirection vers la page HUB.
+
+- **Bouton Création d'un Post**
+    *Si l'utilisateur clic dessus : redirection vers la page Post
+
+- Liste des personnes connectée ou non
+    - Liste des éléments présents pour chaque personne :
+        - Pseudo ou Nom et Prénom
+        - Avatar
+    * Si l'utilisateur n'a pas d'historiques de messages : tri dans l'ordre alphabétique.
+    * Si l'utilisateur a un historique de messages : tri dans l'ordre du message le plus récent en haut, pour descendre vers les moins récents.
+    * Si il y a un nouveau message : changement d'état pour en avertir l'utilisateur.
+    * Si l'utilisateur est abonné à une personne, cette personne sera mise en bleu.
+    * Si une personne est abonnée à l'utilisateur, cette personne sera mise en vert.
+    * Si l'utilisateur et la personne sont abonnées à l'une et l'autre, alors cette personne sera mise en rouge.
+    * Si l'utilisateur clic sur une personne :
+        * Si l'utilisateur ne suis pas cette personne : 
+            * Apparition de deux boutons sur la case de la personne :
+                * **Bouton Suivre cette Personne**
+                    * Si l'utilisateur clic dessus : l'utilisateur suis maintenant cette personne.
+                * **Bouton Voir son Profil**
+                    * Si l'utilisateur clic dessus : l'utilisateur est amené sur la page du profil de la personne.
+        * Si l'utilisateur suis cette personne :
+            * Apparition de deux boutons sur la case de la personne :
+                * **Bouton Envoyer un Message**
+                    * Si l'utilisateur clic dessus : l'utilisateur ouvre le chat avec cette personne
+                * **Bouton Voir son Profil**
+                    * Si l'utilisateur clic dessus : l'utilisateur est amené sur la page du profil de la personne.
+
+- Chat
+    - Liste des éléments présents dans chaque message :
+        - Pseudo ou Nom et Prénom de la personne/utilisateur
+        - Avatar de la personne/utilisateur
+        - Corps du message
+        - Date et heure de diffusion du message
 
 ## Page Groupe
 Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut accepté par le créateur du groupe, ou qu'il est le créateur du groupe, il accède à tout ce que contient le groupe.
@@ -252,7 +307,7 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
     * Si l'utilisateur est le créateur du groupe et qu'il y a une demande d'entrée : changement d'état pour en avertir l'utilisateur.
     * Si l'utilisateur clic sur un groupe : redirection vers la page du groupe. Il est considéré qu'ici, que l'utilisateur ne peut voir que les groupes où il est inscrit.
 
-- Liste des utilisateurs connectées ayant accès au groupe
+- Liste des utilisateurs connectées ou non ayant accès au groupe
     * Si l'utilisateur n'a pas d'historiques de messages : tri dans l'ordre alphabétique.
     * Si l'utilisateur a un historique de messages : tri dans l'ordre du message le plus récent en haut, pour descendre vers les moins récents.
     * Si il y a un nouveau message : changement d'état pour en avertir l'utilisateur.
@@ -269,18 +324,22 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
         * Si l'utilisateur suis cette personne :
             * Apparition de deux boutons sur la case de la personne :
                 * **Bouton Envoyer un Message**
-                    * Si l'utilisateur clic dessus : l'utilisateur ouvre un chat avec cette personne.
+                    * Si l'utilisateur clic dessus : l'utilisateur est amené sur la Page Chat(s)
                 * **Bouton Voir son Profil**
                     * Si l'utilisateur clic dessus : l'utilisateur est amené sur la page du profil de la personne.
 
 - Liste des posts du groupe
-    * Affichage dans l'ordre des posts ou des commentaires dernièrement créés (Du haut vers le bas). Les commentaires font remonter les posts où ils sont créés, mais c'est seulement le post qui est affiché ? Faisons-nous un indice pour dire que le post n'est pas nouveau, mais qu'il y a un nouveau commentaire ?
+    * Affichage dans l'ordre des posts dernièrement créés, ou ayant reçus des commentaires (Du haut vers le bas). Du haut vers le bas. Les Posts et commentaires de groupes ne sont pas dans ce flux.
     * Si l'utilisateur est le créateur du post : mise en avant par un indice visuel.
     * Si l'utilisateur a déjà participé au post avec au moins un commentaire : mise en avant par un indice visuel.
     * Le degré d'accessibilité des posts : très utile pour la partie public, je pense qu'ici ce n'est pas pertinant. Il y a déjà une restriction d'accès à l'entrée dans un groupe. Rajouter des options de limitations d'accès dans les groupes me semble de trop.
     * Si l'utilisateur clic sur un post : redirection vers le post et ces commentaires.
 
 - Chat du Groupe
+    - Liste des membres du groupe
+        * Si une personne est connectée : mise en évidence visuelle de sa connection sur le Projet.
+        * Si une personne n'est pas connectée : mise en évidence visuelle de son absence sur le Projet.
+
 ## Page Liste des Groupes
 
 - Symbole du projet
@@ -435,16 +494,49 @@ Un utilisateur ne peut voir que les Post où il a le droit d'aller et d'interven
 - Onglet des notifications
     * Si il y a des notifications : changement d'état pour en avertir l'utilisateur.
 
-- **Bouton Création d'un Commentaire**
-
-- Affichage du Post
-    * Si le Post à des Commentaires : Affichage des Commentaires.
-- Zone d'écriture d'un commentaire.
-    - Titre.
-    - Corps de Texte.
+* Si le post n'existe pas, affichage des outils de création du post.
+    - Titre du post
+    - Corps de Texte du post
     - **Bouton Importer une Image**
         * Si l'utilisateur clic dessus : ouverture d'une fenêtre pour aller chercher l'image depuis l'ordinateur de l'utilisateur.
     - Degré d'accessibilité (menu déroulant) :
         - Public
         - Diffusion Restreinte
         - Privé
+
+* Si le post existe, affichage du post :
+    - Titre du post
+    - Corps de Texte du post
+    - Degré d'accessibilité
+    - Image, si présente
+    - Pseudo ou Nom et Prénom du Créateur
+    - Avatar du Créateur
+    - Date et heure de création
+    - **Bouton Suppression du Post**
+        * Si l'utilisateur est le créateur du post : l'utilisateur peut voir le bouton.
+        * Si l'utilisateur est le créateur du post et clic dessus : demande d'une confirmation.
+            - Fenêter de contexte avec ce texte : Voulez-vous supprimer ce post et tous ces commentaires ?
+                - **Bouton Supprimer le Commentaire**
+                    * Si l'utilisateur clic dessus : supression du post et de ces commentaires.
+                - **Bouton Retour**
+                    * Si l'utilisateur clic dessus : sortie de la fenêtre de contexte et retour au post.
+    * Affichage des outils de création du commentaire.
+        - Titre du commentaire
+        - Corps de Texte du commentaire
+        - **Bouton Importer une Image**
+            * Si l'utilisateur clic dessus : ouverture d'une fenêtre pour aller chercher l'image depuis l'ordinateur de l'utilisateur.
+    * Si il y a des commentaires existants sur le post, affichage des commentaires.
+        - Titre du commentaire
+        - Corps de Texte du commentaire
+        - Image, si présente
+        - Pseudo ou Nom et Prénom du Créateur
+        - Avatar du Créateur
+        - Date et heure de création
+        - **Bouton Suppression d'un commentaire**
+            * Si l'utilisateur est le créateur du commentaire : l'utilisateur peut voir le bouton.
+            * Si l'utilisateur est le créateur du commentaire et clic dessus : demande d'une confirmation.
+                - Fenêter de contexte avec ce texte : Voulez-vous supprimer ce commentaire ?
+                    - **Bouton Supprimer le Commentaire**
+                        * Si l'utilisateur clic dessus : supression du commentaire.
+                    - **Bouton Retour**
+                        * Si l'utilisateur clic dessus : sortie de la fenêtre de contexte et retour au post.
