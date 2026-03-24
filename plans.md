@@ -1,7 +1,7 @@
 # Table des Matières
 - Corrections à faire
 - Elements à anticiper pour la prochaine partie de planification
-- Codification
+- Nomenclature
 - Plan de construction de Social Network
     - Page d'accueille
     - Page de connexion
@@ -14,6 +14,12 @@
     - Page Profil
     - Page Post
     - Page Notifications
+
+## Bons gestes
+- Une branche, une fonctionnalité.
+- Des codes cours.
+- Une nomenclature claire et bien dessinée.
+- Du code commenté.
 
 # Idées générales et interrogations à explorer
 - Ajouter une icone "Notifications" dans l'entête.
@@ -30,7 +36,7 @@ Questionnement qui fut amené : faisons-nous une liste de contacts d'un côté t
 - Ecrire la procédure de travail.
 - Si il y a trop de tentatives de connexions, mettre un blocage de connexion.
 
-# Codification :
+# Nomenclature :
 - **un bouton sur lequel cliquer**
 - un objet, un lien, un champs de texte,...
     * Si on clic dessus ou que l'on intéragie avec, que ce passe-t-il ?
@@ -112,7 +118,7 @@ Questionnement qui fut amené : faisons-nous une liste de contacts d'un côté t
     * Si les informations de connexions sont fausses :
         * Si le nom de compte n'est pas présent dans la BDD : indique que le compte n'existe pas.
         * Si le mot de passe est faux : indique que le mot de passe est faux.
-        * Si le nmo de compte et le mot de passe sont faux : indique que le compte n'existe pas.
+        * Si le nom de compte et le mot de passe sont faux : indique que le compte n'existe pas.
 
 - **Bouton Inscription**
     * Si l'utilisateur clic dessus : amène l'utilisateur sur la page d'inscription.
