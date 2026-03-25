@@ -261,18 +261,6 @@ C'est ici que l'utilisateur va pouvoir avoir accès à toutes les fonctionnalit�
 Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut accepté par le créateur du groupe, ou qu'il est le créateur du groupe, il accède à tout ce que contient le groupe.
 
 - **Bouton Administration du Groupe**
-    * Si l'utilisateur est le Créateur du Groupe : l'utilisateur peut voir le bouton.
-    * Si l'utilisateur clic dessus : ouverture d'une fenêtre d'options.
-        * **Bouton Retour**
-            * Si l'utilisateur clic dessus : retour sur la page Groupe.
-        * **Bouton Suppression du Groupe**
-            * Si l'utilisateur clic dessus : demande un message de confirmation pour la suppression du groupe.
-                * **Bouton Suppression du Groupe**
-                    * Si l'utilisateur clic dessus : suppression du groupe.
-                * **Bouton Retour**
-                    * Si l'utilisateur clic dessus : retour sur la page Groupe.
-
-- **Bouton Administration du Groupe**
     * Si l'utilisateur n'est pas le Créateur du Groupe : l'utilisateur peut voir le bouton.
     * Si l'utilisateur clic dessus : ouverture d'une fenêtre d'option.
         - **Bouton Donner la direction du groupe à un autre utilisateur**
@@ -311,7 +299,10 @@ Une fois que l'utilisateur à cliqué sur un groupe où sa demande d'accès fut 
                         - Raison du banissement
                     * Si l'utilisateur créateur du groupe n'avait pas remplit la zone de texte pour expliquer la raison du banissement :
                         - Texte : Aucune raison indiquée pour son précédent banissement.
-
+        - **Bouton Accepter la demande d'accès**
+            * Si l'utilisateur clic dessus : la personne demandant l'accès obtient les droits d'accès.
+        - **Bouton Refuser la demande d'accès**
+            * Si l'utilisateur clic dessus : la personne demandant l'accès reçoit une notification négative lui indiquant son refus.
 - Liste des groupes où l'utilisateur est inscrit.
     * Si l'utilisateur est inscrit à un groupe : affichage du groupe dans la liste.
         - Liste des groupes
