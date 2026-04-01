@@ -1,3 +1,3 @@
-module social-network
+module social-network/backend
 
-go 1.26.1
+go 1.24.2
