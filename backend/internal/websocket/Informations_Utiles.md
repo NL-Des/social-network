@@ -26,5 +26,14 @@
 
 ## Transmission d'un message
 
-**Hub** ──(via BroadcastToUser)──> **Channel client.send** ──(via writePump)──> **Client**  
-**Client** ──(via readPump)──> **Hub** ──(via router)──> **Module Concerné**
+```
+┌─────┐                            ┌──────────────────────┐                      ┌────────┐
+│ Hub │ ──(via BroadcastToUser)──> │ Channel client.send  │ ──(via writePump)──> │ Client │
+└─────┘                            └──────────────────────┘                      └────────┘
+```
+
+```
+┌────────┐                     ┌─────┐                   ┌──────────────────┐
+│ Client │ ──(via readPump)──> │ Hub │ ──(via router)──> │ Module concerné  │
+└────────┘                     └─────┘                   └──────────────────┘
+```
