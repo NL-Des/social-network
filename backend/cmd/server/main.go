@@ -1,14 +1,24 @@
-
 package main
 
 import (
 	"fmt"
 	"log"
 	"net/http"
+	"social-network/backend/internal/database"
 	"social-network/backend/internal/handlers"
 )
 
 func main() {
+
+	// Gestion serveur.
+	db, err := database.DbOrchestration()
+	if err != nil {
+		log.Println("Error with DB")
+	}
+	if db != nil {
+		log.Println("Test")
+	}
+
 	// creation du mux
 	mux := http.NewServeMux()
 	// Route principale
