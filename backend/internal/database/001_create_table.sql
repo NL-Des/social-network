@@ -1,14 +1,14 @@
 -- CHECK à mettre en place
 CREATE TABLE IF NOT EXISTS users (
     ID          SERIAL PRIMARY KEY,
-    email       TEXT NOT NULL UNIQUE,
-    password    TEXT NOT NULL,
+    email       TEXT NOT NULL UNIQUE CHECK (email LIKE '%@%'),
+    password    TEXT NOT NULL CHECK (length(password) >= 8),
     firstname   TEXT NOT NULL,
     lastname    TEXT NOT NULL,
-    dateofbirth DATE NOT NULL,
+    dateofbirth DATE NOT NULL CHECK (dateofbirth <= CURRENT_DATE - INTERVAL '13 years'),
     isprivate   BOOLEAN NOT NULL,
     avatar      TEXT,
-    pseudo      TEXT UNIQUE,
+    pseudo      TEXT UNIQUE CHECK (pseudo IS NULL OR (length(trim(pseudo)) >= 3 AND length(pseudo) <= 30)),
     aboutme     TEXT
 );
 
@@ -17,9 +17,9 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS posts (
     ID         SERIAL PRIMARY KEY,
     authorID   INTEGER REFERENCES users(ID) ON DELETE SET NULL,
-    title      TEXT NOT NULL,
-    content    TEXT NOT NULL,
-    privacy    TEXT NOT NULL,
+    title      TEXT NOT NULL CHECK (length(trim(title)) > 0 AND length(title) <= 120),
+    content    TEXT NOT NULL CHECK (length(trim(content)) > 0 AND length(content) <= 10000),
+    privacy    TEXT NOT NULL CHECK (privacy IN ('public', 'friends', 'private')),
     createdat  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updatedat  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS comments (
     ID         SERIAL PRIMARY KEY,
     postID     INTEGER NOT NULL REFERENCES posts(ID) ON DELETE CASCADE,
     authorID   INTEGER REFERENCES users(ID) ON DELETE SET NULL,
-    content    TEXT NOT NULL,
+    content    TEXT NOT NULL CHECK (length(trim(content)) > 0 AND length(content) <= 2000),
     createdat  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updatedat  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS messages (
     ID         SERIAL PRIMARY KEY,
     senderID   INTEGER REFERENCES users(ID) ON DELETE SET NULL,
     receiverID INTEGER REFERENCES users(ID) ON DELETE SET NULL,
-    content    TEXT NOT NULL,
+    content    TEXT NOT NULL CHECK (length(trim(content)) > 0 AND length(content) <= 8000),
     createdat  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updatedat  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -85,8 +85,8 @@ CREATE TABLE IF NOT EXISTS groups (
     ID          SERIAL PRIMARY KEY,
     creatorID   INTEGER REFERENCES users(ID) ON DELETE SET NULL,
     leaderID    INTEGER REFERENCES users(ID) ON DELETE SET NULL,
-    title       TEXT NOT NULL,
-    description TEXT,
+    title       TEXT NOT NULL CHECK (length(trim(title)) > 0 AND length(title) <= 80),
+    description TEXT NOT NULL CHECK (length(trim(description)) > 0 AND length(description) <= 1500),
     createdat   TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS group_members (
     groupID   INTEGER NOT NULL REFERENCES groups(ID) ON DELETE CASCADE,
     userID    INTEGER NOT NULL REFERENCES users(ID) ON DELETE CASCADE,
     invitedby INTEGER REFERENCES users(ID) ON DELETE SET NULL,
-    status    TEXT NOT NULL,
+    status    TEXT NOT NULL CHECK (status IN ('invited', 'pending', 'member')),
     joinedat  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (groupID, userID)
 );
@@ -110,8 +110,8 @@ CREATE TABLE IF NOT EXISTS group_posts (
     ID        SERIAL PRIMARY KEY,
     groupID   INTEGER NOT NULL REFERENCES groups(ID) ON DELETE CASCADE,
     authorID  INTEGER REFERENCES users(ID) ON DELETE SET NULL,
-    title     TEXT NOT NULL,
-    content   TEXT NOT NULL,
+    title     TEXT NOT NULL CHECK (length(trim(title)) > 0 AND length(title) <= 120),
+    content   TEXT NOT NULL CHECK (length(trim(content)) > 0 AND length(content) <= 10000),
     createdat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updatedat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS group_comments (
     ID        SERIAL PRIMARY KEY,
     postID    INTEGER NOT NULL REFERENCES group_posts(ID) ON DELETE CASCADE,
     authorID  INTEGER REFERENCES users(ID) ON DELETE SET NULL,
-    content   TEXT NOT NULL,
+    content   TEXT NOT NULL CHECK (length(trim(content)) > 0 AND length(content) <= 2000),
     createdat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updatedat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -141,7 +141,7 @@ CREATE TABLE IF NOT EXISTS group_chats (
     ID        SERIAL PRIMARY KEY,
     groupID   INTEGER NOT NULL REFERENCES groups(ID) ON DELETE CASCADE,
     senderID  INTEGER REFERENCES users(ID) ON DELETE SET NULL,
-    content   TEXT NOT NULL,
+    content   TEXT NOT NULL CHECK (length(trim(content)) > 0 AND length(content) <= 8000),
     createdat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updatedat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -156,9 +156,9 @@ CREATE TABLE IF NOT EXISTS group_events (
     ID            SERIAL PRIMARY KEY,
     groupID       INTEGER NOT NULL REFERENCES groups(ID) ON DELETE CASCADE,
     creatorID     INTEGER NOT NULL REFERENCES users(ID) ON DELETE CASCADE,
-    title         TEXT NOT NULL,
-    description   TEXT NOT NULL,
-    eventdatetime TIMESTAMPTZ NOT NULL,
+    title         TEXT NOT NULL CHECK (length(trim(title)) > 0 AND length(title) <= 80),
+    description   TEXT NOT NULL CHECK (length(trim(description)) > 0 AND length(description) <= 2000),
+    eventdatetime TIMESTAMPTZ NOT NULL CHECK (eventdatetime >= NOW()),
     createdat     TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS group_event_responses (
     ID          SERIAL PRIMARY KEY,
     eventID     INTEGER NOT NULL REFERENCES group_events(ID) ON DELETE CASCADE,
     userID      INTEGER NOT NULL REFERENCES users(ID) ON DELETE CASCADE,
-    response    TEXT NOT NULL,
+    response    TEXT NOT NULL CHECK (response IN ('coming', 'unsure', 'uninterested')),
     respondedat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
