@@ -20,6 +20,7 @@
   --shadow-neon: 0 0 30px 4px rgba(73, 199, 255, 1);
 
   /* On lie les variables CSS à des noms utilisables dans Tailwind */
+  /*   brand fait référence à une convention de nommage pour dire que ce sont les couleurs personnalisées du projet. */
   --color-brand-border: var(--brand-blue);
   --color-brand-text: var(--light-blue-text);
   --color-brand-card: var(--dark-bg);
