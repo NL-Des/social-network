@@ -19,9 +19,9 @@
 ###################################################
 
 ###################################################
-# Instruction pour lancer Docker-Compose sans considérations particulières.
+# Instruction pour lancer Docker-Compose.
 #    # Commande à écrire dans le terminal :
-#        # docker-compose up -d
+#        # docker compose up -d --build --remove-orphans --force-recreate
 #
 # Instruction pour lancer Docker-Compose après de profonds changements, sans une réinitialisation du volume.
 #    # Commandes à écrire dans le terminal :
