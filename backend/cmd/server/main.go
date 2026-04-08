@@ -11,12 +11,20 @@ import (
 func main() {
 
 	// Gestion serveur.
-	db, err := database.DbOrchestration()
+	db, err := database.DbOrchestrationDev()
 	if err != nil {
-		log.Println("Error with DB")
+		log.Println("Error with DB", err)
 	}
+	// Test de confirmation de la connection avec la BDD, en comptant le nombre de tables.
 	if db != nil {
 		log.Println("Test")
+		var tableCount int
+		err = db.QueryRow("SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'").Scan(&tableCount)
+		if err != nil {
+			log.Println("Erreur lors du comptage des tables :", err)
+		} else {
+			log.Printf("🔍 La base de données contient actuellement %d tables.", tableCount)
+		}
 	}
 
 	// creation du mux

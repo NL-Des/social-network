@@ -15,9 +15,9 @@ func DbOrchestration() (*sql.DB, error) {
 	// Les variables qui suivent seront à remplir avec les futures données du .env.
 	// pathDB := "./backend/internal/database/database.sql"
 	pathCreateDB := "./backend/internal/database/001_createtable.sql"
-	login := "test"
-	password := "123456789"
-	nameDatabase := "database"
+	login := "myuser"
+	password := "mypassword"
+	nameDatabase := "mydatabase"
 	sslmode := "disable"
 
 	// Vérification des chemins BDD et de créations de tables.

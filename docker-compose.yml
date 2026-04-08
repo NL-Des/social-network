@@ -13,6 +13,12 @@
 ###################################################
 
 ###################################################
+# Instruction pour installer l'extension pour visualiser la BDD.
+#   # Commande à écrire dans le terminal :
+#       # code --install-extension cweijan.vscode-postgresql-client2
+###################################################
+
+###################################################
 # Instruction pour lancer Docker-Compose sans considérations particulières.
 #    # Commande à écrire dans le terminal :
 #        # docker-compose up -d
@@ -26,10 +32,10 @@
 #        # docker compose down -v
 #        # docker compose up -d --build --remove-orphans --force-recreate
 #
-# Instruction pour effacer toutes les images, conteneurs, volumes et éléments de Docker.
+# Instruction pour effacer toutes les images, conteneurs, volumes et éléments de Docker liés au projet.
 # Attention ! Ceci est définitif et doit être utilisé avec précaution et après réflexion.
-#    # Commandes à écrire dans le terminal :
-#        # docker system prune -a --volumes
+#    # Commande à écrire dans le terminal :
+#        # docker compose down -v --rmi all
 ###################################################
 
 ###################################################
@@ -72,6 +78,7 @@ services:
             - "5432:5432"
         volumes:
             - postgres-data:/var/lib/postgresql/
+            - ./backend/internal/database/migrations/postgresql:/docker-entrypoint-initdb.d
         # restart: always
 volumes:
     postgres-data:
