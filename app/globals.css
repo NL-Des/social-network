@@ -26,3 +26,13 @@
   --color-brand-card: var(--dark-bg);
   --font-retro: var(--font-retro);
 }
+
+@keyframes pulseZoom {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}

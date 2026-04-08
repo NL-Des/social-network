@@ -2,6 +2,11 @@
 @layer properties {
   @supports (((-webkit-hyphens: none)) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color: rgb(from red r g b)))) {
     *, :before, :after, ::backdrop {
+      --tw-rotate-x: initial;
+      --tw-rotate-y: initial;
+      --tw-rotate-z: initial;
+      --tw-skew-x: initial;
+      --tw-skew-y: initial;
       --tw-space-y-reverse: 0;
       --tw-border-style: solid;
       --tw-font-weight: initial;
@@ -339,10 +344,6 @@
     height: calc(var(--spacing) * 17);
   }
 
-  .h-18 {
-    height: calc(var(--spacing) * 18);
-  }
-
   .h-52 {
     height: calc(var(--spacing) * 52);
   }
@@ -381,6 +382,18 @@
 
   .max-w-md {
     max-width: var(--container-md);
+  }
+
+  .transform {
+    transform: var(--tw-rotate-x, ) var(--tw-rotate-y, ) var(--tw-rotate-z, ) var(--tw-skew-x, ) var(--tw-skew-y, );
+  }
+
+  .animate-\[pulseZoom_2\.5s_ease-in-out_infinite\] {
+    animation: 2.5s ease-in-out infinite pulseZoom;
+  }
+
+  .animate-\[pulseZoom_3s_ease-in-out_infinite\] {
+    animation: 3s ease-in-out infinite pulseZoom;
   }
 
   .cursor-pointer {
@@ -582,6 +595,41 @@
   --light-blue-text: #cfe8ff;
   --dark-bg: #081222;
   --font-retro: "Press Start 2P", system-ui, cursive;
+}
+
+@keyframes pulseZoom {
+  0%, 100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@property --tw-rotate-x {
+  syntax: "*";
+  inherits: false
+}
+
+@property --tw-rotate-y {
+  syntax: "*";
+  inherits: false
+}
+
+@property --tw-rotate-z {
+  syntax: "*";
+  inherits: false
+}
+
+@property --tw-skew-x {
+  syntax: "*";
+  inherits: false
+}
+
+@property --tw-skew-y {
+  syntax: "*";
+  inherits: false
 }
 
 @property --tw-space-y-reverse {
