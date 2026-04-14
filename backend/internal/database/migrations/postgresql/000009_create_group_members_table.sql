@@ -1,3 +1,4 @@
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS group_members (
     groupID   INTEGER NOT NULL REFERENCES groups(ID) ON DELETE CASCADE,
     userID    INTEGER NOT NULL REFERENCES users(ID) ON DELETE CASCADE,
@@ -12,3 +13,6 @@ CREATE INDEX IF NOT EXISTS idx_group_members_groupID
 
 CREATE INDEX IF NOT EXISTS idx_group_members_userID
     ON group_members(userID);
+
+-- +migrate Down
+DROP TABLE IF EXISTS group_members;

@@ -13,23 +13,8 @@
 ###################################################
 
 ###################################################
-# Instruction pour installer l'extension pour visualiser la BDD.
-#   # Commande à écrire dans le terminal :
-#       # code --install-extension cweijan.vscode-postgresql-client2
-###################################################
-
-###################################################
 # Instruction pour lancer Docker-Compose.
 #    # Commande à écrire dans le terminal :
-#        # docker compose up -d --build --remove-orphans --force-recreate
-#
-# Instruction pour lancer Docker-Compose après de profonds changements, sans une réinitialisation du volume.
-#    # Commandes à écrire dans le terminal :
-#        # docker compose up -d --build --remove-orphans --force-recreate
-#
-# Instruction pour lancer Docker-Compose après de profonds changements, avec une réinitialisation du volume.
-#    # Commandes à écrire dans le terminal :
-#        # docker compose down -v
 #        # docker compose up -d --build --remove-orphans --force-recreate
 #
 # Instruction pour effacer toutes les images, conteneurs, volumes et éléments de Docker liés au projet.
@@ -39,32 +24,19 @@
 ###################################################
 
 ###################################################
-# Instruction de lancement du docker si on ne veut pas utiliser le docker-compose.
-#   # Lancement de l'image préconfigurée depuis le terminal:
-#       # docker run --name postgres-db -e POSTGRES_PASSWORD=mypassword -e POSTGRES_USER=myuser -e POSTGRES_DB=mydatabase -p 5432:5432 -v postgres-data:/var/lib/postgresql -d postgres
-#    # Explication du fonctionnement de la commande :
-#      # docker run // Création et lancement du conteneur.
-#        # --name postgres-db // Nom personnalisé du conteneur.
-#        #  -e POSTGRES_PASSWORD=mypassword // mot de passe pour se conencter à la BDD.
-#        #  -e POSTGRES_USER=myuser // Nom d'utilisateur pour se connecter à la BDD.
-#        #  -e POSTGRES_DB=mydatabase // Nom de la BDD, permet la création automatique de la BDD après la création du conteneur.
-#        #  -p 5432:5432 // Ports d'entrées et de sorties.
-#        #  -v postgres-data:/var/lib/postgresql // Localisation du Volume, là où seront stockées les données de la BDD en local sur l'ordinateur.
-#        #  -d postgres // En mode détaché, "postgres" est le nom officiel de l'image à utiliser depuis le Docker HUB.
+# Instruction pour installer l'extension pour visualiser la BDD.
+#   # Commande à écrire dans le terminal :
+#       # code --install-extension cweijan.vscode-postgresql-client2
 ###################################################
 
 ###################################################
 # Pour accéder à la base de données.
-    # Télécharger l'extension VScode :
-        # "PostgreSQL" de Database Client
-    # Redémarrer VScode.
-    # Allez dans l'extension et entrez les informations nécessaires :
-        # Username
-        # Database
-        # Password
-    # Cliquez sur "Connect"
+#    # Allez dans l'extension et entrez les informations contenues dans initdb.go ou dans le .env :
+#        # Username
+#        # Database
+#        # Password
+#    # Cliquez sur "Connect"
 ###################################################
-
 
 services:
     postgres-db:
@@ -78,7 +50,5 @@ services:
             - "5432:5432"
         volumes:
             - postgres-data:/var/lib/postgresql/
-            - ./backend/internal/database/migrations/postgresql:/docker-entrypoint-initdb.d
-        # restart: always
 volumes:
     postgres-data:
