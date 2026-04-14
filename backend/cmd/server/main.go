@@ -32,6 +32,8 @@ func main() {
 	mux := http.NewServeMux()
 	// Route principale
 	mux.HandleFunc("/", handlers.HomeHandler)
+	mux.HandleFunc("/auth/login", handlers.LoginHandler)
+	mux.HandleFunc("/auth/register", handlers.RegisterHandler)
 
 	// Démarrer le serveur
 	fmt.Println("Démarrage sur http://localhost:5090")
