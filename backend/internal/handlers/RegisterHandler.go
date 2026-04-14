@@ -42,6 +42,19 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	user.ProfilePicture = r.FormValue("profilePicture")
 	user.IsPrivate = true
 
+	// 1. Vérifier que l'utilisateur n'est pas déjà enregistré
+	//	requête à la db et regarder s'il y a un match => exists == true
+	// if user exists : message d'erreur inviter le user à se login (voire redirection vers la page de login)
+	// response = success : false, error : err
+	// print err dans le terminal
+
+	// 2. Hasher le password
+
+	// 3. Enregistrer le user dans la db
+	// requête db
+	// if err != nil => response = success : false, error : err
+	// print err dans le terminal
+
 	response := map[string]interface{}{
 		"success": true,
 		"user":    user,
