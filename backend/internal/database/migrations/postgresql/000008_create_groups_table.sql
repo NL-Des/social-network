@@ -1,3 +1,4 @@
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS groups (
     ID          SERIAL PRIMARY KEY,
     creatorID   INTEGER REFERENCES users(ID) ON DELETE SET NULL,
@@ -6,3 +7,6 @@ CREATE TABLE IF NOT EXISTS groups (
     description TEXT NOT NULL CHECK (length(trim(description)) > 0 AND length(description) <= 1500),
     createdat   TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+-- +migrate Down
+DROP TABLE IF EXISTS groups;

@@ -11,7 +11,8 @@ import (
 func main() {
 
 	// Gestion serveur.
-	db, err := database.DbOrchestrationDev()
+	// db, err := database.DbOrchestrationDev()
+	db, err := database.DbOrchestration()
 	if err != nil {
 		log.Println("Error with DB", err)
 	}
@@ -23,7 +24,7 @@ func main() {
 		if err != nil {
 			log.Println("Erreur lors du comptage des tables :", err)
 		} else {
-			log.Printf("🔍 La base de données contient actuellement %d tables.", tableCount)
+			log.Printf("La base de données contient actuellement %d tables.", tableCount)
 		}
 	}
 

@@ -1,3 +1,4 @@
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS group_comments (
     ID        SERIAL PRIMARY KEY,
     postID    INTEGER NOT NULL REFERENCES group_posts(ID) ON DELETE CASCADE,
@@ -12,3 +13,6 @@ CREATE INDEX IF NOT EXISTS idx_group_comments_postID
 
 CREATE INDEX IF NOT EXISTS idx_group_comments_authorID
     ON group_comments(authorID);
+
+-- +migrate Down
+DROP TABLE IF EXISTS group_comments;

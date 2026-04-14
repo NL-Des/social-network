@@ -1,3 +1,4 @@
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS messages (
     ID         SERIAL PRIMARY KEY,
     senderID   INTEGER REFERENCES users(ID) ON DELETE SET NULL,
@@ -12,3 +13,6 @@ CREATE INDEX IF NOT EXISTS idx_messages_senderID
 
 CREATE INDEX IF NOT EXISTS idx_messages_receiverID
     ON messages(receiverID);
+
+-- +migrate Down
+DROP TABLE IF EXISTS messages;

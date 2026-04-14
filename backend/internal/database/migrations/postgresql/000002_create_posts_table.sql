@@ -1,3 +1,4 @@
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS posts (
     ID         SERIAL PRIMARY KEY,
     authorID   INTEGER REFERENCES users(ID) ON DELETE SET NULL,
@@ -10,3 +11,6 @@ CREATE TABLE IF NOT EXISTS posts (
 
 CREATE INDEX IF NOT EXISTS idx_posts_authorID
     ON posts(authorID);
+
+-- +migrate Down
+DROP TABLE IF EXISTS posts;

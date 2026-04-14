@@ -1,5 +1,9 @@
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS post_tag (
     postID INTEGER NOT NULL REFERENCES posts(ID) ON DELETE CASCADE,
     tagID  INTEGER NOT NULL REFERENCES tag(ID) ON DELETE CASCADE,
     PRIMARY KEY (postID, tagID)
 );
+
+-- +migrate Down
+DROP TABLE IF EXISTS post_tag;

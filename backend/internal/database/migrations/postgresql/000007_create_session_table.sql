@@ -1,3 +1,4 @@
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS session (
     ID        SERIAL PRIMARY KEY,
     userID    INTEGER NOT NULL REFERENCES users(ID) ON DELETE CASCADE,
@@ -8,3 +9,6 @@ CREATE TABLE IF NOT EXISTS session (
 
 CREATE INDEX IF NOT EXISTS idx_session_userID
     ON session(userID);
+
+-- +migrate Down
+DROP TABLE IF EXISTS session;
