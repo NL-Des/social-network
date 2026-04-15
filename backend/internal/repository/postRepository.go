@@ -36,14 +36,14 @@ func (r *PostRepo) CreateNewPost(authorID string, postData model.Post) error {
 * Mise à jour d'un post dans la base de données après modification par l'utilisateur
 * Paramètres : ID du poste, titre et contenu, niveau de confidentialité
 */
-func (r *PostRepo) UpdateExistingPost(postID int, postData model.Post) error {
+func (r *PostRepo) UpdateExistingPost(postData model.Post) error {
 	postData.Title = template.HTMLEscapeString(strings.TrimSpace(postData.Title))
 	updateTime := time.Now()
 
 	_, err := r.db.Exec(
 		`UPDATE posts SET title = ?, content = ?, privacy = ?, updatedat = ?
 		WHERE ID = ?
-		`, postData.Title, postData.Content, postData.Privacy, updateTime, postID)
+		`, postData.Title, postData.Content, postData.Privacy, updateTime, postData.ID)
 
 	return err
 }

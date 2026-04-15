@@ -1,6 +1,8 @@
 package repository
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 type TagRepo struct {
 	db *sql.DB
@@ -70,9 +72,21 @@ func (r *TagRepo) GetTagID(tagName string) (error, int) {
 */
 func (r *TagRepo) CreateNewTag(tagName string) error {
 	_, err := r.db.Exec(
-		`INSERT INTO tags (name)
+		`INSERT INTO tag (name)
 		VALUES (?)
 		`, tagName)
 
 		return err
+}
+
+/*
+*
+*/
+func (r *TagRepo) DeletePostTags(postID int) error {
+	_, err := r.db.Exec(`
+	DELETE FROM tag
+	WHERE postID = ?
+	`, postID)
+
+	return err
 }

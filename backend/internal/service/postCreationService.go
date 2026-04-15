@@ -92,3 +92,24 @@ func (s *PostAndCommentsService) DeleteComment(commentID int, mode string) error
 
 	return nil
 }
+
+/*
+* Gère la modification d'un post 
+* 1. Met à jour content, title et privacy
+* 2. Vérifie si des tags ont été ajoutés et les ajoute si c'est le cas
+*/
+func (s *PostAndCommentsService) EditPost(postData model.Post) error {
+	err := s.postRepo.UpdateExistingPost(postData)
+	if err != nil {
+		return err
+	}
+
+	s.tagRepo.DeletePostTags(postData.ID)
+	s.tagRepo.AddPostTags(postData.ID, postData.Tags)
+
+	return nil
+}
+
+func (s *PostAndCommentsService) EditComment(commentID int, content string) error {
+	return s.commentRepo.UpdateExistingComment(commentID, content)
+}
