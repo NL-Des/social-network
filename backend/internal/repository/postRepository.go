@@ -81,3 +81,24 @@ func (r *PostRepo) GetPostIDFromContent(authorID, content string) (int, error) {
 
 	return postID, nil
 }
+
+/*
+* Récupère l'ID de l'auteur d'un post particulier
+* Paramètres : ID du post
+*/
+func (r *PostRepo) GetPostAuthorID(postID int) (string, error) {
+	row := r.db.QueryRow(`
+	SELECT authorID
+	FROM posts
+	WHERE ID = ?
+	`, postID)
+
+	authorID := ""
+
+	err := row.Scan(&authorID)
+	if err != nil || authorID == "" {
+		return "", err
+	}
+
+	return authorID, nil
+}

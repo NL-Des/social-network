@@ -55,3 +55,24 @@ func (r *CommentRepo) DeleteExistingComment(commentID int) error {
 
 		return err
 }
+
+/*
+* Récupère l'ID de l'auteur d'un commentaire
+* Paramètres : ID du post
+*/
+func (r *CommentRepo) GetCommentAuthorID(commentID int) (string, error) {
+	row := r.db.QueryRow(`
+	SELECT authorID
+	FROM comments
+	WHERE ID = ?
+	`, commentID)
+
+	authorID := ""
+
+	err := row.Scan(&authorID)
+	if err != nil || authorID == "" {
+		return "", err
+	}
+
+	return authorID, nil
+}
