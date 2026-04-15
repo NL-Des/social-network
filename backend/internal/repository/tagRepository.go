@@ -48,7 +48,7 @@ func (r *TagRepo) AddPostTags(postID int, TagList []string) error {
 */
 func (r *TagRepo) GetTagID(tagName string) (error, int) {
 	row := r.db.QueryRow(`
-	SELECT id
+	SELECT ID
 	FROM tag
 	WHERE name = ?
 	`, tagName)

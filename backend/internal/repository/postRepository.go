@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"html/template"
+	"social-network/backend/internal/model"
 	"strings"
 	"time"
 )
@@ -20,13 +21,13 @@ func NewPostRepo(db *sql.DB) *PostRepo{
 * Paramètres : ID du posteur, titre (optionnel) et contenu du post, niveau de confidentialité
 
 */
-func (r *PostRepo) CreateNewPost(authorID, title, content, privacy string) error {
-	title = template.HTMLEscapeString(strings.TrimSpace(title))
+func (r *PostRepo) CreateNewPost(authorID string, postData model.Post) error {
+	postData.Title = template.HTMLEscapeString(strings.TrimSpace(postData.Title))
 	
 	_, err := r.db.Exec(
 		`INSERT INTO posts (authorID, title, content, privacy)
 		VALUES (?, ?, ?, ?)
-		`, authorID, title, content, privacy)
+		`, authorID, postData.Title, postData.Content, postData.Privacy)
 
 		return err
 }
@@ -35,14 +36,14 @@ func (r *PostRepo) CreateNewPost(authorID, title, content, privacy string) error
 * Mise à jour d'un post dans la base de données après modification par l'utilisateur
 * Paramètres : ID du poste, titre et contenu, niveau de confidentialité
 */
-func (r *PostRepo) UpdateExistingPost(postID int, title, content, privacy string) error {
-	title = template.HTMLEscapeString(strings.TrimSpace(title))
+func (r *PostRepo) UpdateExistingPost(postID int, postData model.Post) error {
+	postData.Title = template.HTMLEscapeString(strings.TrimSpace(postData.Title))
 	updateTime := time.Now()
 
 	_, err := r.db.Exec(
 		`UPDATE posts SET title = ?, content = ?, privacy = ?, updatedat = ?
 		WHERE ID = ?
-		`, title, content, privacy, updateTime, postID)
+		`, postData.Title, postData.Content, postData.Privacy, updateTime, postID)
 
 	return err
 }
@@ -58,4 +59,25 @@ func (r *PostRepo) DeleteExistingPost(postID int) error {
 		`, postID)
 
 		return err
+}
+
+/*
+* Récupère l'ID d'un post à partir du contenu du message
+* Paramètres : ID de l'auteur du post et contenu du message
+*/
+func (r *PostRepo) GetPostIDFromContent(authorID, content string) (int, error) {
+	row := r.db.QueryRow(`
+	SELECT ID
+	FROM posts
+	WHERE content = ?, authorID = ?
+	`, content, authorID)
+
+	postID := 0
+
+	err := row.Scan(&postID)
+	if err != nil || postID == 0 {
+		return 0, err
+	}
+
+	return postID, nil
 }
