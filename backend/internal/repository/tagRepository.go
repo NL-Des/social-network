@@ -80,7 +80,8 @@ func (r *TagRepo) CreateNewTag(tagName string) error {
 }
 
 /*
-*
+* Supprime tous les tags d'un post 
+* Paramètres : ID du post
 */
 func (r *TagRepo) DeletePostTags(postID int) error {
 	_, err := r.db.Exec(`
