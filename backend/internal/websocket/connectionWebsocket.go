@@ -25,9 +25,9 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, userID int64) {
     client := NewClient(hub, conn, userID)
 
     // 3. Enregistrer le client dans le Hub
-    hub.register <- client
+    hub.Register <- client
 
     // 4. Lancer les goroutines
-    go client.writePump()
-    go client.readPump()
+    go client.WritePump()
+    go client.ReadPump()
 }

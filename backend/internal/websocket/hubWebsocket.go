@@ -8,14 +8,17 @@ import (
 
 type Hub struct {
 	//Map des clients connectés : plus efficace qu'une liste. Le booléen est toujours égal à VRAI
-    clients    map[*Client]bool 
+    Clients    map[*Client]bool 
 	//Channels de connection et déconnection: 
 	// Un client qui se connecte/déconnecte est envoyé dessus, 
 	// le hub écoute en permanence et agit en conséquence
-    register   chan *Client
-    unregister chan *Client
+    Register   chan *Client
+    Unregister chan *Client
 	//Nécessaire pour la lecture/écriture simultanée dans clients via des goroutines
-    mu         sync.RWMutex
+    Mu         sync.RWMutex
+    Quit       chan struct{} // Pour fermer le hub lors des tests
+    OnMessage func(c *Client, raw []byte) //Temporaires, Pour les tests
+    
 }
 
 type MessageWs struct {
@@ -27,9 +30,10 @@ type MessageWs struct {
 // Constructeur : créé un hub vide
 func NewHub() *Hub {
     return &Hub{
-        clients:    make(map[*Client]bool),
-        register:   make(chan *Client),
-        unregister: make(chan *Client),
+        Clients:    make(map[*Client]bool),
+        Register:   make(chan *Client),
+        Unregister: make(chan *Client),
+        Quit:       make(chan struct{}),
     }
 }
 
@@ -42,18 +46,20 @@ func NewHub() *Hub {
 func (h *Hub) Run() {
     for {
         select {
-        case client := <-h.register:
-            h.mu.Lock()
-            h.clients[client] = true
-            h.mu.Unlock()
+        case client := <-h.Register:
+            h.Mu.Lock()
+            h.Clients[client] = true
+            h.Mu.Unlock()
 		
-        case client := <-h.unregister:
-            h.mu.Lock()
-            if _, ok := h.clients[client]; ok {
-                delete(h.clients, client)
-                close(client.send)
+        case client := <-h.Unregister:
+            h.Mu.Lock()
+            if _, ok := h.Clients[client]; ok {
+                delete(h.Clients, client)
+                close(client.Send)
             }
-            h.mu.Unlock()
+            h.Mu.Unlock()
+            case <-h.Quit:
+                return
         }
     }
 }
@@ -61,19 +67,24 @@ func (h *Hub) Run() {
 //Un utilisateurs peut avoir plusieurs clients (plusieurs onglet, plusieurs navigateurs, etc.)
 //La fonction transmet le message à tous les clients d'un même utilisateur
 func (h *Hub) BroadcastToUser(userID int64, message MessageWs) {
-    h.mu.RLock()
-    defer h.mu.RUnlock()
+    h.Mu.RLock()
+    defer h.Mu.RUnlock()
 
-    for client := range h.clients {
+    for client := range h.Clients {
         if client.UserID == userID {
             jsonBytes, _ := utils.EncodeMessage(message)
-			client.send <- jsonBytes
+			client.Send <- jsonBytes
 
         }
     }
 }
 
 func (h *Hub) RouteMessage(c *Client, raw []byte) {
-    // Pour l'instant on log, plus tard on branchera le router
+    if h.OnMessage != nil {
+        h.OnMessage(c, raw)
+        return
+    }
+
     fmt.Println("Message reçu :", string(raw))
 }
+

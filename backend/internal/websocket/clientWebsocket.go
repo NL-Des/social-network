@@ -23,7 +23,7 @@ type Client struct {
 
     //"File d'attente" -> stock les messages du hub à destination du client 
 	//le temps qu'ils soient envoyés au websocket du client
-    send chan []byte
+    Send chan []byte
     UserID int64
 }
 
@@ -35,12 +35,12 @@ func NewClient(hub *Hub, conn *websocket.Conn, userID int64) *Client {
         // Channel bufferisé :
         //  - taille 256 messages
         //  - évite de bloquer immédiatement si le client ne lit pas assez vite
-        send:   make(chan []byte, 256),
+        Send:   make(chan []byte, 256),
         UserID: userID,
     }
 }
 
-func (c *Client) writePump() {
+func (c *Client) WritePump() {
     ticker := time.NewTicker(pingPeriod)
     defer func() {
         ticker.Stop()
@@ -50,7 +50,7 @@ func (c *Client) writePump() {
     for {
         select {
         // Le Hub a envoyé un message dans client.send
-        case message, ok := <-c.send:
+        case message, ok := <-c.Send:
             c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
             if !ok {
                 // Le Hub a fermé le channel → on ferme la WS
@@ -74,10 +74,10 @@ func (c *Client) writePump() {
 }
 
 
-func (c *Client) readPump() {
+func (c *Client) ReadPump() {
     defer func() {
         // Quand readPump se termine, la connexion est morte
-        c.Hub.unregister <- c
+        c.Hub.Unregister <- c
         c.Conn.Close()
     }()
 
