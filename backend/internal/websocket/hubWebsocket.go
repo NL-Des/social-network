@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"fmt"
 	"social-network/backend/internal/websocket/utils"
 	"sync"
 )
@@ -70,4 +71,9 @@ func (h *Hub) BroadcastToUser(userID int64, message MessageWs) {
 
         }
     }
+}
+
+func (h *Hub) RouteMessage(c *Client, raw []byte) {
+    // Pour l'instant on log, plus tard on branchera le router
+    fmt.Println("Message reçu :", string(raw))
 }
