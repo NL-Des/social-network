@@ -118,3 +118,21 @@ func (s *PostAndCommentsService) EditPost(postData model.Post) error {
 func (s *PostAndCommentsService) EditComment(commentID int, content string) error {
 	return s.commentRepo.UpdateExistingComment(commentID, content)
 }
+
+/*
+* Gère la récupération d'un post et de ses commentaires pour l'afficher
+* Paramètres : ID du post
+*/
+func (s *PostAndCommentsService) DisplayPostAndComments (postID int) (model.Post, error) {
+	post, err := s.postRepo.GetPostFromID(postID)
+	if err != nil {
+		return model.Post{}, err
+	}
+	post.Comments, err = s.commentRepo.GetCommentsFromPostID(postID)
+	if err != nil {
+		return model.Post{}, err
+	}
+
+	return post, nil
+
+}

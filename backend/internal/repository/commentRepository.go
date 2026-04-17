@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"social-network/backend/internal/model"
 	"time"
 )
 
@@ -75,4 +76,33 @@ func (r *CommentRepo) GetCommentAuthorID(commentID int) (string, error) {
 	}
 
 	return authorID, nil
+}
+
+func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error) {
+	rows, err := r.db.Query(
+		`SELECT c.ID, c.content, c.createdat, c.updatedat, u.username, u.avatar
+		FROM comments c
+		JOIN users u ON c.authorID = u.ID
+		WHERE postID = ?
+		`,postID)
+		if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var comments = []model.Comment{}
+	for rows.Next() {
+		comment := model.Comment{}
+		if err := rows.Scan(&comment.ID, &comment.Content, &comment.CreatedAt, &comment.Author.Username, &comment.Author.Avatar); err != nil {
+			return nil, err
+		}
+		
+		comments = append(comments, comment)
+	}
+
+	if err := rows.Err(); err != nil {
+    return nil, err
+}
+   
+    return comments, nil
 }
