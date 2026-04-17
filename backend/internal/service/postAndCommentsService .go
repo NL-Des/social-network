@@ -123,7 +123,7 @@ func (s *PostAndCommentsService) EditComment(commentID int, content string) erro
 * Gère la récupération d'un post et de ses commentaires pour l'afficher
 * Paramètres : ID du post
 */
-func (s *PostAndCommentsService) DisplayPostAndComments (postID int) (model.Post, error) {
+func (s *PostAndCommentsService) DisplayPostAndComments(postID int) (model.Post, error) {
 	post, err := s.postRepo.GetPostFromID(postID)
 	if err != nil {
 		return model.Post{}, err

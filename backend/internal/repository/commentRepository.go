@@ -78,6 +78,10 @@ func (r *CommentRepo) GetCommentAuthorID(commentID int) (string, error) {
 	return authorID, nil
 }
 
+/*
+* Récupère tous les commentaires d'un post
+* Paramètres : ID du post
+*/
 func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error) {
 	rows, err := r.db.Query(
 		`SELECT c.ID, c.content, c.createdat, c.updatedat, u.username, u.avatar
