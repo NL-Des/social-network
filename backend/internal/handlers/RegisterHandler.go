@@ -57,11 +57,21 @@ func (h *Handler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//Vérification pour éviter doublon
-	exists, err := repository.UserExists(user.Email, h.DB)
-	if exists || err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	//Vérification pour éviter doublon email ou pseudo
+	exists, field, err := repository.UserExists(user.Email, user.UserName, h.DB)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+	if exists {
+		if field == "email" {
+			http.Error(w, "email déjà utilisé", http.StatusBadRequest)
+			return
+		}
+		if field == "username" {
+			http.Error(w, "pseudo déjà utilisé", http.StatusBadRequest)
+			return
+		}
 	}
 
 	hashedPassword, err := service.HashPassword(user.Password)
