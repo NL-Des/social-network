@@ -1,15 +1,22 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"social-network/backend/internal/model"
+	"social-network/backend/internal/repository"
+	"social-network/backend/internal/service"
 )
+
+// TEST avec curl
+// curl -X POST http://localhost:5090/auth/login \
+//   -H "Content-Type: application/json" \
+//   -d '{"email":"email@email.com","password":"password"}'
 
 // LoginHandler récupère les données de connexion et les traites
 func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Requête à LoginHandler")
 	// permet aux deux serveurs de communiquer sans que le navigateur les bloque
 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
@@ -33,14 +40,20 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var savedUser model.LoginUser
-	// Chercher user en db
-	savedUser, err = GetUserbyEmail(credentials.Email, h.DB)
+
+	savedUser, err = repository.GetUserCredsbyEmail(credentials.Email, h.DB)
 	if err != nil {
-		http.Error(w, "Unable to get user from db", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	//Comparer passwords
+	if !service.IsValidPassword(credentials.Password, savedUser.Password) {
+		http.Error(w, "Mot de passe incorrect", http.StatusBadRequest)
+		return
+	}
+
+	// -- A insérer : Générer session et renvoyer cookie --
+
 	response := map[string]interface{}{
 		"success": true,
 	}
@@ -48,32 +61,4 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode((response))
 
-	fmt.Printf("Credentials récupéré : %s, %s\n", credentials.Email, credentials.Password)
-}
-
-func GetUserbyEmail(email string, db *sql.DB) (model.LoginUser, error) {
-	var user model.LoginUser
-
-	err := db.QueryRow(`
-		SELECT id, email, password
-		FROM users
-		WHERE email = $1
-	`, email).Scan(
-		&user.ID,
-		&user.Email,
-		&user.Password,
-	)
-
-	if err != nil {
-		return model.LoginUser{}, err
-	}
-	return user, nil
-}
-
-func IsValidPassword(password, savedPasseword string) bool {
-	if password != savedPasseword {
-		return false
-	}
-
-	return true
 }

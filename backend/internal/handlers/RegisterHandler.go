@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"net/http"
 	"social-network/backend/internal/model"
+	"social-network/backend/internal/repository"
 	"social-network/backend/internal/service"
 )
 
 // * Commande pour tester la handler sans front *
-// curl -X POST http://localhost:5090/auth/register \
-// -H "Content-Type: application/json" \
-// -d '{"name": "lad", "firstName": "val", "birthday": "01/01/01"; "email": "email@email.com", "password": "password", "confirmPassword": "password", "userName": "vallad", "description": "", "profilePicture": ""}'
-
+// curl -X POST http://localhost:5090/auth/register   -F "name=labo"   -F "firstName=loli"   -F "birthday=01/01/01"   -F "email=email2@email.com"   -F "password=password"   -F "confirmPassword=password"   -F "userName=lolilab"   -F "descriptio
+// n="   -F "profilePicture="
 // LoginHandler récupère les données de l'inscription et les traites
 func (h *Handler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// permet aux deux serveurs de communiquer sans que le navigateur les bloque
@@ -51,13 +50,15 @@ func (h *Handler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	user.ProfilePicture = r.FormValue("profilePicture")
 	user.IsPrivate = true
 
+	// Vérifications des données reçues
 	err = service.ValidUserData(user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	exists, err := service.UserExists(user.Email, h.DB)
+	//Vérification pour éviter doublon
+	exists, err := repository.UserExists(user.Email, h.DB)
 	if exists || err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -71,14 +72,12 @@ func (h *Handler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	user.Password = hashedPassword
 
-	err = service.SaveUser(user, h.DB)
+	err = repository.SaveUser(user, h.DB)
 	if err != nil {
 		fmt.Print(err)
 		http.Error(w, "unable to save user into db", http.StatusInternalServerError)
 		return
 	}
-
-	fmt.Print("user saved")
 
 	response := map[string]interface{}{
 		"success": true,
