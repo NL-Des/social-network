@@ -35,7 +35,7 @@ func main() {
 	mux := http.NewServeMux()
 	// Route principale
 	mux.HandleFunc("/", handlers.HomeHandler)
-	mux.HandleFunc("/auth/login", handlers.LoginHandler)
+	mux.HandleFunc("/auth/login", h.LoginHandler)
 	mux.HandleFunc("/auth/register", h.RegisterHandler)
 
 	// Démarrer le serveur
