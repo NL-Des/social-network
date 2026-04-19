@@ -55,20 +55,32 @@ func GetUserCredsbyEmail(email string, db *sql.DB) (model.LoginUser, error) {
 	return user, nil
 }
 
-func UserExists(email string, db *sql.DB) (bool, error) {
-	var id int
+func UserExists(email, username string, db *sql.DB) (bool, string, error) {
+	var existingEmail, existingUsername string
 
-	err := db.QueryRow("SELECT id FROM users WHERE email=$1", email).Scan(&id)
+	err := db.QueryRow(`
+		SELECT email, pseudo
+		FROM users
+		WHERE email = $1 OR pseudo = $2
+	`, email, username).Scan(&existingEmail, &existingUsername)
 
 	if err == sql.ErrNoRows {
-		return false, nil
+		return false, "", nil
 	}
 
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
-	return true, errors.New("email already registered")
+	if existingEmail == email {
+		return true, "email", nil
+	}
+
+	if existingUsername == username {
+		return true, "username", nil
+	}
+
+	return false, "", nil
 }
 
 // *** INSERT ***
