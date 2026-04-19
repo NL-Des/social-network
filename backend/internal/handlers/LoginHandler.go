@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -8,7 +9,7 @@ import (
 )
 
 // LoginHandler récupère les données de connexion et les traites
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// permet aux deux serveurs de communiquer sans que le navigateur les bloque
 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
@@ -30,6 +31,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erreur de lecture du JSON", http.StatusBadRequest)
 		return
 	}
+
+	var savedUser model.LoginUser
+	// Chercher user en db
+	savedUser, err = GetUserbyEmail(credentials.Email, h.DB)
+	if err != nil {
+		http.Error(w, "Unable to get user from db", http.StatusInternalServerError)
+		return
+	}
+
+	//Comparer passwords
 	response := map[string]interface{}{
 		"success": true,
 	}
@@ -38,4 +49,31 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode((response))
 
 	fmt.Printf("Credentials récupéré : %s, %s\n", credentials.Email, credentials.Password)
+}
+
+func GetUserbyEmail(email string, db *sql.DB) (model.LoginUser, error) {
+	var user model.LoginUser
+
+	err := db.QueryRow(`
+		SELECT id, email, password
+		FROM users
+		WHERE email = $1
+	`, email).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Password,
+	)
+
+	if err != nil {
+		return model.LoginUser{}, err
+	}
+	return user, nil
+}
+
+func IsValidPassword(password, savedPasseword string) bool {
+	if password != savedPasseword {
+		return false
+	}
+
+	return true
 }
