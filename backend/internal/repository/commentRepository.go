@@ -2,7 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"social-network/backend/internal/model"
+	/* "social-network/backend/internal/model" */
 	"time"
 )
 
@@ -82,7 +82,7 @@ func (r *CommentRepo) GetCommentAuthorID(commentID int) (string, error) {
 * Récupère tous les commentaires d'un post
 * Paramètres : ID du post
 */
-func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error) {
+/* func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error) {
 	rows, err := r.db.Query(
 		`SELECT c.ID, c.content, c.createdat, c.updatedat, u.username, u.avatar
 		FROM comments c
@@ -109,4 +109,4 @@ func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error)
 }
    
     return comments, nil
-}
+} */
