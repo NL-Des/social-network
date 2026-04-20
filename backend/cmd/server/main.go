@@ -28,10 +28,15 @@ func main() {
 		}
 	}
 
+	//Injection de la db dans les handlers
+	h := &handlers.Handler{DB: db}
+
 	// creation du mux
 	mux := http.NewServeMux()
 	// Route principale
 	mux.HandleFunc("/", handlers.HomeHandler)
+	mux.HandleFunc("/auth/login", h.LoginHandler)
+	mux.HandleFunc("/auth/register", h.RegisterHandler)
 
 	// Démarrer le serveur
 	fmt.Println("Démarrage sur http://localhost:5090")
