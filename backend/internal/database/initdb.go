@@ -4,106 +4,83 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 
 	_ "github.com/lib/pq"
+	migrate "github.com/rubenv/sql-migrate"
 )
 
 func DbOrchestration() (*sql.DB, error) {
-	var db *sql.DB
-	var err error
-	// Les variables qui suivent seront à remplir avec les futures données du .env.
-	// pathDB := "./backend/internal/database/database.sql"
-	pathCreateDB := "./backend/internal/database/001_createtable.sql"
-	login := "myuser"
+	// Paramètres de connexions, à mettre dans le .env une fois le développement fini.
+	host := "localhost"
+	port := 5432
+	user := "myuser"
 	password := "mypassword"
-	nameDatabase := "mydatabase"
+	dbname := "mydatabase"
 	sslmode := "disable"
 
-	// Vérification des chemins BDD et de créations de tables.
-	resultPathCreateDB := pathToTheFileToCreateTheTables(pathCreateDB)
-	resultPathDB := doesTheDBExist(login, password, nameDatabase, sslmode)
+	// Concaténation des informations de connexions.
+	stringOfConnection := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		host, port, user, password, dbname, sslmode)
 
-	if resultPathCreateDB && resultPathDB {
-		log.Println("DB already existing.")
-		log.Println("Initialisation of DB")
-		db = connexionToTheDB(login, password, nameDatabase, sslmode)
-		log.Println("Connection to the DB")
-		verficationConnexion(db)
-		log.Println("DB launch")
-	} else if resultPathCreateDB && resultPathDB == false {
-		log.Println("DB doesn't exist.")
-		log.Println("Creating DB.")
-		db = connexionToTheDB(login, password, nameDatabase, sslmode)
-		createDB(pathCreateDB, db)
-		log.Println("Initialisation of DB")
-		verficationConnexion(db)
-		log.Println("Connection to the DB")
-		log.Println("DB launch")
+	// Envoi des informations de connexions à la BDD.
+	db, err := sql.Open("postgres", stringOfConnection)
+	if err != nil {
+		log.Fatalln("Error connexion to BDD : %w", err)
 	}
+
+	// Tentative de connexion à la BDD.
+	err = db.Ping()
+	// Si la tentative de connexion ne fonctionne pas, cela veut dire que la BDD n'existe pas.
+	// Le conteneur Docker contient une BDD postgre préconfigurée, c'est à elle que nous allons
+	// tenter de nous connecter pour ensuite créer notre propre base de donnée. Il semblerait que
+	// soit une obligation dans le processus de création.
+	if err != nil {
+		log.Println("La base de données n'existe pas. Création de la BDD en cours...")
+		// Création de la BDD.
+		createDatabaseIfNotExists(user, password, host, port, dbname)
+		// Reconnexion après construction de la BDD.
+		db, _ = sql.Open("postgres", stringOfConnection)
+	}
+
+	// Lancement des migrations, même si la BDD existait déjà.
+	log.Println("Vérification et application des migrations...")
+	n, err := applyMigrations(db)
+	if err != nil {
+		log.Fatalln("Error migration : %w", err)
+	}
+
+	if n > 0 {
+		log.Printf("Succès : %d nouvelles migrations appliquées.", n)
+	} else {
+		log.Println("Base de données déjà à jour, aucunes modifications appliquées.")
+	}
+
 	return db, err
 }
 
-// Vérification, si le chemin vers le fichier de création des tables est bon.
-func pathToTheFileToCreateTheTables(pathCreateDB string) bool {
-	testIfFileToCreateDBExist, err := os.Stat(pathCreateDB)
-	if err != nil {
-		// Vérification, si le fichier de création de la BDD existe.
-		if testIfFileToCreateDBExist == nil {
-			log.Println("Error with variable testIfFileToCreateDBExist, file to create db doesn't exist")
-		}
-		log.Fatalln("Error with variable testIfDBExist for the file to create tables(001_createtable.sql) : ", err)
+// Fonction pour appliquer les migrations via le package sql-migrate.
+func applyMigrations(db *sql.DB) (int, error) {
+	migrations := &migrate.FileMigrationSource{
+		Dir: "internal/database/migrations/postgresql",
 	}
-	return true
+
+	// migrate.Up appliquera uniquement les fichiers .sql qui n'ont pas encore été exécutés
+	return migrate.Exec(db, "postgres", migrations, migrate.Up)
 }
 
-// Vérification, si la BDD existe.
-func doesTheDBExist(login string, password string, nameDatabase string, sslmode string) bool {
-	// Tentative de connexion.
-	connexionString := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=%s", login, password, nameDatabase, sslmode)
-	db, err := sql.Open("postgres", connexionString)
+// Si la BDD n'existe pas, création.
+func createDatabaseIfNotExists(user, password, host string, port int, dbname string) {
+	// Connexion à la BDD pour pouvoir la créer.
+	stringOfConnectionToPostgreDb := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=postgres sslmode=disable", host, port, user, password)
+	db, err := sql.Open("postgres", stringOfConnectionToPostgreDb)
 	if err != nil {
-		return false
+		log.Fatalln("Impossible to connect to the DB during the processus of creation of the DB : %w", err)
 	}
 	defer db.Close()
-	// Si la connexion est détectée, on vérifie que la BDD est réellement accessible ou non dysfonctionnelle.
-	err = db.Ping()
-	if err != nil {
-		return false
-	}
-	return true
-}
-
-// Création de la BDD.
-func createDB(pathCreateDB string, db *sql.DB) {
-	// Lecture et chargement des tables dans createDB.
-	DBCreation, err := os.ReadFile(pathCreateDB)
-	if err != nil {
-		log.Fatalln("Error with variable createDB for reading the file to create the DB : ", err)
-	}
 
 	// Création de la BDD.
-	_, err = db.Exec(string(DBCreation))
+	_, err = db.Exec(fmt.Sprintf("Creation of Database with the following name : %s", dbname))
 	if err != nil {
-		log.Fatalln("Error during creation of the DB : ", err)
-	}
-}
-
-// AvecPostreSQL, il faut envoyer un login pour pouvoir y accèder.
-// Ici, sql.Open, va vérifier si nos arguments de connections sont valides.
-func connexionToTheDB(login string, password string, nameDatabase string, sslmode string) *sql.DB {
-	// Construction de la chaîne de constructions.
-	connexionString := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=%s", login, password, nameDatabase, sslmode)
-	db, err := sql.Open("postgres", connexionString)
-	if err != nil {
-		log.Fatalln("Error opening to the DB :", err)
-	}
-	return db
-}
-
-// Vérification, si nous sommes bien connectés à la BDD.
-func verficationConnexion(db *sql.DB) {
-	if err := db.Ping(); err != nil {
-		log.Fatalln("Error connecting to the DB : ", err)
+		log.Fatalln("Impossible to create DB : %w", err)
 	}
 }

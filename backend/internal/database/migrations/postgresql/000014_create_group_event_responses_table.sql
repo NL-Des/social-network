@@ -1,3 +1,4 @@
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS group_event_responses (
     ID          SERIAL PRIMARY KEY,
     eventID     INTEGER NOT NULL REFERENCES group_events(ID) ON DELETE CASCADE,
@@ -11,3 +12,6 @@ CREATE INDEX IF NOT EXISTS idx_group_event_responses_eventID
 
 CREATE INDEX IF NOT EXISTS idx_group_event_responses_userID
     ON group_event_responses(userID);
+
+-- +migrate Down
+DROP TABLE IF EXISTS group_event_responses;
