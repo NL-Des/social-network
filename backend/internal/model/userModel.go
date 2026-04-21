@@ -10,7 +10,6 @@ type User struct {
 	Description    string `json:"description"`
 	ProfilePicture string `json:"profilePicture"`
 	IsPrivate      bool   `json:"isprivate"`
-	Avatar string `json:"avatar`
 }
 /* Sauvegarde pour prévenir un nettoyage trop profond de fonctionnalités potentiellement encore en développement.
 package model
