@@ -43,6 +43,7 @@ func (lh *LoginHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := lh.UserService.Login(credentials.Email, credentials.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	// -- A insérer : Générer session et renvoyer cookie --

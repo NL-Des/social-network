@@ -18,9 +18,10 @@ func NewUserService(ur *repository.UserRepo) *UserService {
 
 // REGISTER
 
-func (s *UserService) Register(user model.RegisterUser) error {
+func (s *UserService) Register(userData model.RegisterUser) error {
 	// 1. validation des données reçues
-	if err := s.validateUserData(user); err != nil {
+	user, err := s.validateUserData(userData)
+	if err != nil {
 		return err
 	}
 
@@ -31,10 +32,10 @@ func (s *UserService) Register(user model.RegisterUser) error {
 	}
 	if exists {
 		if field == "email" {
-			return errors.New("email already used")
+			return errors.New("email déjà utilisé")
 		}
 		if field == "username" {
-			return errors.New("username already used")
+			return errors.New("username déjà utilisé")
 		}
 	}
 
@@ -51,15 +52,24 @@ func (s *UserService) Register(user model.RegisterUser) error {
 
 // Vérification || Email et passeword non vides.
 // Password et confirmPassword identiques.
-func (s *UserService) validateUserData(user model.RegisterUser) error {
+func (s *UserService) validateUserData(user model.RegisterUser) (model.RegisterUser, error) {
 	if user.Email == "" || user.Password == "" {
-		return errors.New("empty email or password")
+		err := errors.New("email ou mot de passe vide")
+		return model.RegisterUser{}, err
 	}
 
 	if user.Password != user.ConfirmPassword {
-		return errors.New("different passwords")
+		err := errors.New("les mots de passe ne sont pas identiques")
+		return model.RegisterUser{}, err
 	}
-	return nil
+
+	validUser := user
+
+	if user.Username == "" {
+		username := user.FirstName + "." + user.Name
+		validUser.Username = username
+	}
+	return validUser, nil
 }
 
 func (s *UserService) hashPassword(password string) (string, error) {
@@ -79,7 +89,7 @@ func (s *UserService) Login(email, password string) (model.LoginUser, error) {
 	// Comparaison des mots de passe hashés
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return model.LoginUser{}, errors.New("invalid password")
+		return model.LoginUser{}, errors.New("mot de passe incorrect")
 	}
 
 	return user, nil
