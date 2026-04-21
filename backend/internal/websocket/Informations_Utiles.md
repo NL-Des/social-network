@@ -37,3 +37,31 @@
 │ Client │ ──(via readPump)──> │ Hub │ ──(via router)──> │ Module concerné  │
 └────────┘                     └─────┘                   └──────────────────┘
 ```
+
+## Formats des mesages WS
+
+# Private message
+
+```
+Type: "private:sending"
+Data: map[string]interface{}{
+       "from_id": ,
+       "from_username": ,
+       "from_avatar": ,
+       "to_id": ,
+       "message_id": ,
+       "message_content": ,
+       "posted_at": ,
+}
+```
+
+# Is-typing
+
+```
+Type: "private:typing"
+Data: map[string]interface{}{
+       "typer_id": ,
+       "typer_username": ,
+       "typer_avatar": ,
+}
+```

@@ -2,13 +2,15 @@ package websocket_test
 
 import (
 	"social-network/backend/internal/websocket"
+	"social-network/backend/internal/websocket/router"
 	"social-network/backend/internal/websocket/utils"
 	"testing"
 	"time"
 )
 
 func TestBroadcastToUser(t *testing.T) {
-    hub := websocket.NewHub()
+    router := &router.DefaultRouter{}
+    hub := websocket.NewHub(router)
     go hub.Run()
 	defer close(hub.Quit)
 

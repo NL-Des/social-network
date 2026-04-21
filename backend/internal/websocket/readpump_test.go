@@ -6,14 +6,16 @@ import (
 	"testing"
 	"time"
 
+	"social-network/backend/internal/websocket"
 	ws "social-network/backend/internal/websocket"
+	"social-network/backend/internal/websocket/router"
 
 	gws "github.com/gorilla/websocket"
 )
 
 func TestReadPump(t *testing.T) {
     // Création du Hub
-    hub := ws.NewHub()
+    hub := websocket.NewHub(&router.DefaultRouter{})
 	go hub.Run()
 	defer close(hub.Quit)
 

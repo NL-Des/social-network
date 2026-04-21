@@ -24,11 +24,13 @@ type Client struct {
     //"File d'attente" -> stock les messages du hub à destination du client 
 	//le temps qu'ils soient envoyés au websocket du client
     Send chan []byte
-    UserID int64
+    UserID int
+    Username string
+    UserAvatar string
 }
 
 //Constructeur
-func NewClient(hub *Hub, conn *websocket.Conn, userID int64) *Client {
+func NewClient(hub *Hub, conn *websocket.Conn, userID int) *Client {
     return &Client{
         Hub:    hub,
         Conn:   conn,

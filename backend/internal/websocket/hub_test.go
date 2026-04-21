@@ -2,12 +2,14 @@ package websocket_test
 
 import (
 	"social-network/backend/internal/websocket"
+	"social-network/backend/internal/websocket/router"
 	"testing"
 	"time"
 )
 
 func TestHubRegister(t *testing.T) {
-    hub := websocket.NewHub()
+    hub := websocket.NewHub(&router.DefaultRouter{})
+
     go hub.Run()
 	defer close(hub.Quit)
 
@@ -30,7 +32,7 @@ func TestHubRegister(t *testing.T) {
 }
 
 func TestHubUnregister(t *testing.T) {
-    hub := websocket.NewHub()
+    hub := websocket.NewHub(&router.DefaultRouter{})
     go hub.Run()
 
     client := &websocket.Client{

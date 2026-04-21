@@ -1,10 +1,13 @@
 package websocket
 
 import (
-	"fmt"
 	"social-network/backend/internal/websocket/utils"
 	"sync"
 )
+
+type MessageRouter interface {
+    Route(h *Hub, c *Client, raw []byte)
+}
 
 type Hub struct {
 	//Map des clients connectés : plus efficace qu'une liste. Le booléen est toujours égal à VRAI
@@ -16,6 +19,7 @@ type Hub struct {
     Unregister chan *Client
 	//Nécessaire pour la lecture/écriture simultanée dans clients via des goroutines
     Mu         sync.RWMutex
+    Router     MessageRouter
     Quit       chan struct{} // Pour fermer le hub lors des tests
     OnMessage func(c *Client, raw []byte) //Temporaires, Pour les tests
     
@@ -28,11 +32,12 @@ type MessageWs struct {
 
 
 // Constructeur : créé un hub vide
-func NewHub() *Hub {
+func NewHub(router MessageRouter) *Hub {
     return &Hub{
         Clients:    make(map[*Client]bool),
         Register:   make(chan *Client),
         Unregister: make(chan *Client),
+        Router:     router,
         Quit:       make(chan struct{}),
     }
 }
@@ -66,7 +71,7 @@ func (h *Hub) Run() {
 
 //Un utilisateurs peut avoir plusieurs clients (plusieurs onglet, plusieurs navigateurs, etc.)
 //La fonction transmet le message à tous les clients d'un même utilisateur
-func (h *Hub) BroadcastToUser(userID int64, message MessageWs) {
+func (h *Hub) BroadcastToUser(userID int, message MessageWs) {
     h.Mu.RLock()
     defer h.Mu.RUnlock()
 
@@ -85,6 +90,5 @@ func (h *Hub) RouteMessage(c *Client, raw []byte) {
         return
     }
 
-    fmt.Println("Message reçu :", string(raw))
+    h.Router.Route(h, c, raw)
 }
-

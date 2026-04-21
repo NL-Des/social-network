@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"social-network/backend/internal/websocket"
+	"social-network/backend/internal/websocket/router"
 	"strings"
 	"testing"
 
@@ -11,7 +12,7 @@ import (
 )
 
 func TestWritePump(t *testing.T) {
-    hub := websocket.NewHub()
+    hub := websocket.NewHub(&router.DefaultRouter{})
     go hub.Run()
 	defer close(hub.Quit)
 

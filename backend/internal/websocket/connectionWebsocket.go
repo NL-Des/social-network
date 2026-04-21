@@ -14,7 +14,7 @@ var upgrader = websocket.Upgrader{
     },
 }
 
-func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, userID int64) {
+func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, userID int) {
     // 1. Upgrade HTTP → WebSocket
     conn, err := upgrader.Upgrade(w, r, nil)
     if err != nil {
