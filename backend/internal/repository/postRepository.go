@@ -107,7 +107,7 @@ func (r *PostRepo) GetPostAuthorID(postID int) (string, error) {
 * Paramètres : ID du post
 * Renvoie : un post (titre, contenu, confidentialité, date) et les informations de son auteur (pseudo et avatar)
 */
-/* func (r * PostRepo) GetPostFromID(postID int) (model.Post, error) {
+func (r * PostRepo) GetPostFromID(postID int) (model.Post, error) {
 	row := r.db.QueryRow(`
 	SELECT p.title, p.content, u.username, u.avatar, p.privacy, p.createdat, p.updatedat
 	FROM posts p
@@ -117,10 +117,10 @@ func (r *PostRepo) GetPostAuthorID(postID int) (string, error) {
 
 	post := model.Post{}
 
-	err := row.Scan(&post.Title, &post.Content, &post.Author.Username, &post.Author.Avatar, &post.Privacy, &post.CreatedAt, &post.UpdatedAt)
+	err := row.Scan(&post.Title, &post.Content, &post.Author.Username, &post.Author.ProfilePicture, &post.Privacy, &post.CreatedAt, &post.UpdatedAt)
 	if err != nil {
 		return model.Post{}, err
 	}
 
 	return post, nil
-} */
+} 

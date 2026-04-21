@@ -12,7 +12,7 @@ func GetUserbyID(id int, db *sql.DB) (model.User, error) {
 	var user model.User
 
 	err := db.QueryRow(`
-		SELECT id, name, firstName, birthday, email, userName, description, profilePicture, isprivate
+		SELECT id, name, firstName, birthday, email, username, description, profilePicture, isprivate
 		FROM users
 		WHERE id = $1
 	`, id).Scan(
@@ -21,7 +21,7 @@ func GetUserbyID(id int, db *sql.DB) (model.User, error) {
 		&user.FirstName,
 		&user.Birthday,
 		&user.Email,
-		&user.UserName,
+		&user.Username,
 		&user.Description,
 		&user.ProfilePicture,
 		&user.IsPrivate,
@@ -106,7 +106,7 @@ func SaveUser(user model.RegisterUser, db *sql.DB) error {
 		user.Birthday,
 		user.IsPrivate,
 		user.ProfilePicture,
-		user.UserName,
+		user.Username,
 		user.Description,
 	)
 

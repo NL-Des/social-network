@@ -7,7 +7,7 @@ type RegisterUser struct {
 	Email           string `json:"email"`
 	Password        string `json:"password"`
 	ConfirmPassword string `json:"confirmPassword"`
-	UserName        string `json:"userName"`
+	Username        string `json:"username"`
 	Description     string `json:"description"`
 	ProfilePicture  string `json:"profilePicture"`
 	IsPrivate       bool   `json:"isprivate"`
