@@ -6,11 +6,12 @@ type User struct {
 	FirstName      string `json:"firstName"`
 	Birthday       string `json:"birthday"`
 	Email          string `json:"email"`
-	UserName       string `json:"userName"`
+	Username       string `json:"username"`
 	Description    string `json:"description"`
 	ProfilePicture string `json:"profilePicture"`
 	IsPrivate      bool   `json:"isprivate"`
 }
+
 /* Sauvegarde pour prévenir un nettoyage trop profond de fonctionnalités potentiellement encore en développement.
 package model
 

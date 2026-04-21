@@ -117,10 +117,10 @@ func (r * PostRepo) GetPostFromID(postID int) (model.Post, error) {
 
 	post := model.Post{}
 
-	err := row.Scan(&post.Title, &post.Content, &post.Author.Username, &post.Author.Avatar, &post.Privacy, &post.CreatedAt, &post.UpdatedAt)
+	err := row.Scan(&post.Title, &post.Content, &post.Author.Username, &post.Author.ProfilePicture, &post.Privacy, &post.CreatedAt, &post.UpdatedAt)
 	if err != nil {
 		return model.Post{}, err
 	}
 
 	return post, nil
-}
+} 
