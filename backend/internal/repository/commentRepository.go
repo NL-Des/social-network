@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"social-network/backend/internal/model"
+	/* "social-network/backend/internal/model" */
 	"time"
 )
 
@@ -97,7 +98,7 @@ func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error)
 	var comments = []model.Comment{}
 	for rows.Next() {
 		comment := model.Comment{}
-		if err := rows.Scan(&comment.ID, &comment.Content, &comment.CreatedAt, &comment.Author.Username, &comment.Author.Avatar); err != nil {
+		if err := rows.Scan(&comment.ID, &comment.Content, &comment.CreatedAt, &comment.Author.Username, &comment.Author.ProfilePicture); err != nil {
 			return nil, err
 		}
 		
@@ -109,4 +110,4 @@ func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error)
 }
    
     return comments, nil
-}
+} 
