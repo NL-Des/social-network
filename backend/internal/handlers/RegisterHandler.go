@@ -10,7 +10,7 @@ import (
 )
 
 // * Commande pour tester la handler sans front *
-// curl -X POST http://localhost:5090/auth/register   -F "name=labo"   -F "firstName=loli"   -F "birthday=01/01/01"   -F "email=email2@email.com"   -F "password=password"   -F "confirmPassword=password"   -F "userName=lolilab"   -F "descriptio
+// curl -X POST http://localhost:5090/auth/register   -F "name=labo"   -F "firstName=loli"   -F "birthday=01/01/01"   -F "email=email2@email.com"   -F "password=password"   -F "confirmPassword=password"   -F "username=lolilab"   -F "descriptio
 // n="   -F "profilePicture="
 // LoginHandler récupère les données de l'inscription et les traites
 func (h *Handler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +45,7 @@ func (h *Handler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	user.Email = r.FormValue("email")
 	user.Password = r.FormValue("password")
 	user.ConfirmPassword = r.FormValue("confirmPassword")
-	user.UserName = r.FormValue("userName")
+	user.Username = r.FormValue("username")
 	user.Description = r.FormValue("description")
 	user.ProfilePicture = r.FormValue("profilePicture")
 	user.IsPrivate = true
@@ -58,7 +58,7 @@ func (h *Handler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Vérification pour éviter doublon email ou pseudo
-	exists, field, err := repository.UserExists(user.Email, user.UserName, h.DB)
+	exists, field, err := repository.UserExists(user.Email, user.Username, h.DB)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
