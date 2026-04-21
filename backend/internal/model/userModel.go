@@ -6,7 +6,7 @@ type User struct {
 	FirstName      string `json:"firstName"`
 	Birthday       string `json:"birthday"`
 	Email          string `json:"email"`
-	Username       string `json:"userame"`
+	Username       string `json:"username"`
 	Description    string `json:"description"`
 	ProfilePicture string `json:"profilePicture"`
 	IsPrivate      bool   `json:"isprivate"`
