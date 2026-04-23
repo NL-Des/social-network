@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"social-network/backend/internal/database"
 	"social-network/backend/internal/handlers"
+	"social-network/backend/internal/middleware"
 	"social-network/backend/internal/repository"
 	"social-network/backend/internal/service"
 )
@@ -33,9 +34,13 @@ func main() {
 	// **
 	// Déclarations temporaires pour test - Creéation de login et register Handlers
 	userRepo := repository.NewUserRepo(db)
+	sessionRepo := repository.NewSessionRepo(db)
 	userService := service.NewUserService(userRepo)
+	sessionService := service.NewSessionService(sessionRepo)
 	registerHandler := handlers.NewRegisterHandler(userService)
-	loginHandler := handlers.NewLoginHandler(userService)
+	loginHandler := handlers.NewLoginHandler(userService, sessionService)
+	authMiddleware := middleware.NewAuthMiddleware(sessionService)
+	_ = authMiddleware
 	// **
 
 	// creation du mux
