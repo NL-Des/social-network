@@ -47,7 +47,7 @@ func (rh *RegisterHandler) RegisterHandler(w http.ResponseWriter, r *http.Reques
 	user.Email = r.FormValue("email")
 	user.Password = r.FormValue("password")
 	user.ConfirmPassword = r.FormValue("confirmPassword")
-	user.Username = r.FormValue("username")
+	user.Username = r.FormValue("userName")
 	user.Description = r.FormValue("description")
 	user.ProfilePicture = r.FormValue("profilePicture")
 	user.IsPrivate = true

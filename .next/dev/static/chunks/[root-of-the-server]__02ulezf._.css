@@ -397,6 +397,10 @@
 @layer components;
 
 @layer utilities {
+  .visible {
+    visibility: visible;
+  }
+
   .start {
     inset-inline-start: var(--spacing);
   }
@@ -427,6 +431,10 @@
 
   .hidden {
     display: none;
+  }
+
+  .table {
+    display: table;
   }
 
   .aspect-square {

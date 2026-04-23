@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently \"pnpm dev:next\" \"pnpm dev:go\"",
     "dev:next": "next dev",
-    "dev:go": "cd backend/cmd/server && go run main.go",
+    "dev:go": "cd backend && go run ./cmd/server",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

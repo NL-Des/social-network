@@ -1,12 +1,7 @@
-<<<<<<< HEAD
 import Button from '@/app/components/ui/button'
 import InputStd from '@/app/components/ui/inputStd'
 import registerAction from './actions'
-=======
-import Button from "@/app/components/ui/button";
-import InputStd from "@/app/components/ui/inputStd";
-import registerAction from "./actions";
->>>>>>> cfe20a422743d7de26a5941ec0b120d3c0ef2dcf
+
 export default function RegisterPage() {
   return (
     <div className="w-full min-h-screen bg-background p-6 flex flex-col items-center justify-center gap-16 ">
@@ -75,11 +70,7 @@ export default function RegisterPage() {
           <InputStd
             type="text"
             placeholder="Pseudo"
-<<<<<<< HEAD
             name="userName"
-=======
-            name="username"
->>>>>>> cfe20a422743d7de26a5941ec0b120d3c0ef2dcf
             className="rounded-full text-center"
           ></InputStd>
           <textarea
@@ -93,9 +84,5 @@ export default function RegisterPage() {
         </div>
       </form>
     </div>
-<<<<<<< HEAD
   )
-=======
-  );
->>>>>>> cfe20a422743d7de26a5941ec0b120d3c0ef2dcf
 }
