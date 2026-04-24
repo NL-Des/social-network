@@ -11,6 +11,18 @@
       },
       "filename": "Desktop/Zone01/social-network/app/auth/register/actions.tsx",
       "exportedName": "default"
+    },
+    "404866f89b2457bd41969e9815f5ed28829b534a2b": {
+      "workers": {
+        "app/auth/login/page": {
+          "moduleId": "[project]/Desktop/Zone01/social-network/.next-internal/server/app/auth/login/page/actions.js { ACTIONS_MODULE0 => \"[project]/Desktop/Zone01/social-network/app/auth/login/actions.tsx [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "default",
+          "filename": "Desktop/Zone01/social-network/app/auth/login/actions.tsx"
+        }
+      },
+      "filename": "Desktop/Zone01/social-network/app/auth/login/actions.tsx",
+      "exportedName": "default"
     }
   },
   "edge": {},

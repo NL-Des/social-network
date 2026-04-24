@@ -1,4 +1,2 @@
-{"timestamp":"00:00:00.771","source":"Server","level":"LOG","message":""}
-{"timestamp":"00:00:00.997","source":"Server","level":"ERROR","message":"Cannot specify a encType or method for a form that specifies a function as the action. React provides those automatically. They will get overridden."}
-{"timestamp":"00:00:19.070","source":"Server","level":"LOG","message":"{}"}
-{"timestamp":"00:08:42.337","source":"Browser","level":"ERROR","message":"Cannot specify a encType or method for a form that specifies a function as the action. React provides those automatically. They will get overridden."}
+{"timestamp":"00:00:00.676","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:02.031","source":"Server","level":"ERROR","message":"Cannot specify a encType or method for a form that specifies a function as the action. React provides those automatically. They will get overridden."}
