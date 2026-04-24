@@ -1,18 +1,5 @@
 {
-  "node": {
-    "40833131a2f030054cd026085615fce06d1f75172f": {
-      "workers": {
-        "app/auth/register/page": {
-          "moduleId": "[project]/Desktop/Zone01/social-network/.next-internal/server/app/auth/register/page/actions.js { ACTIONS_MODULE0 => \"[project]/Desktop/Zone01/social-network/app/auth/register/actions.tsx [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false,
-          "exportedName": "default",
-          "filename": "Desktop/Zone01/social-network/app/auth/register/actions.tsx"
-        }
-      },
-      "filename": "Desktop/Zone01/social-network/app/auth/register/actions.tsx",
-      "exportedName": "default"
-    }
-  },
+  "node": {},
   "edge": {},
   "encryptionKey": "IoMaMSPliF3gIMLzeVL+n9TjKMW966U9lb4iDtaiKdo="
 }
