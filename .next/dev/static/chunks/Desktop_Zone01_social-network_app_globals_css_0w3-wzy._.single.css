@@ -308,8 +308,24 @@
     visibility: visible;
   }
 
+  .absolute {
+    position: absolute;
+  }
+
+  .relative {
+    position: relative;
+  }
+
   .start {
     inset-inline-start: var(--spacing);
+  }
+
+  .top-2 {
+    top: calc(var(--spacing) * 2);
+  }
+
+  .right-2 {
+    right: calc(var(--spacing) * 2);
   }
 
   .col-span-2 {
@@ -326,6 +342,10 @@
 
   .mb-8 {
     margin-bottom: calc(var(--spacing) * 8);
+  }
+
+  .ml-1 {
+    margin-left: calc(var(--spacing) * 1);
   }
 
   .flex {
@@ -346,6 +366,10 @@
 
   .aspect-square {
     aspect-ratio: 1;
+  }
+
+  .h-8 {
+    height: calc(var(--spacing) * 8);
   }
 
   .h-17 {
@@ -370,6 +394,10 @@
 
   .w-2\/3 {
     width: 66.6667%;
+  }
+
+  .w-8 {
+    width: calc(var(--spacing) * 8);
   }
 
   .w-50 {
@@ -404,10 +432,6 @@
     animation: 3s ease-in-out infinite pulseZoom;
   }
 
-  .cursor-pointer {
-    cursor: pointer;
-  }
-
   .grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -428,10 +452,6 @@
     justify-content: center;
   }
 
-  .gap-2 {
-    gap: calc(var(--spacing) * 2);
-  }
-
   .gap-10 {
     gap: calc(var(--spacing) * 10);
   }
@@ -446,8 +466,8 @@
     margin-block-end: calc(calc(var(--spacing) * 10) * calc(1 - var(--tw-space-y-reverse)));
   }
 
-  .justify-self-center {
-    justify-self: center;
+  .overflow-hidden {
+    overflow: hidden;
   }
 
   .rounded-2xl {
@@ -475,8 +495,22 @@
     background-color: var(--color-black);
   }
 
+  .bg-black\/60 {
+    background-color: #0009;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-black\/60 {
+      background-color: color-mix(in oklab, var(--color-black) 60%, transparent);
+    }
+  }
+
   .bg-brand-card {
     background-color: var(--dark-bg);
+  }
+
+  .object-cover {
+    object-fit: cover;
   }
 
   .p-3 {
@@ -534,6 +568,10 @@
     color: var(--light-blue-text);
   }
 
+  .text-white {
+    color: var(--color-white);
+  }
+
   .antialiased {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -572,12 +610,6 @@
   @media (hover: hover) {
     .hover\:text-white:hover {
       color: var(--color-white);
-    }
-  }
-
-  @media (hover: hover) {
-    .hover\:opacity-80:hover {
-      opacity: .8;
     }
   }
 
