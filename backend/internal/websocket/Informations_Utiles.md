@@ -60,8 +60,9 @@ Data: map[string]interface{}{
 ```
 Type: "private:typing"
 Data: map[string]interface{}{
-       "typer_id": ,
-       "typer_username": ,
-       "typer_avatar": ,
+       "from_id": ,
+       "from_username": ,
+       "from_avatar": ,
+       "to_id": ,
 }
 ```
