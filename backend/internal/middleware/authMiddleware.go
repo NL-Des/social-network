@@ -19,7 +19,7 @@ func NewAuthMiddleware(ss *service.SessionService) *AuthMiddleware {
 // Pour l'instant, bloque la requête si non authentifié, modifiable facilement.
 func (m *AuthMiddleware) RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("session_id")
+		cookie, err := r.Cookie("session_token")
 		if err != nil {
 			http.Error(w, "Non authentifié", http.StatusUnauthorized)
 			return

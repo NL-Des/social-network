@@ -14,11 +14,11 @@ func NewSessionRepo(db *sql.DB) *SessionRepo {
 	return &SessionRepo{db: db}
 }
 
-func (r *SessionRepo) CreateSession(sessionID string, userID int, expiresAt time.Time) error {
+func (r *SessionRepo) CreateSession(token string, userID int, createdAt time.Time, expiresAt time.Time) error {
 	_, err := r.db.Exec(`
-		INSERT INTO session (id, user_id, expires_at)
-		VALUES ($1, $2, $3)
-	`, sessionID, userID, expiresAt)
+		INSERT INTO session (token, userID, createdat, expiresat)
+		VALUES ($1, $2, $3, $4)
+	`, token, userID, createdAt, expiresAt)
 
 	return err
 }
@@ -28,7 +28,7 @@ func (r *SessionRepo) GetSession(token string) (int, error) {
 	var expires time.Time
 
 	err := r.db.QueryRow(`
-		SELECT user_id, expires_at
+		SELECT userID, expiresat
 		FROM session
 		WHERE token = $1
 	`, token).Scan(&userID, &expires)
@@ -51,7 +51,7 @@ func (r *SessionRepo) SessionExists(userID int) (string, bool, error) {
 	err := r.db.QueryRow(`
 	SELECT token
 	FROM session
-	WHERE user_id = $1
+	WHERE userID = $1
 	`, userID).Scan(&token)
 
 	if err == sql.ErrNoRows {
@@ -63,4 +63,12 @@ func (r *SessionRepo) SessionExists(userID int) (string, bool, error) {
 	}
 
 	return token, true, nil
+}
+
+func (r *SessionRepo) DeleteSession(token string) error {
+	_, err := r.db.Exec(`
+		DELETE FROM session
+		WHERE token = $1
+	`, token)
+	return err
 }

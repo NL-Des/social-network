@@ -32,11 +32,12 @@ func main() {
 	}
 
 	// **
-	// Déclarations temporaires pour test - Creéation de login et register Handlers
+	// Déclarations temporaires dans le main pour test - Creéation de login et register Handlers
 	userRepo := repository.NewUserRepo(db)
 	sessionRepo := repository.NewSessionRepo(db)
 	userService := service.NewUserService(userRepo)
 	sessionService := service.NewSessionService(sessionRepo)
+	logoutHandler := handlers.NewLogoutHandler(sessionService)
 	registerHandler := handlers.NewRegisterHandler(userService)
 	loginHandler := handlers.NewLoginHandler(userService, sessionService)
 	authMiddleware := middleware.NewAuthMiddleware(sessionService)
@@ -49,6 +50,10 @@ func main() {
 	mux.HandleFunc("/", handlers.HomeHandler)
 	mux.HandleFunc("/auth/login", loginHandler.LoginHandler)
 	mux.HandleFunc("/auth/register", registerHandler.RegisterHandler)
+	mux.HandleFunc("/auth/logout", logoutHandler.HandleLogout)
+
+	// Route test
+	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
 
 	// Démarrer le serveur
 	fmt.Println("Démarrage sur http://localhost:5090")

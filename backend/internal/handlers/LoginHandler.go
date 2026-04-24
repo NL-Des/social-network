@@ -54,15 +54,15 @@ func (lh *LoginHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//-- Générer session et créer cookie --
-	sessionID, err := lh.SessionService.CreateSession(user.ID)
+	token, err := lh.SessionService.CreateSession(user.ID)
 	if err != nil {
-		http.Error(w, "Erreur session", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    sessionID,
+		Name:     "session_token",
+		Value:    token,
 		Path:     "/",
 		HttpOnly: true,
 		Expires:  time.Now().Add(24 * time.Hour),
