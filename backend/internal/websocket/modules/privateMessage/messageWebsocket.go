@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/websocket"
-	"time"
 )
 
 type PrivateSendingPayload struct {
@@ -34,8 +33,6 @@ func HandleSending(h *websocket.Hub, c *websocket.Client, data interface{}) {
         SenderID:   c.UserID,
         ReceiverID: payload.ToID,
         Content:    payload.MessageContent,
-        CreatedAt:  time.Now(),
-        UpdatedAt:  time.Now(),
     }
 
     // TODO : insert en BDD → message.ID rempli
