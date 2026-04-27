@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 interface ButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
@@ -5,21 +7,59 @@ interface ButtonProps {
   type?: "button" | "submit" | "reset";
 }
 
-export function ButtonWithoutBorders({ 
-  children, 
-  onClick, 
-  className = "", 
-  type = "button" 
+export function ButtonToHome({ 
+  children,
+  className = ""
 }: ButtonProps) {
   return (
-    <button
-      type={type}
-      onClick={onClick}
-      // On utilise les backticks pour fusionner les classes de base et les classes personnalisées
-      className={`bg-blue-500 hover:bg-blue-600 text-white font-bold h-10 px-4 rounded-sm transition-colors ${className}`}
-    >
+    <Link
+      href="http://localhost:3000/"
+      className={`inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold h-10 px-4 rounded-sm transition-colors ${className}`}
+    >  
       {children}
-    </button>
+    </Link>
+  );
+}
+
+export function ButtonToGroups({ 
+  children,
+  className = ""
+}: ButtonProps) {
+  return (
+    <Link
+      href="/auth"
+      className={`inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold h-10 px-4 rounded-sm transition-colors ${className}`}
+    >  
+      {children}
+    </Link>
+  );
+}
+
+export function ButtonToMessages({ 
+  children,
+  className = ""
+}: ButtonProps) {
+  return (
+    <Link
+      href="/auth"
+      className={`inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold h-10 px-4 rounded-sm transition-colors ${className}`}
+    >  
+      {children}
+    </Link>
+  );
+}
+
+export function ButtonToNotifications({ 
+  children,
+  className = ""
+}: ButtonProps) {
+  return (
+    <Link
+      href="/auth"
+      className={`inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold h-10 px-4 rounded-sm transition-colors ${className}`}
+    >  
+      {children}
+    </Link>
   );
 }
 
