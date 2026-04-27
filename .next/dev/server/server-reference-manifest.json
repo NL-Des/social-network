@@ -1,5 +1,18 @@
 {
-  "node": {},
+  "node": {
+    "4028253da81190586bef603504ba799a7696a0cc10": {
+      "workers": {
+        "app/auth/login/page": {
+          "moduleId": "[project]/Exercice/social network/.next-internal/server/app/auth/login/page/actions.js { ACTIONS_MODULE0 => \"[project]/Exercice/social network/app/auth/login/actions.tsx [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "default",
+          "filename": "Exercice/social network/app/auth/login/actions.tsx"
+        }
+      },
+      "filename": "Exercice/social network/app/auth/login/actions.tsx",
+      "exportedName": "default"
+    }
+  },
   "edge": {},
   "encryptionKey": "IoMaMSPliF3gIMLzeVL+n9TjKMW966U9lb4iDtaiKdo="
 }

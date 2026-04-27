@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ButtonWithoutBorders } from '@/app/components/ui/button'
 
 export default function Home() {
   return(
@@ -14,7 +15,7 @@ export default function Home() {
           <div className="w-24 h-24 overflow-hidden rounded-full border-2 border-blue-500 cursor-pointer hover:opacity-80 transition-opacity">
             <img
               src="une-image.png"
-              alt="Profil"
+              alt="Image de profil" /* C'est ce que verra l'utilisateur si il y a une erreur d'affichage */
               className="w-full h-full object-cover"
             />
           </div>
@@ -22,17 +23,22 @@ export default function Home() {
         {/* Nom du profil, cliquable pour être
         redirigé sur la page du profil de l'utilisateur. */}
         <Link href="/profil">
-          <span className="text-blue-800 font medium">
+          <span className="text-blue-800 font medium cursor-pointer hover:opacity-80 transition-opacity">
             Nom du profil
           </span>
         </Link>
       </div>
       {/* Partie de droite. */}
       <div className="flex flex-row gap-2">
-        <div className="bg-blue-500 h-10 w-25 rounded-sm"></div>
-        <div className="bg-blue-500 h-10 w-25 rounded-sm"></div>
-        <div className="bg-blue-500 h-10 w-25 rounded-sm"></div>
-        <div className="bg-blue-500 h-10 w-25 rounded-sm"></div>
+        <div>
+{/*           <ButtonWithoutBorders onClick={() => alert('Bouton cliqué !')}>
+            Test
+          </ButtonWithoutBorders> */}
+          <ButtonWithoutBorders>Test</ButtonWithoutBorders>
+        </div>
+        <div className="bg-blue-500 h-10 w-24 rounded-sm"></div>
+        <div className="bg-blue-500 h-10 w-24 rounded-sm"></div>
+        <div className="bg-blue-500 h-10 w-24 rounded-sm"></div>
       </div>
     </div>
   </div>
