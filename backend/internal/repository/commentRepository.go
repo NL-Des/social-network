@@ -25,7 +25,7 @@ func (r *CommentRepo) CreateNewComment(postID int, authorID, content string) err
 	_, err := r.db.Exec(
 		`INSERT INTO comments (authorID, content)
 		VALUES ($1, $2)
-		WHERE postID = ?
+		WHERE postID = $3
 		`, authorID, content, postID)
 
 		return err
