@@ -32,7 +32,7 @@ func (r *TagRepo) AddPostTags(postID int, TagList []string) error {
 
 		_, err = r.db.Exec(`
 		INSERT INTO post_tag (postID, TagID)
-		VALUES (?, ?)
+		VALUES ($1, $2)
 		`, postID, tagID)
 
 		if err != nil {
@@ -52,7 +52,7 @@ func (r *TagRepo) GetTagID(tagName string) (error, int) {
 	row := r.db.QueryRow(`
 	SELECT ID
 	FROM tag
-	WHERE name = ?
+	WHERE name = $1
 	`, tagName)
 
 
@@ -73,7 +73,7 @@ func (r *TagRepo) GetTagID(tagName string) (error, int) {
 func (r *TagRepo) CreateNewTag(tagName string) error {
 	_, err := r.db.Exec(
 		`INSERT INTO tag (name)
-		VALUES (?)
+		VALUES ($1)
 		`, tagName)
 
 		return err
@@ -86,7 +86,7 @@ func (r *TagRepo) CreateNewTag(tagName string) error {
 func (r *TagRepo) DeletePostTags(postID int) error {
 	_, err := r.db.Exec(`
 	DELETE FROM tag
-	WHERE postID = ?
+	WHERE postID = $1
 	`, postID)
 
 	return err

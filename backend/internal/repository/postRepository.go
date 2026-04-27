@@ -20,15 +20,22 @@ func NewPostRepo(db *sql.DB) *PostRepo{
 * Création d'un nouveau post dans la base de données
 * Paramètres : ID du posteur, titre (optionnel) et contenu du post, niveau de confidentialité
 */
-func (r *PostRepo) CreateNewPost(authorID string, postData model.Post) error {
+func (r *PostRepo) CreateNewPost(authorID string, postData model.Post) (int, error) {
 	postData.Title = template.HTMLEscapeString(strings.TrimSpace(postData.Title))
+	var postID int
 	
-	_, err := r.db.Exec(
-		`INSERT INTO posts (authorID, title, content, privacy)
-		VALUES (?, ?, ?, ?)
-		`, authorID, postData.Title, postData.Content, postData.Privacy)
+	query := `
+        INSERT INTO posts (authorID, title, content, privacy)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id`
 
-		return err
+	err := r.db.QueryRow(query, authorID, postData.Title, postData.Content, postData.Privacy).Scan(&postID)
+
+    if err != nil {
+        return 0, err
+    }
+
+    return postID, nil
 }
 
 /*
@@ -40,8 +47,8 @@ func (r *PostRepo) UpdateExistingPost(postData model.Post) error {
 	updateTime := time.Now()
 
 	_, err := r.db.Exec(
-		`UPDATE posts SET title = ?, content = ?, privacy = ?, updatedat = ?
-		WHERE ID = ?
+		`UPDATE posts SET title = $1, content = $2, privacy = $3, updatedat = $4
+		WHERE ID = $5
 		`, postData.Title, postData.Content, postData.Privacy, updateTime, postData.ID)
 
 	return err
@@ -54,7 +61,7 @@ func (r *PostRepo) UpdateExistingPost(postData model.Post) error {
 func (r *PostRepo) DeleteExistingPost(postID int) error {
 		_, err := r.db.Exec(`
 		DELETE FROM posts
-		WHERE ID = ?
+		WHERE ID = $1
 		`, postID)
 
 		return err
@@ -68,7 +75,7 @@ func (r *PostRepo) GetPostIDFromContent(authorID, content string) (int, error) {
 	row := r.db.QueryRow(`
 	SELECT ID
 	FROM posts
-	WHERE content = ?, authorID = ?
+	WHERE content = $1, authorID = $2
 	`, content, authorID)
 
 	postID := 0
@@ -89,7 +96,7 @@ func (r *PostRepo) GetPostAuthorID(postID int) (string, error) {
 	row := r.db.QueryRow(`
 	SELECT authorID
 	FROM posts
-	WHERE ID = ?
+	WHERE ID = $1
 	`, postID)
 
 	authorID := ""
@@ -112,7 +119,7 @@ func (r * PostRepo) GetPostFromID(postID int) (model.Post, error) {
 	SELECT p.title, p.content, u.username, u.avatar, p.privacy, p.createdat, p.updatedat
 	FROM posts p
 	JOIN users u ON p.authorID = u.ID
-	WHERE p.ID = ?
+	WHERE p.ID = $1
 	`, postID)
 
 	post := model.Post{}

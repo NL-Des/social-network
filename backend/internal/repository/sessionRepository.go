@@ -23,8 +23,8 @@ func (r *SessionRepo) CreateSession(token string, userID int, createdAt time.Tim
 	return err
 }
 
-func (r *SessionRepo) GetSession(token string) (int, error) {
-	var userID int
+func (r *SessionRepo) GetSession(token string) (string, error) {
+	var userID string
 	var expires time.Time
 
 	err := r.db.QueryRow(`
@@ -34,12 +34,12 @@ func (r *SessionRepo) GetSession(token string) (int, error) {
 	`, token).Scan(&userID, &expires)
 
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	if time.Now().After(expires) {
 		r.db.Exec(`DELETE FROM session WHERE token = $1`, token)
-		return 0, errors.New("session expirée")
+		return "", errors.New("session expirée")
 	}
 
 	return userID, nil

@@ -46,7 +46,7 @@ func generateSessionToken() string {
 	return uuid.NewString()
 }
 
-func (s *SessionService) GetUserID(token string) (int, error) {
+func (s *SessionService) GetUserID(token string) (string, error) {
 	return s.sessionRepo.GetSession(token)
 }
 

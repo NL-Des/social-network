@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"social-network/backend/internal/model"
+
 	/* "social-network/backend/internal/model" */
 	"time"
 )
@@ -23,7 +24,7 @@ func NewCommentRepo(db *sql.DB) *CommentRepo{
 func (r *CommentRepo) CreateNewComment(postID int, authorID, content string) error {
 	_, err := r.db.Exec(
 		`INSERT INTO comments (authorID, content)
-		VALUES (?, ?)
+		VALUES ($1, $2)
 		WHERE postID = ?
 		`, authorID, content, postID)
 
@@ -38,8 +39,8 @@ func (r *CommentRepo) UpdateExistingComment(commentID int, content string) error
 	updateTime := time.Now()
 
 	_, err := r.db.Exec(
-		`UPDATE comments SET content = ?, updatedat = ?
-		WHERE ID = ?
+		`UPDATE comments SET content = $1, updatedat = $2
+		WHERE ID = $3
 		`, content, updateTime, commentID)
 
 	return err
@@ -52,7 +53,7 @@ func (r *CommentRepo) UpdateExistingComment(commentID int, content string) error
 func (r *CommentRepo) DeleteExistingComment(commentID int) error {
 		_, err := r.db.Exec(`
 		DELETE FROM comments
-		WHERE ID = ?
+		WHERE ID = $1
 		`, commentID)
 
 		return err
@@ -66,7 +67,7 @@ func (r *CommentRepo) GetCommentAuthorID(commentID int) (string, error) {
 	row := r.db.QueryRow(`
 	SELECT authorID
 	FROM comments
-	WHERE ID = ?
+	WHERE ID = $1
 	`, commentID)
 
 	authorID := ""
@@ -88,7 +89,7 @@ func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error)
 		`SELECT c.ID, c.content, c.createdat, c.updatedat, u.username, u.avatar
 		FROM comments c
 		JOIN users u ON c.authorID = u.ID
-		WHERE postID = ?
+		WHERE postID = $1
 		`,postID)
 		if err != nil {
 		return nil, err
