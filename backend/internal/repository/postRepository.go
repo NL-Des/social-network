@@ -67,26 +67,6 @@ func (r *PostRepo) DeleteExistingPost(postID int) error {
 		return err
 }
 
-/*
-* Récupère l'ID d'un post à partir du contenu du message
-* Paramètres : ID de l'auteur du post et contenu du message
-*/
-func (r *PostRepo) GetPostIDFromContent(authorID, content string) (int, error) {
-	row := r.db.QueryRow(`
-	SELECT ID
-	FROM posts
-	WHERE content = $1, authorID = $2
-	`, content, authorID)
-
-	postID := 0
-
-	err := row.Scan(&postID)
-	if err != nil || postID == 0 {
-		return 0, err
-	}
-
-	return postID, nil
-}
 
 /*
 * Récupère l'ID de l'auteur d'un post particulier

@@ -29,9 +29,11 @@ func (s *PostAndCommentsService) CreateNewPost(authorID string, postData model.P
 		return err
 	}
 
+	if len(postData.Tags) !=0 {
 	err = s.tagRepo.AddPostTags(postID, postData.Tags)
 	if err != nil {
 		return err
+	}
 	}
 
 	return nil
@@ -98,7 +100,7 @@ func (s *PostAndCommentsService) DeleteComment(commentID int, mode string) error
 func (s *PostAndCommentsService) EditPost(authorID string, postData model.Post) error {
 	posterID, err := s.postRepo.GetPostAuthorID(postData.ID)
 
-	if posterID != authorID {
+	if posterID != authorID  {
 		return errors.New("utilisateur non autorisé")
 	}
 
@@ -108,6 +110,7 @@ func (s *PostAndCommentsService) EditPost(authorID string, postData model.Post) 
 		return err
 	}
 
+	if len(postData.Tags) !=0 {
 	err = s.tagRepo.DeletePostTags(postData.ID)
 	if err != nil {
 		return err
@@ -117,6 +120,7 @@ func (s *PostAndCommentsService) EditPost(authorID string, postData model.Post) 
 	if err != nil {
 		return err
 	}
+	}
 
 	return nil
 }
@@ -125,7 +129,15 @@ func (s *PostAndCommentsService) EditPost(authorID string, postData model.Post) 
 * Gère la modification d'un commentaire
 * Paramètres : ID du commentaire, nouveau contenu du commentaire
 */ 
-func (s *PostAndCommentsService) EditComment(commentID int, content string) error {
+func (s *PostAndCommentsService) EditComment(authorID string, commentID int, content string) error {
+	posterID, err := s.commentRepo.GetCommentAuthorID(commentID)
+	if posterID != authorID  {
+		return errors.New("utilisateur non autorisé")
+	} else if err != nil {
+		return err
+	}
+
+	
 	return s.commentRepo.UpdateExistingComment(commentID, content)
 }
 
@@ -133,7 +145,7 @@ func (s *PostAndCommentsService) EditComment(commentID int, content string) erro
 * Gère la récupération d'un post et de ses commentaires pour l'afficher
 * Paramètres : ID du post
 */
-/* func (s *PostAndCommentsService) DisplayPostAndComments(postID int) (model.Post, error) {
+func (s *PostAndCommentsService) DisplayPostAndComments(postID int) (model.Post, error) {
 	post, err := s.postRepo.GetPostFromID(postID)
 	if err != nil {
 		return model.Post{}, err
@@ -145,4 +157,4 @@ func (s *PostAndCommentsService) EditComment(commentID int, content string) erro
 
 	return post, nil
 
-} */
+} 
