@@ -127,6 +127,7 @@
 
 @layer theme {
   :root, :host {
+    --color-red-500: #fb2c36;
     --color-black: #000;
     --color-white: #fff;
     --spacing: .25rem;
@@ -138,6 +139,7 @@
     --text-2xl--line-height: calc(2 / 1.5);
     --text-4xl: 2.25rem;
     --text-4xl--line-height: calc(2.5 / 2.25);
+    --font-weight-semibold: 600;
     --font-weight-bold: 700;
     --radius-2xl: 1rem;
     --default-transition-duration: .15s;
@@ -145,6 +147,12 @@
     --default-font-family: var(--font-geist-sans);
     --default-mono-font-family: var(--font-geist-mono);
     --font-retro: var(--font-retro);
+  }
+
+  @supports (color: lab(0% 0 0)) {
+    :root, :host {
+      --color-red-500: lab(55.4814% 75.0732 48.8528);
+    }
   }
 }
 
@@ -545,6 +553,10 @@
     justify-content: center;
   }
 
+  .gap-4 {
+    gap: calc(var(--spacing) * 4);
+  }
+
   .gap-10 {
     gap: calc(var(--spacing) * 10);
   }
@@ -657,8 +669,17 @@
     font-weight: var(--font-weight-bold);
   }
 
+  .font-semibold {
+    --tw-font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-semibold);
+  }
+
   .text-brand-text {
     color: var(--light-blue-text);
+  }
+
+  .text-red-500 {
+    color: var(--color-red-500);
   }
 
   .text-white {

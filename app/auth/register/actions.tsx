@@ -1,16 +1,25 @@
-'use server'
+'use server';
 
-import {redirect} from 'next/navigation'
+import {redirect} from 'next/navigation';
 
-export default async function registerAction(formData) {
+type State = {
+  error: string | null;
+};
+
+export default async function registerAction(
+  prevState: any,
+  formData: FormData
+) {
   const reponse = await fetch('http://localhost:5090/auth/register', {
     method: 'POST',
     body: formData
-  })
-  // On attend que le JSON soit extrait
+  });
+
   if (reponse.ok) {
-    redirect('/auth/login')
+    redirect('/auth/login');
   } else {
-    console.error("Erreur lors de l'inscription:", reponse.statusText)
+    // Le backend renvoie l'erreur en texte (http.Error)
+    const errorText = await reponse.text();
+    return { error: errorText.trim() || "Erreur lors de l'inscription" };
   }
 }

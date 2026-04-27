@@ -3,10 +3,15 @@ import {useState, useRef} from 'react';
 import Button from '@/app/components/ui/button';
 import InputStd from '@/app/components/ui/inputStd';
 import registerAction from './actions';
+import {useFormState} from 'react-dom';
 
 export default function RegisterPage() {
+  // preview permet d'afficher quand l'image est selectionnée dans le formulaire
   const [preview, setPreview] = useState<string | null>(null);
+  // fileInputRef permet de detecter quand l'utilisateur selectionne un fichier
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const initialState = {error: null as string | null};
+  const [state, formAction] = useFormState(registerAction, initialState);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -30,7 +35,7 @@ export default function RegisterPage() {
         </h1>
       </div>
       <form
-        action={registerAction}
+        action={formAction}
         encType="multipart/form-data"
         className="bg-brand-card w-full max-w-6xl p-10 rounded-2xl border-1 border-brand-border shadow-neon py-20"
       >
@@ -120,7 +125,10 @@ export default function RegisterPage() {
             name="description"
             className="  col-span-3 row-span-5 h-full border-1 border-brand-border shadow-neon p-5 rounded-2xl text-brand-text"
           ></textarea>
-          <div className="col-span-3 flex justify-center">
+          <div className="col-span-3 flex flex-col items-center gap-4">
+            {state?.error && (
+              <p className="text-red-500 font-semibold">{state.error}</p>
+            )}
             <Button className="w-50 text-brand-text">Inscription</Button>
           </div>
         </div>
