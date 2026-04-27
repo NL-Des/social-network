@@ -1,15 +1,15 @@
 {
   "node": {
-    "40833131a2f030054cd026085615fce06d1f75172f": {
+    "4028253da81190586bef603504ba799a7696a0cc10": {
       "workers": {
-        "app/auth/register/page": {
-          "moduleId": "[project]/Desktop/Zone01/social-network/.next-internal/server/app/auth/register/page/actions.js { ACTIONS_MODULE0 => \"[project]/Desktop/Zone01/social-network/app/auth/register/actions.tsx [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+        "app/auth/login/page": {
+          "moduleId": "[project]/Exercice/social network/.next-internal/server/app/auth/login/page/actions.js { ACTIONS_MODULE0 => \"[project]/Exercice/social network/app/auth/login/actions.tsx [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
           "exportedName": "default",
-          "filename": "Desktop/Zone01/social-network/app/auth/register/actions.tsx"
+          "filename": "Exercice/social network/app/auth/login/actions.tsx"
         }
       },
-      "filename": "Desktop/Zone01/social-network/app/auth/register/actions.tsx",
+      "filename": "Exercice/social network/app/auth/login/actions.tsx",
       "exportedName": "default"
     }
   },
