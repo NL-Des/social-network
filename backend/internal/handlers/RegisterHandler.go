@@ -5,15 +5,21 @@ import (
 	"fmt"
 	"net/http"
 	"social-network/backend/internal/model"
-	"social-network/backend/internal/repository"
 	"social-network/backend/internal/service"
 )
 
-// * Commande pour tester la handler sans front *
-// curl -X POST http://localhost:5090/auth/register   -F "name=labo"   -F "firstName=loli"   -F "birthday=01/01/01"   -F "email=email2@email.com"   -F "password=password"   -F "confirmPassword=password"   -F "username=lolilab"   -F "descriptio
-// n="   -F "profilePicture="
-// LoginHandler récupère les données de l'inscription et les traites
-func (h *Handler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+type RegisterHandler struct {
+	UserService *service.UserService
+}
+
+type RegisterResponse struct {
+	Sucess bool `json:"success"`
+}
+
+func NewRegisterHandler(us *service.UserService) *RegisterHandler {
+	return &RegisterHandler{UserService: us}
+}
+func (rh *RegisterHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// permet aux deux serveurs de communiquer sans que le navigateur les bloque
 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
@@ -50,47 +56,14 @@ func (h *Handler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	user.ProfilePicture = r.FormValue("profilePicture")
 	user.IsPrivate = true
 
-	// Vérifications des données reçues
-	err = service.ValidUserData(user)
+	err = rh.UserService.Register(user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	//Vérification pour éviter doublon email ou pseudo
-	exists, field, err := repository.UserExists(user.Email, user.Username, h.DB)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if exists {
-		if field == "email" {
-			http.Error(w, "email déjà utilisé", http.StatusBadRequest)
-			return
-		}
-		if field == "username" {
-			http.Error(w, "pseudo déjà utilisé", http.StatusBadRequest)
-			return
-		}
-	}
-
-	hashedPassword, err := service.HashPassword(user.Password)
-	if err != nil {
-		fmt.Print(err)
-		http.Error(w, "unable to hash the password", http.StatusInternalServerError)
-		return
-	}
-	user.Password = hashedPassword
-
-	err = repository.SaveUser(user, h.DB)
-	if err != nil {
-		fmt.Print(err)
-		http.Error(w, "unable to save user into db", http.StatusInternalServerError)
-		return
-	}
-
-	response := map[string]interface{}{
-		"success": true,
+	response := RegisterResponse{
+		Sucess: true,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

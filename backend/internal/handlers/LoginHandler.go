@@ -5,17 +5,24 @@ import (
 	"fmt"
 	"net/http"
 	"social-network/backend/internal/model"
-	"social-network/backend/internal/repository"
 	"social-network/backend/internal/service"
+	"time"
 )
 
-// TEST avec curl
-// curl -X POST http://localhost:5090/auth/login \
-//   -H "Content-Type: application/json" \
-//   -d '{"email":"email@email.com","password":"password"}'
+type LoginHandler struct {
+	UserService    *service.UserService
+	SessionService *service.SessionService
+}
 
-// LoginHandler récupère les données de connexion et les traites
-func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
+type LoginResponse struct {
+	Success bool `json:"sucess"`
+}
+
+func NewLoginHandler(us *service.UserService, ss *service.SessionService) *LoginHandler {
+	return &LoginHandler{UserService: us, SessionService: ss}
+}
+
+func (lh *LoginHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Requête à LoginHandler")
 	// permet aux deux serveurs de communiquer sans que le navigateur les bloque
 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
@@ -39,23 +46,30 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var savedUser model.LoginUser
+	//-- Vérifier credentials à la tentative de connexion --
+	user, err := lh.UserService.Login(credentials.Email, credentials.Password)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	savedUser, err = repository.GetUserCredsbyEmail(credentials.Email, h.DB)
+	//-- Générer session et créer cookie --
+	token, err := lh.SessionService.CreateSession(user.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if !service.IsValidPassword(credentials.Password, savedUser.Password) {
-		http.Error(w, "Mot de passe incorrect", http.StatusBadRequest)
-		return
-	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Now().Add(24 * time.Hour),
+	})
 
-	// -- A insérer : Générer session et renvoyer cookie --
-
-	response := map[string]interface{}{
-		"success": true,
+	response := LoginResponse{
+		Success: true,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

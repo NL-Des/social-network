@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"social-network/backend/internal/database"
 	"social-network/backend/internal/handlers"
+	"social-network/backend/internal/middleware"
+	"social-network/backend/internal/repository"
+	"social-network/backend/internal/service"
 )
 
 func main() {
@@ -28,15 +31,29 @@ func main() {
 		}
 	}
 
-	//Injection de la db dans les handlers
-	h := &handlers.Handler{DB: db}
+	// **
+	// Déclarations temporaires dans le main pour test - Creéation de login et register Handlers
+	userRepo := repository.NewUserRepo(db)
+	sessionRepo := repository.NewSessionRepo(db)
+	userService := service.NewUserService(userRepo)
+	sessionService := service.NewSessionService(sessionRepo)
+	logoutHandler := handlers.NewLogoutHandler(sessionService)
+	registerHandler := handlers.NewRegisterHandler(userService)
+	loginHandler := handlers.NewLoginHandler(userService, sessionService)
+	authMiddleware := middleware.NewAuthMiddleware(sessionService)
+	_ = authMiddleware
+	// **
 
 	// creation du mux
 	mux := http.NewServeMux()
 	// Route principale
 	mux.HandleFunc("/", handlers.HomeHandler)
-	mux.HandleFunc("/auth/login", h.LoginHandler)
-	mux.HandleFunc("/auth/register", h.RegisterHandler)
+	mux.HandleFunc("/auth/login", loginHandler.LoginHandler)
+	mux.HandleFunc("/auth/register", registerHandler.RegisterHandler)
+	mux.HandleFunc("/auth/logout", logoutHandler.HandleLogout)
+
+	// Route test
+	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
 
 	// Démarrer le serveur
 	fmt.Println("Démarrage sur http://localhost:5090")

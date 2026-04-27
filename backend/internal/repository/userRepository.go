@@ -6,12 +6,20 @@ import (
 	"social-network/backend/internal/model"
 )
 
+type UserRepo struct {
+	db *sql.DB
+}
+
+func NewUserRepo(db *sql.DB) *UserRepo {
+	return &UserRepo{db: db}
+}
+
 // *** SELECT ***
 
-func GetUserbyID(id int, db *sql.DB) (model.User, error) {
+func (r *UserRepo) GetUserbyID(id int) (model.User, error) {
 	var user model.User
 
-	err := db.QueryRow(`
+	err := r.db.QueryRow(`
 		SELECT id, name, firstName, birthday, email, username, description, profilePicture, isprivate
 		FROM users
 		WHERE id = $1
@@ -32,10 +40,11 @@ func GetUserbyID(id int, db *sql.DB) (model.User, error) {
 	}
 	return user, nil
 }
-func GetUserCredsbyEmail(email string, db *sql.DB) (model.LoginUser, error) {
+
+func (r *UserRepo) GetUserCredsbyEmail(email string) (model.LoginUser, error) {
 	var user model.LoginUser
 
-	err := db.QueryRow(`
+	err := r.db.QueryRow(`
 		SELECT id, email, password
 		FROM users
 		WHERE email = $1
@@ -55,10 +64,10 @@ func GetUserCredsbyEmail(email string, db *sql.DB) (model.LoginUser, error) {
 	return user, nil
 }
 
-func UserExists(email, username string, db *sql.DB) (bool, string, error) {
+func (r *UserRepo) UserExists(email, username string) (bool, string, error) {
 	var existingEmail, existingUsername string
 
-	err := db.QueryRow(`
+	err := r.db.QueryRow(`
 		SELECT email, pseudo
 		FROM users
 		WHERE email = $1 OR pseudo = $2
@@ -85,8 +94,8 @@ func UserExists(email, username string, db *sql.DB) (bool, string, error) {
 
 // *** INSERT ***
 
-func SaveUser(user model.RegisterUser, db *sql.DB) error {
-	_, err := db.Exec(`
+func (r *UserRepo) SaveUser(user model.RegisterUser) error {
+	_, err := r.db.Exec(`
 		INSERT INTO users (
 			email,
 			password,
