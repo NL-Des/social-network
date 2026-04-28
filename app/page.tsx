@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { RightBar, UpBar } from "./components/ui/bar";
 // Barre d'affichage haute.
 export default function Home() {

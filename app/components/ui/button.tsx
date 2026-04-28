@@ -4,6 +4,7 @@ interface ButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
   className?: string;
+  href: string;
   type?: "button" | "submit" | "reset";
 }
 
@@ -14,8 +15,7 @@ export function ButtonToHome({
   return (
     <Link
       href="http://localhost:3000/"
-      className={`inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold h-10 px-4 rounded-sm transition-colors ${className}`}
-    >  
+      className={`inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold h-10 text-sm px-3 sm:text-base sm:px-6 rounded-sm transition-colors ${className}`}    >  
       {children}
     </Link>
   );
@@ -28,8 +28,7 @@ export function ButtonToGroups({
   return (
     <Link
       href="/auth"
-      className={`inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold h-10 px-4 rounded-sm transition-colors ${className}`}
-    >  
+      className={`inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold h-10 text-sm px-3 sm:text-base sm:px-6 rounded-sm transition-colors ${className}`}    >  
       {children}
     </Link>
   );
@@ -42,8 +41,7 @@ export function ButtonToMessages({
   return (
     <Link
       href="/auth"
-      className={`inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold h-10 px-4 rounded-sm transition-colors ${className}`}
-    >  
+      className={`inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold h-10 text-sm px-3 sm:text-base sm:px-6 rounded-sm transition-colors ${className}`}    >   
       {children}
     </Link>
   );
@@ -56,8 +54,35 @@ export function ButtonToNotifications({
   return (
     <Link
       href="/auth"
-      className={`inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold h-10 px-4 rounded-sm transition-colors ${className}`}
-    >  
+      className={`inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold h-10 text-sm px-3 sm:text-base sm:px-6 rounded-sm transition-colors ${className}`}    >  
+      {children}
+    </Link>
+  );
+}
+
+export function ButtonToGoToOneGroupOnTheSideBar({ 
+  children,
+  href, // Récupération du lien de redirection vers le groupe sur la page qui affiche le bouton.
+  className = ""
+}: ButtonProps) {
+  return (
+    <Link
+      href={href}
+      className={`inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold h-10 text-sm px-3 sm:text-base sm:px-6 rounded-sm transition-colors ${className}`}    >  
+      {children}
+    </Link>
+  );
+}
+
+export function ButtonToOneUserProfilOnTheSideBar({ 
+  children,
+  href, // Récupération du lien de redirection vers l'utilisateur sur la page qui affiche le bouton.
+  className = ""
+}: ButtonProps) {
+  return (
+    <Link
+      href={href}
+      className={`inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold h-5 text-sm px-3 sm:text-base sm:px-3 rounded-sm transition-colors ${className}`}    >  
       {children}
     </Link>
   );
