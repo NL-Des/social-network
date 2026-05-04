@@ -18,16 +18,16 @@ interface RightSidebarProps {
 
 export default function RightSidebar({ groups, users }: RightSidebarProps) {
   return (
-    <aside className="h-full bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-6">
+    <aside className="h-full overflow-y-auto bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-6">
       <section>
-        <h2 className="font-retro text-brand-text text-xs mb-5">Mes Groupes</h2>
+        <h2 className="font-retro text-brand-text text-base mb-5">Mes Groupes</h2>
         <div className="flex flex-col gap-4">
           {groups.map((group) => (
             <div key={group.id} className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gray-600 flex-shrink-0" />
               <div>
-                <p className="text-white text-sm font-semibold">{group.name}</p>
-                <p className="text-brand-text text-xs">{group.membersCount} membres</p>
+                <p className="text-white text-lg font-semibold">{group.name}</p>
+                <p className="text-brand-text text-base">{group.membersCount} membres</p>
               </div>
             </div>
           ))}
@@ -35,7 +35,7 @@ export default function RightSidebar({ groups, users }: RightSidebarProps) {
       </section>
 
       <section>
-        <h2 className="font-retro text-brand-text text-xs mb-5">Utilisateurs</h2>
+        <h2 className="font-retro text-brand-text text-base mb-5">Utilisateurs</h2>
         <div className="flex flex-col gap-3">
           {users.map((user) => (
             <div key={user.id} className="flex items-center gap-3">
@@ -43,11 +43,11 @@ export default function RightSidebar({ groups, users }: RightSidebarProps) {
                 {user.online && (
                   <span className="absolute -left-3 w-2 h-2 bg-green-500 rounded-full" />
                 )}
-                <div className="w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center text-white text-xs font-bold">
+                <div className="w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center text-white text-base font-bold">
                   {user.initials}
                 </div>
               </div>
-              <p className="text-white text-sm">{user.name}</p>
+              <p className="text-white text-lg">{user.name}</p>
             </div>
           ))}
         </div>

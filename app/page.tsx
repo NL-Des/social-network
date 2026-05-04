@@ -58,11 +58,11 @@ export default function HomePage() {
     <div className="bg-background h-screen flex flex-col overflow-hidden">
       <Header user={mockCurrentUser} />
 
-      <div className="pt-[72px] flex-1 overflow-hidden px-4 pb-4">
+      <div className="pt-[104px] flex-1 overflow-hidden px-4 pb-4">
         <div className="h-full grid grid-cols-[312px_1fr_264px] gap-4 pt-4">
 
           {/* Colonne gauche — filtres */}
-          <div className="overflow-y-auto h-full">
+          <div className="h-full">
             <SearchFilter filters={mockFilters} />
           </div>
 
@@ -74,7 +74,7 @@ export default function HomePage() {
           </div>
 
           {/* Colonne droite — groupes & utilisateurs */}
-          <div className="overflow-y-auto h-full">
+          <div className="h-full">
             <RightSidebar groups={mockGroups} users={mockUsers} />
           </div>
 
