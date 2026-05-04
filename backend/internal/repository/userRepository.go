@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"time"
 
 	"social-network/backend/internal/model"
 )
@@ -22,6 +23,39 @@ func NewUserRepo(db *sql.DB) *UserRepo {
 
 // GetProfileByID récupère les données formatées pour l'affichage du profil (ex: Header de la Home).
 // Il calcule le nombre de followers et formate le nom (Prénom + Initiale du nom).
+func (r *UserRepo) GetFullProfileByID(id int) (model.FullProfile, error) {
+	var profile model.FullProfile
+	var birthDate time.Time
+	var isprivate bool
+
+	err := r.db.QueryRow(`
+		SELECT firstname, lastname, pseudo, email, dateofbirth, isprivate
+		FROM users WHERE id = $1
+	`, id).Scan(&profile.FirstName, &profile.LastName, &profile.Username, &profile.Email, &birthDate, &isprivate)
+	if err != nil {
+		return model.FullProfile{}, err
+	}
+
+	profile.BirthDate = birthDate.Format("2006-01-02")
+
+	if isprivate {
+		profile.Visibility = "private"
+	} else {
+		profile.Visibility = "public"
+	}
+
+	r.db.QueryRow(`SELECT COUNT(*) FROM followers WHERE followingID = $1`, id).Scan(&profile.FollowersCount)
+
+	if len(profile.FirstName) > 0 {
+		profile.Initials += strings.ToUpper(string([]rune(profile.FirstName)[0]))
+	}
+	if len(profile.LastName) > 0 {
+		profile.Initials += strings.ToUpper(string([]rune(profile.LastName)[0]))
+	}
+
+	return profile, nil
+}
+
 func (r *UserRepo) GetProfileByID(id int) (model.MeResponse, error) {
 	var firstname, lastname, pseudo string
 

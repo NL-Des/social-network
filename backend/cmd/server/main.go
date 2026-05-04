@@ -55,6 +55,7 @@ func main() {
 
 	// Routes protégées
 	mux.HandleFunc("/user/me", authMiddleware.RequireAuth(meHandler.HandleMe))
+	mux.HandleFunc("/user/profile", authMiddleware.RequireAuth(meHandler.HandleProfile))
 	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
 
 	// Démarrer le serveur

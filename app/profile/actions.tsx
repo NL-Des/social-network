@@ -1,6 +1,6 @@
 "use server";
 
-// Interfaces - aka les struct du Next.js
+import { cookies } from "next/headers";
 
 export interface UserProfile {
   firstName: string;
@@ -51,35 +51,34 @@ export interface ProfilePageProps {
   visibility?: "private" | "public";
 }
 
-// Génère les initiales à partir d'un nom complet
-
 function getInitials(firstName: string, lastName: string): string {
   return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
 }
 
-// Récupération dans l'API
+export default async function profileAction(): Promise<ProfilePageProps> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get("session_token");
 
-export default async function profileAction(
-  userID: number,
-): Promise<ProfilePageProps> {
-  const response = await fetch(`http://localhost:5090/profile/${userID}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
+  if (!sessionToken) throw new Error("Non authentifié");
+
+  const response = await fetch("http://localhost:5090/user/profile", {
+    headers: { Cookie: `session_token=${sessionToken.value}` },
   });
 
-  const data = await response.json();
-  console.log(data.success);
+  if (!response.ok) throw new Error("Impossible de charger le profil");
 
-  // Nom à adapter en fonction des données renvoyées par la BDD
+  const data = await response.json();
+  const u = data.user;
+
   return {
     user: {
-      firstName: data.user.firstName,
-      lastName: data.user.lastName,
-      username: data.user.username,
-      email: data.user.email,
-      birthDate: data.user.birthDate,
-      followersCount: data.user.followersCount ?? 0,
-      initials: getInitials(data.user.firstName, data.user.lastName),
+      firstName: u.firstName,
+      lastName: u.lastName,
+      username: u.username,
+      email: u.email,
+      birthDate: u.birthDate,
+      followersCount: u.followersCount ?? 0,
+      initials: u.initials ?? getInitials(u.firstName, u.lastName),
     },
     navItems: [
       { label: "Accueil", href: "/" },
@@ -103,7 +102,7 @@ export default async function profileAction(
       title: e.title,
       subtitle: e.subtitle ?? e.description,
       initials: e.title.slice(0, 2).toUpperCase(),
-      color: e.color ?? "text-cyan-300",
+      color: e.color ?? "text-brand-text",
     })),
     groups: (data.groups ?? []).map((g: any) => ({
       id: String(g.id),
@@ -121,6 +120,6 @@ export default async function profileAction(
       initials: getInitials(u.firstName, u.lastName),
       isOnline: u.isOnline ?? false,
     })),
-    visibility: data.user.visibility ?? "public",
+    visibility: u.visibility ?? "public",
   };
 }

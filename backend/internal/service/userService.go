@@ -83,6 +83,10 @@ func (s *UserService) GetProfile(id int) (model.MeResponse, error) {
 	return s.userRepo.GetProfileByID(id)
 }
 
+func (s *UserService) GetFullProfile(id int) (model.FullProfile, error) {
+	return s.userRepo.GetFullProfileByID(id)
+}
+
 // LOGIN
 
 func (s *UserService) Login(email, password string) (model.LoginUser, error) {

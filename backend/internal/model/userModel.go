@@ -1,5 +1,16 @@
 package model
 
+type FullProfile struct {
+	FirstName      string `json:"firstName"`
+	LastName       string `json:"lastName"`
+	Username       string `json:"username"`
+	Email          string `json:"email"`
+	BirthDate      string `json:"birthDate"`
+	FollowersCount int    `json:"followersCount"`
+	Initials       string `json:"initials"`
+	Visibility     string `json:"visibility"`
+}
+
 type MeResponse struct {
 	Name      string `json:"name"`
 	Username  string `json:"username"`
