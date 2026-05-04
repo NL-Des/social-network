@@ -7,11 +7,11 @@ import (
 )
 
 type MeHandler struct {
-	userService *service.UserService
+	profileService *service.ProfileService
 }
 
-func NewMeHandler(us *service.UserService) *MeHandler {
-	return &MeHandler{userService: us}
+func NewMeHandler(ps *service.ProfileService) *MeHandler {
+	return &MeHandler{profileService: ps}
 }
 
 func (h *MeHandler) HandleMe(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +21,7 @@ func (h *MeHandler) HandleMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	profile, err := h.userService.GetProfile(userID)
+	profile, err := h.profileService.GetProfile(userID)
 	if err != nil {
 		http.Error(w, "user not found", http.StatusNotFound)
 		return

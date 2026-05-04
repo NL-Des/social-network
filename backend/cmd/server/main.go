@@ -37,10 +37,11 @@ func main() {
 	sessionRepo := repository.NewSessionRepo(db)
 	userService := service.NewUserService(userRepo)
 	sessionService := service.NewSessionService(sessionRepo)
+	profileService := service.NewProfileService(userService)
 	logoutHandler := handlers.NewLogoutHandler(sessionService)
 	registerHandler := handlers.NewRegisterHandler(userService)
 	loginHandler := handlers.NewLoginHandler(userService, sessionService)
-	meHandler := handlers.NewMeHandler(userService)
+	meHandler := handlers.NewMeHandler(profileService)
 	authMiddleware := middleware.NewAuthMiddleware(sessionService)
 	// **
 
