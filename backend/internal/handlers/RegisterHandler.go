@@ -14,6 +14,10 @@ type RegisterHandler struct {
 	UserService *service.UserService
 }
 
+type RegisterResponse struct {
+	Sucess bool `json:"success"`
+}
+
 func NewRegisterHandler(us *service.UserService) *RegisterHandler {
 	return &RegisterHandler{UserService: us}
 }
@@ -92,8 +96,8 @@ func (rh *RegisterHandler) RegisterHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	response := map[string]interface{}{
-		"success": true,
+	response := RegisterResponse{
+		Sucess: true,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

@@ -6,14 +6,20 @@ import (
 	"net/http"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/service"
+	"time"
 )
 
 type LoginHandler struct {
-	UserService *service.UserService
+	UserService    *service.UserService
+	SessionService *service.SessionService
 }
 
-func NewLoginHandler(us *service.UserService) *LoginHandler {
-	return &LoginHandler{UserService: us}
+type LoginResponse struct {
+	Success bool `json:"sucess"`
+}
+
+func NewLoginHandler(us *service.UserService, ss *service.SessionService) *LoginHandler {
+	return &LoginHandler{UserService: us, SessionService: ss}
 }
 
 func (lh *LoginHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -40,17 +46,30 @@ func (lh *LoginHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//-- Vérifier credentials à la tentative de connexion --
 	user, err := lh.UserService.Login(credentials.Email, credentials.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// -- A insérer : Générer session et renvoyer cookie --
-	_ = user
+	//-- Générer session et créer cookie --
+	token, err := lh.SessionService.CreateSession(user.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	response := map[string]interface{}{
-		"success": true,
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Now().Add(24 * time.Hour),
+	})
+
+	response := LoginResponse{
+		Success: true,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
