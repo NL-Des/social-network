@@ -1,16 +1,11 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Header, { CurrentUser } from './components/home/Header'
 import SearchFilter, { FilterItem } from './components/home/SearchFilter'
 import PostCard, { Post } from './components/home/PostCard'
 import RightSidebar, { Group, SidebarUser } from './components/home/RightSidebar'
-
-// --- Mock data — remplace chaque bloc par un fetch vers ton backend Go ---
-
-const mockCurrentUser: CurrentUser = {
-  name: 'Mathis P',
-  username: 'mathis',
-  followers: 128,
-  initials: 'MP',
-}
 
 const mockPosts: Post[] = [
   {
@@ -51,12 +46,39 @@ const mockFilters: FilterItem[] = [
   { label: 'Tag', count: 12 },
 ]
 
-// --- Fin des données mock ---
-
 export default function HomePage() {
+  const router = useRouter()
+  const [user, setUser] = useState<CurrentUser | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/me')
+      .then((res) => {
+        if (!res.ok) {
+          router.replace('/auth/login')
+          return null
+        }
+        return res.json()
+      })
+      .then((data) => {
+        if (data) setUser(data)
+      })
+      .finally(() => setLoading(false))
+  }, [router])
+
+  if (loading) {
+    return (
+      <div className="bg-background h-screen flex items-center justify-center">
+        <p className="text-brand-text font-retro text-sm">Chargement...</p>
+      </div>
+    )
+  }
+
+  if (!user) return null
+
   return (
     <div className="bg-background h-screen flex flex-col overflow-hidden">
-      <Header user={mockCurrentUser} />
+      <Header user={user} />
 
       <div className="pt-[104px] flex-1 overflow-hidden px-4 pb-4">
         <div className="h-full grid grid-cols-[312px_1fr_264px] gap-4 pt-4">

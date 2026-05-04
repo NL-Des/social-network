@@ -1,5 +1,12 @@
 package model
 
+type MeResponse struct {
+	Name      string `json:"name"`
+	Username  string `json:"username"`
+	Followers int    `json:"followers"`
+	Initials  string `json:"initials"`
+}
+
 type User struct {
 	ID             int    `json:"id"`
 	Name           string `json:"name"`

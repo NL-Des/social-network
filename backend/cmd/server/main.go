@@ -40,8 +40,8 @@ func main() {
 	logoutHandler := handlers.NewLogoutHandler(sessionService)
 	registerHandler := handlers.NewRegisterHandler(userService)
 	loginHandler := handlers.NewLoginHandler(userService, sessionService)
+	meHandler := handlers.NewMeHandler(userService)
 	authMiddleware := middleware.NewAuthMiddleware(sessionService)
-	_ = authMiddleware
 	// **
 
 	// creation du mux
@@ -52,7 +52,8 @@ func main() {
 	mux.HandleFunc("/auth/register", registerHandler.RegisterHandler)
 	mux.HandleFunc("/auth/logout", logoutHandler.HandleLogout)
 
-	// Route test
+	// Routes protégées
+	mux.HandleFunc("/user/me", authMiddleware.RequireAuth(meHandler.HandleMe))
 	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
 
 	// Démarrer le serveur

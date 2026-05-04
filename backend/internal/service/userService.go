@@ -77,6 +77,12 @@ func (s *UserService) hashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
+// PROFILE
+
+func (s *UserService) GetProfile(id int) (model.MeResponse, error) {
+	return s.userRepo.GetProfileByID(id)
+}
+
 // LOGIN
 
 func (s *UserService) Login(email, password string) (model.LoginUser, error) {

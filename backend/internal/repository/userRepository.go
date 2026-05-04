@@ -3,6 +3,8 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"strings"
+
 	"social-network/backend/internal/model"
 )
 
@@ -15,6 +17,47 @@ func NewUserRepo(db *sql.DB) *UserRepo {
 }
 
 // *** SELECT ***
+
+func (r *UserRepo) GetProfileByID(id int) (model.MeResponse, error) {
+	var firstname, lastname, pseudo string
+
+	err := r.db.QueryRow(`
+		SELECT firstname, lastname, pseudo
+		FROM users
+		WHERE id = $1
+	`, id).Scan(&firstname, &lastname, &pseudo)
+	if err != nil {
+		return model.MeResponse{}, err
+	}
+
+	var followersCount int
+	err = r.db.QueryRow(`
+		SELECT COUNT(*) FROM followers WHERE followingID = $1
+	`, id).Scan(&followersCount)
+	if err != nil {
+		return model.MeResponse{}, err
+	}
+
+	displayName := firstname
+	if len(lastname) > 0 {
+		displayName = firstname + " " + strings.ToUpper(string([]rune(lastname)[0]))
+	}
+
+	initials := ""
+	if len(firstname) > 0 {
+		initials += strings.ToUpper(string([]rune(firstname)[0]))
+	}
+	if len(lastname) > 0 {
+		initials += strings.ToUpper(string([]rune(lastname)[0]))
+	}
+
+	return model.MeResponse{
+		Name:      displayName,
+		Username:  pseudo,
+		Followers: followersCount,
+		Initials:  initials,
+	}, nil
+}
 
 func (r *UserRepo) GetUserbyID(id int) (model.User, error) {
 	var user model.User
