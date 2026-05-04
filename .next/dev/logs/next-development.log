@@ -1,4 +1,42 @@
-{"timestamp":"00:00:00.561","source":"Server","level":"WARN","message":"⚠ The \"middleware\" file convention is deprecated. Please use \"proxy\" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy"}
-{"timestamp":"00:00:00.717","source":"Server","level":"LOG","message":""}
-{"timestamp":"00:01:16.627","source":"Server","level":"LOG","message":"✓ Compiled in 445ms"}
-{"timestamp":"00:03:38.721","source":"Server","level":"LOG","message":"✓ Compiled in 60ms"}
+{"timestamp":"00:00:00.970","source":"Server","level":"WARN","message":"⚠ The \"middleware\" file convention is deprecated. Please use \"proxy\" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy"}
+{"timestamp":"00:00:01.130","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:01:39.212","source":"Server","level":"LOG","message":"✓ Compiled in 40ms"}
+{"timestamp":"00:01:54.643","source":"Server","level":"ERROR","message":"Cannot specify a encType or method for a form that specifies a function as the action. React provides those automatically. They will get overridden."}
+{"timestamp":"00:03:10.865","source":"Server","level":"LOG","message":"✓ Compiled in 19ms"}
+{"timestamp":"00:03:20.682","source":"Server","level":"LOG","message":"✓ Compiled in 17ms"}
+{"timestamp":"00:03:33.704","source":"Server","level":"LOG","message":"✓ Compiled in 14ms"}
+{"timestamp":"00:05:28.272","source":"Server","level":"LOG","message":"✓ Compiled in 64ms"}
+{"timestamp":"00:05:34.267","source":"Server","level":"LOG","message":"✓ Compiled in 20ms"}
+{"timestamp":"00:06:10.602","source":"Server","level":"LOG","message":"✓ Compiled in 21ms"}
+{"timestamp":"00:06:25.212","source":"Server","level":"LOG","message":"✓ Compiled in 20ms"}
+{"timestamp":"00:06:35.632","source":"Server","level":"LOG","message":"✓ Compiled in 19ms"}
+{"timestamp":"00:06:57.732","source":"Server","level":"LOG","message":"✓ Compiled in 12ms"}
+{"timestamp":"00:07:01.630","source":"Server","level":"LOG","message":"✓ Compiled in 12ms"}
+{"timestamp":"00:07:08.013","source":"Server","level":"LOG","message":"✓ Compiled in 49ms"}
+{"timestamp":"00:07:15.942","source":"Server","level":"LOG","message":"✓ Compiled in 21ms"}
+{"timestamp":"00:07:24.649","source":"Server","level":"LOG","message":"✓ Compiled in 11ms"}
+{"timestamp":"00:07:52.218","source":"Server","level":"LOG","message":"✓ Compiled in 11ms"}
+{"timestamp":"00:08:03.920","source":"Server","level":"LOG","message":"✓ Compiled in 11ms"}
+{"timestamp":"00:08:21.602","source":"Server","level":"LOG","message":"✓ Compiled in 13ms"}
+{"timestamp":"00:08:28.978","source":"Server","level":"LOG","message":"✓ Compiled in 12ms"}
+{"timestamp":"00:08:32.792","source":"Server","level":"LOG","message":"✓ Compiled in 14ms"}
+{"timestamp":"00:08:37.437","source":"Server","level":"LOG","message":"✓ Compiled in 11ms"}
+{"timestamp":"00:09:16.792","source":"Server","level":"LOG","message":"✓ Compiled in 22ms"}
+{"timestamp":"00:09:24.521","source":"Server","level":"LOG","message":"✓ Compiled in 13ms"}
+{"timestamp":"00:10:07.416","source":"Server","level":"LOG","message":"✓ Compiled in 14ms"}
+{"timestamp":"00:10:26.375","source":"Server","level":"LOG","message":"✓ Compiled in 11ms"}
+{"timestamp":"00:10:44.917","source":"Server","level":"LOG","message":"✓ Compiled in 14ms"}
+{"timestamp":"00:10:53.826","source":"Server","level":"LOG","message":"✓ Compiled in 10ms"}
+{"timestamp":"00:11:55.899","source":"Server","level":"LOG","message":"✓ Compiled in 13ms"}
+{"timestamp":"00:12:22.878","source":"Server","level":"LOG","message":"✓ Compiled in 21ms"}
+{"timestamp":"00:12:42.837","source":"Server","level":"LOG","message":"✓ Compiled in 20ms"}
+{"timestamp":"00:13:01.347","source":"Server","level":"LOG","message":"✓ Compiled in 21ms"}
+{"timestamp":"00:13:11.821","source":"Server","level":"LOG","message":"✓ Compiled in 20ms"}
+{"timestamp":"00:14:29.071","source":"Server","level":"LOG","message":"✓ Compiled in 15ms"}
+{"timestamp":"00:14:47.311","source":"Server","level":"LOG","message":"✓ Compiled in 12ms"}
+{"timestamp":"00:14:58.673","source":"Server","level":"LOG","message":"✓ Compiled in 12ms"}
+{"timestamp":"00:15:09.054","source":"Server","level":"LOG","message":"✓ Compiled in 11ms"}
+{"timestamp":"00:15:18.840","source":"Server","level":"LOG","message":"✓ Compiled in 10ms"}
+{"timestamp":"00:15:44.620","source":"Server","level":"LOG","message":"✓ Compiled in 24ms"}
+{"timestamp":"00:15:48.405","source":"Server","level":"LOG","message":"✓ Compiled in 11ms"}
+{"timestamp":"00:16:18.690","source":"Server","level":"LOG","message":"✓ Compiled in 15ms"}
