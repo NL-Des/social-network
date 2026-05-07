@@ -13,6 +13,8 @@ type PublicProfile struct {
 	Followers []Follower  `json:"followers"`
 	Following []Following `json:"following"`
 	Posts     []AllPosts  `json:"posts"`
+
+	CanEdit bool `json:"canEdit"`
 }
 
 type Follower struct {
