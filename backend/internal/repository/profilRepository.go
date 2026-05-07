@@ -13,6 +13,7 @@ func NewProfilRepository(db *sql.DB) *ProfilRepository {
 	return &ProfilRepository{db: db}
 }
 
+// récupère un utilisateur complet depuis la base de données en fonction de son ID
 func (r *ProfilRepository) GetUserByID(id int) (*model.User, error) {
 	query := `
         SELECT ID, lastname, firstname, dateofbirth, email, pseudo, aboutme, avatar, isprivate

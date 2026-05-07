@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"social-network/backend/internal/database"
 	"social-network/backend/internal/handlers"
+	"social-network/backend/internal/router"
 )
 
 func main() {
@@ -38,8 +39,10 @@ func main() {
 	mux.HandleFunc("/auth/login", h.LoginHandler)
 	mux.HandleFunc("/auth/register", h.RegisterHandler)
 
+	r := router.NewRouter(mux, db)
+
 	// Démarrer le serveur
 	fmt.Println("Démarrage sur http://localhost:3000")
 	// log fatal permet d'envoyer le message d'erreur avant de fermer le programme avec un fmt.print classique pas d'arret du programme
-	log.Fatal(http.ListenAndServe(":5090", mux))
+	log.Fatal(http.ListenAndServe(":5090", r))
 }

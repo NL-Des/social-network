@@ -14,6 +14,7 @@ type PublicProfile struct {
 	Following []Following `json:"following"`
 	Posts     []AllPosts  `json:"posts"`
 
+	// indique si l’utilisateur connecté est propriétaire du profil
 	CanEdit bool `json:"canEdit"`
 }
 
