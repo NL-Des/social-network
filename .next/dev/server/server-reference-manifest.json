@@ -1,17 +1,5 @@
 {
   "node": {
-    "0081fc0dcbe2d2dd900d7e435b1d995b2cc9a606cb": {
-      "workers": {
-        "app/profile/page": {
-          "moduleId": "[project]/Desktop/Zone01/social-network/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/Desktop/Zone01/social-network/app/profile/actions.tsx [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false,
-          "exportedName": "default",
-          "filename": "Desktop/Zone01/social-network/app/profile/actions.tsx"
-        }
-      },
-      "filename": "Desktop/Zone01/social-network/app/profile/actions.tsx",
-      "exportedName": "default"
-    },
     "60833131a2f030054cd026085615fce06d1f75172f": {
       "workers": {
         "app/auth/register/page": {
