@@ -54,7 +54,7 @@ export default function RegisterPage() {
               className="rounded-full text-center h-17"
             />
             <InputStd
-              type="date"
+              type="text"
               placeholder="Date de naissance"
               name="birthday"
               className="rounded-full text-center h-17"
