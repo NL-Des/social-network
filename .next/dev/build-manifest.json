@@ -1,30 +1,6 @@
 {
   "pages": {
-    "/_app": [
-      "static/chunks/0luj_next_dist_compiled_11e__vq._.js",
-      "static/chunks/0luj_next_dist_shared_lib_06691jl._.js",
-      "static/chunks/0luj_next_dist_client_0d~6qj~._.js",
-      "static/chunks/0luj_next_dist_0~gg~04._.js",
-      "static/chunks/0luj_next_app_0gzh0go.js",
-      "static/chunks/[next]_entry_page-loader_ts_0wraqpf._.js",
-      "static/chunks/0efe_react-dom_0g3m6bf._.js",
-      "static/chunks/0y6w__pnpm_016dxlv._.js",
-      "static/chunks/[root-of-the-server]__0-h5ea9._.js",
-      "static/chunks/Exercice_social network_pages__app_07xvfw~._.js",
-      "static/chunks/turbopack-Exercice_social network_pages__app_0xvog2p._.js"
-    ],
-    "/_error": [
-      "static/chunks/0luj_next_dist_compiled_11e__vq._.js",
-      "static/chunks/0luj_next_dist_shared_lib_00yg4-c._.js",
-      "static/chunks/0luj_next_dist_client_0d~6qj~._.js",
-      "static/chunks/0luj_next_dist_0gqr3km._.js",
-      "static/chunks/[next]_entry_page-loader_ts_117lw6.._.js",
-      "static/chunks/0efe_react-dom_0g3m6bf._.js",
-      "static/chunks/0y6w__pnpm_016dxlv._.js",
-      "static/chunks/[root-of-the-server]__0yk2f.u._.js",
-      "static/chunks/Exercice_social network_pages__error_07xvfw~._.js",
-      "static/chunks/turbopack-Exercice_social network_pages__error_0e7hnvl._.js"
-    ]
+    "/_app": []
   },
   "devFiles": [],
   "polyfillFiles": [
