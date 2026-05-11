@@ -37,11 +37,12 @@ func main() {
 	sessionRepo := repository.NewSessionRepo(db)
 	userService := service.NewUserService(userRepo)
 	sessionService := service.NewSessionService(sessionRepo)
+	profileService := service.NewProfileService(userService)
 	logoutHandler := handlers.NewLogoutHandler(sessionService)
 	registerHandler := handlers.NewRegisterHandler(userService)
 	loginHandler := handlers.NewLoginHandler(userService, sessionService)
+	meHandler := handlers.NewMeHandler(profileService)
 	authMiddleware := middleware.NewAuthMiddleware(sessionService)
-	_ = authMiddleware
 	// **
 
 	// creation du mux
@@ -52,7 +53,9 @@ func main() {
 	mux.HandleFunc("/auth/register", registerHandler.RegisterHandler)
 	mux.HandleFunc("/auth/logout", logoutHandler.HandleLogout)
 
-	// Route test
+	// Routes protégées
+	mux.HandleFunc("/user/me", authMiddleware.RequireAuth(meHandler.HandleMe))
+	mux.HandleFunc("/user/profile", authMiddleware.RequireAuth(meHandler.HandleProfile))
 	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
 
 	// Démarrer le serveur

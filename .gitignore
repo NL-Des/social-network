@@ -3,3 +3,7 @@ node_modules/
 .env
 .next/
 dist/
+CLAUDE.md
+claude.md
+public/images/profil
+.next
