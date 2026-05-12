@@ -11,7 +11,7 @@ export interface CurrentUser {
 
 const NAV_LINKS = [
   { label: 'Accueil', href: '/' },
-  { label: 'Groupes', href: '/groups' },
+  { label: 'Groupes', href: '/groupes' },
   { label: 'Messages', href: '/messages' },
   { label: 'Notifications', href: '/notifications' },
 ]
