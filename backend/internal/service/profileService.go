@@ -46,11 +46,14 @@ func (s *ProfilService) GetProfile(viewerID, profileID int) (*model.PublicProfil
 		DateOfBirth: user.Birthday,
 		AboutMe:     user.Description,
 		Avatar:      user.ProfilePicture,
-		Followers:   []model.Follower{},
-		Following:   []model.Following{},
-		Posts:       []model.AllPosts{},
+		IsPrivate:   user.IsPrivate,
 		CanEdit:     isOwner,
 	}
+
+	// Followers / Following / Posts
+	profile.Followers, _ = s.ProfilRepo.GetFollowers(profileID)
+	profile.Following, _ = s.ProfilRepo.GetFollowing(profileID)
+	profile.Posts, _ = s.ProfilRepo.GetPosts(profileID)
 
 	return profile, nil
 }

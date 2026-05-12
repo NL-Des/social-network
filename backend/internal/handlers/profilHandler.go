@@ -19,15 +19,6 @@ func NewProfilHandler(s *service.ProfilService) *ProfilHandler {
 }
 
 func (h *ProfilHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
-	/* // POUR TEST
-	fakeUser := map[string]interface{}{
-		"id":   123,
-		"name": "Test User",
-		"bio":  "Ceci est un faux utilisateur pour test",
-	}
-
-	json.NewEncoder(w).Encode(fakeUser) */
-
 	// Validation du header X-User-ID
 	viewerHeader := r.Header.Get("X-User-ID")
 	if viewerHeader == "" {
@@ -49,6 +40,21 @@ func (h *ProfilHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid user id", http.StatusBadRequest)
 		return
 	}
+
+	// POUR TEST
+	/* fakeUser := map[string]interface{}{
+		"id":        profileID,
+		"pseudo":    "TestUser",
+		"bio":       "Ceci est un faux utilisateur pour test",
+		"followers": []string{"Alice", "Bob"},
+		"following": []string{"Charlie"},
+		"posts":     []string{"Post 1", "Post 2"},
+		"canEdit":   viewerID == profileID,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(fakeUser)
+	return */
 
 	// Appel au service métier
 	profile, err := h.ProfilService.GetProfile(viewerID, profileID)
