@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export interface Group {
   id: string
   name: string
@@ -23,13 +25,17 @@ export default function RightSidebar({ groups, users }: RightSidebarProps) {
         <h2 className="font-retro text-brand-text text-base mb-5">Mes Groupes</h2>
         <div className="flex flex-col gap-4">
           {groups.map((group) => (
-            <div key={group.id} className="flex items-center gap-3">
+            <Link
+              key={group.id}
+              href={`/groups/${group.id}`}
+              className="flex items-center gap-3 rounded-xl px-2 py-1 -mx-2 hover:bg-white/5 transition-colors"
+            >
               <div className="w-10 h-10 rounded-full bg-gray-600 flex-shrink-0" />
               <div>
                 <p className="text-white text-lg font-semibold">{group.name}</p>
                 <p className="text-brand-text text-base">{group.membersCount} membres</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
@@ -38,7 +44,11 @@ export default function RightSidebar({ groups, users }: RightSidebarProps) {
         <h2 className="font-retro text-brand-text text-base mb-5">Utilisateurs</h2>
         <div className="flex flex-col gap-3">
           {users.map((user) => (
-            <div key={user.id} className="flex items-center gap-3">
+            <Link
+              key={user.id}
+              href={`/users/${user.id}`}
+              className="flex items-center gap-3 rounded-xl px-2 py-1 -mx-2 hover:bg-white/5 transition-colors"
+            >
               <div className="relative flex-shrink-0 flex items-center">
                 {user.online && (
                   <span className="absolute -left-3 w-2 h-2 bg-green-500 rounded-full" />
@@ -48,7 +58,7 @@ export default function RightSidebar({ groups, users }: RightSidebarProps) {
                 </div>
               </div>
               <p className="text-white text-lg">{user.name}</p>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
