@@ -1,30 +1,27 @@
 package router
 
 import (
-	"database/sql"
 	"net/http"
 
 	"social-network/backend/internal/handlers"
-	"social-network/backend/internal/repository"
-	"social-network/backend/internal/service"
+	"social-network/backend/internal/middleware"
 
 	"github.com/gorilla/mux"
 )
 
-func NewRouter(serverMux *http.ServeMux, db *sql.DB) http.Handler {
+func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, auth *middleware.AuthMiddleware) http.Handler {
 
-	// Routeur principal PRO (Gorilla Mux)
 	router := mux.NewRouter()
 
-	// --- PROFIL : architecture propre (repo → service → handler) ---
-	profilRepo := repository.NewProfilRepository(db)
-	profilService := service.NewProfilService(profilRepo)
-	profilHandler := handlers.NewProfilHandler(profilService)
+	// Routes dynamiques protégées
+	router.Handle("/users/{id}/profile",
+		auth.RequireAuth(http.HandlerFunc(profilHandler.GetProfile)),
+	).Methods("GET")
 
-	// Route dynamique PRO
-	router.HandleFunc("/users/{id}/profile", profilHandler.GetProfile).Methods("GET")
+	// Route statique protégée déjà gérée dans main.go
+	// /me/profile
 
-	// Routes statiques (ServeMux de tes collègues)
+	// Toutes les autres routes : ServeMux
 	router.PathPrefix("/").Handler(serverMux)
 
 	return router

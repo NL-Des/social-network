@@ -18,6 +18,7 @@
   --font-mono: var(--font-geist-mono);
   /* syntaxe : x-offset | y-offset | blur | spread | color */
   --shadow-neon: 0 0 30px 4px rgba(73, 199, 255, 1);
+  --shadow-neon-panel: 0 0 12px 1px rgba(73, 199, 255, 0.55), 0 0 40px 6px rgba(73, 199, 255, 0.18);
 
   /* On lie les variables CSS à des noms utilisables dans Tailwind */
   /*   brand fait référence à une convention de nommage pour dire que ce sont les couleurs personnalisées du projet. */

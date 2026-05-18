@@ -18,6 +18,7 @@ func NewProfilHandler(s *service.ProfilService) *ProfilHandler {
 	return &ProfilHandler{ProfilService: s}
 }
 
+// /profile/{id}
 func (h *ProfilHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	// Validation du header X-User-ID
 	viewerHeader := r.Header.Get("X-User-ID")
@@ -76,4 +77,30 @@ func (h *ProfilHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(profile)
 
+}
+
+// /me
+func (h *ProfilHandler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
+
+	viewerHeader := r.Header.Get("X-User-ID")
+	if viewerHeader == "" {
+		http.Error(w, "missing X-User-ID header", http.StatusUnauthorized)
+		return
+	}
+
+	viewerID, err := strconv.Atoi(viewerHeader)
+	if err != nil {
+		http.Error(w, "invalid X-User-ID header", http.StatusBadRequest)
+		return
+	}
+
+	// viewerID == profileID
+	profile, err := h.ProfilService.GetProfile(viewerID, viewerID)
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(profile)
 }

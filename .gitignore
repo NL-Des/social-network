@@ -1,5 +1,9 @@
 node_modules/
 .pnpm-store/
 .env
-.next/ dev
+.next/
 dist/
+CLAUDE.md
+claude.md
+public/images/profil
+.next
