@@ -7,6 +7,7 @@ export interface GroupItem {
   name: string
   initials: string
   membersCount: string
+  description: string
 }
 
 interface LeftSidebarGroupsProps {
