@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -20,17 +21,9 @@ func NewProfilHandler(s *service.ProfilService) *ProfilHandler {
 
 // /profile/{id}
 func (h *ProfilHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
-	// Validation du header X-User-ID
-	viewerHeader := r.Header.Get("X-User-ID")
-	if viewerHeader == "" {
-		http.Error(w, "missing X-User-ID header", http.StatusUnauthorized)
-		return
-	}
-
-	// Récupération de l’ID du viewer depuis les headers
-	viewerID, err := strconv.Atoi(viewerHeader)
-	if err != nil {
-		http.Error(w, "invalid X-User-ID header", http.StatusBadRequest)
+	viewerID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -75,22 +68,17 @@ func (h *ProfilHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	// Réponse JSON
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(profile)
+	if err := json.NewEncoder(w).Encode(profile); err != nil {
+		log.Printf("encode profile: %v", err)
+	}
 
 }
 
 // /me
 func (h *ProfilHandler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
-
-	viewerHeader := r.Header.Get("X-User-ID")
-	if viewerHeader == "" {
-		http.Error(w, "missing X-User-ID header", http.StatusUnauthorized)
-		return
-	}
-
-	viewerID, err := strconv.Atoi(viewerHeader)
-	if err != nil {
-		http.Error(w, "invalid X-User-ID header", http.StatusBadRequest)
+	viewerID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -102,5 +90,7 @@ func (h *ProfilHandler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(profile)
+	if err := json.NewEncoder(w).Encode(profile); err != nil {
+		log.Printf("encode profile: %v", err)
+	}
 }

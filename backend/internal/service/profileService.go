@@ -1,7 +1,9 @@
 package service
 
 import (
+	"database/sql"
 	"errors"
+	"log"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/repository"
 )
@@ -26,15 +28,24 @@ func (s *ProfilService) GetProfile(viewerID, profileID int) (*model.PublicProfil
 
 	// Récupération de l'utilisateur cible
 	user, err := s.ProfilRepo.GetUserByID(profileID)
-	if err != nil {
+	if err == sql.ErrNoRows {
 		return nil, ErrUserNotFound
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	isOwner := viewerID == profileID
 
 	// Si ce n'est pas son profil et que le compte est privé : interdit
 	if !isOwner && user.IsPrivate {
-		return nil, ErrProfilePrivate
+		isFollower, err := s.ProfilRepo.IsFollower(viewerID, profileID)
+		if err != nil {
+			return nil, err
+		}
+		if !isFollower {
+			return nil, ErrProfilePrivate
+		}
 	}
 
 	// Construction du profil
@@ -51,9 +62,26 @@ func (s *ProfilService) GetProfile(viewerID, profileID int) (*model.PublicProfil
 	}
 
 	// Followers / Following / Posts
-	profile.Followers, _ = s.ProfilRepo.GetFollowers(profileID)
-	profile.Following, _ = s.ProfilRepo.GetFollowing(profileID)
-	profile.Posts, _ = s.ProfilRepo.GetPosts(profileID)
+	followers, err := s.ProfilRepo.GetFollowers(profileID)
+	if err != nil {
+		log.Printf("GetFollowers(%d): %v", profileID, err)
+		followers = []model.Follower{}
+	}
+	profile.Followers = followers
+
+	following, err := s.ProfilRepo.GetFollowing(profileID)
+	if err != nil {
+		log.Printf("GetFollowing(%d): %v", profileID, err)
+		following = []model.Following{}
+	}
+	profile.Following = following
+
+	posts, err := s.ProfilRepo.GetPosts(profileID)
+	if err != nil {
+		log.Printf("GetPosts(%d): %v", profileID, err)
+		posts = []model.AllPosts{}
+	}
+	profile.Posts = posts
 
 	return profile, nil
 }

@@ -56,7 +56,6 @@ func main() {
 	mux.HandleFunc("/auth/logout", logoutHandler.HandleLogout)
 
 	// Routes protégées
-	mux.HandleFunc("/me/profile", authMiddleware.RequireAuth(profileHandler.GetMyProfile))
 	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
 
 	r := router.NewRouter(mux, profileHandler, authMiddleware)

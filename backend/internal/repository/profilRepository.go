@@ -33,7 +33,9 @@ func (r *ProfilRepository) GetUserByID(id int) (*model.User, error) {
 		&user.ProfilePicture,
 		&user.IsPrivate,
 	)
-
+	if err == sql.ErrNoRows {
+		return nil, sql.ErrNoRows // utilisateur vraiment introuvable
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -47,18 +49,23 @@ func (r *ProfilRepository) GetFollowers(userID int) ([]model.Follower, error) {
         SELECT u.ID, u.pseudo
         FROM followers f
         JOIN users u ON u.ID = f.followerID
-        WHERE f.followingID = $1
+        WHERE f.followingID = $1 AND f.status = 'accepted'
     `, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var followers []model.Follower
+	followers := make([]model.Follower, 0)
 	for rows.Next() {
 		var f model.Follower
-		rows.Scan(&f.ID, &f.Username)
+		if err := rows.Scan(&f.ID, &f.Username); err != nil {
+			return nil, err
+		}
 		followers = append(followers, f)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return followers, nil
@@ -70,18 +77,23 @@ func (r *ProfilRepository) GetFollowing(userID int) ([]model.Following, error) {
         SELECT u.ID, u.pseudo
         FROM followers f
         JOIN users u ON u.ID = f.followingID
-        WHERE f.followerID = $1
+        WHERE f.followerID = $1 AND f.status = 'accepted'
     `, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var following []model.Following
+	following := make([]model.Following, 0)
 	for rows.Next() {
 		var f model.Following
-		rows.Scan(&f.ID, &f.Username)
+		if err := rows.Scan(&f.ID, &f.Username); err != nil {
+			return nil, err
+		}
 		following = append(following, f)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return following, nil
@@ -100,12 +112,30 @@ func (r *ProfilRepository) GetPosts(userID int) ([]model.AllPosts, error) {
 	}
 	defer rows.Close()
 
-	var posts []model.AllPosts
+	posts := make([]model.AllPosts, 0)
 	for rows.Next() {
 		var p model.AllPosts
-		rows.Scan(&p.ID, &p.Title, &p.Content)
+		if err := rows.Scan(&p.ID, &p.Title, &p.Content); err != nil {
+			return nil, err
+		}
 		posts = append(posts, p)
 	}
-
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return posts, nil
+}
+
+func (r *ProfilRepository) IsFollower(viewerID, profileID int) (bool, error) {
+	var exists bool
+	err := r.db.QueryRow(`
+        SELECT EXISTS (
+            SELECT 1 FROM followers
+            WHERE followerID = $1 AND followingID = $2 AND status = 'accepted'
+        )
+    `, viewerID, profileID).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }

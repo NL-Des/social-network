@@ -5,7 +5,7 @@ type PublicProfile struct {
 	Pseudo      string `json:"pseudo"`
 	FirstName   string `json:"firstName"`
 	LastName    string `json:"lastName"`
-	DateOfBirth string `json:"DateOfBirth"`
+	DateOfBirth string `json:"dateOfBirth"`
 	AboutMe     string `json:"aboutMe"`
 	Avatar      string `json:"avatar"`
 	IsPrivate   bool   `json:"isPrivate"`

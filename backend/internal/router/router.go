@@ -13,13 +13,14 @@ func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, 
 
 	router := mux.NewRouter()
 
-	// Routes dynamiques protégées
+	// Routes profil
 	router.Handle("/users/{id}/profile",
 		auth.RequireAuth(http.HandlerFunc(profilHandler.GetProfile)),
 	).Methods("GET")
 
-	// Route statique protégée déjà gérée dans main.go
-	// /me/profile
+	router.Handle("/me/profile",
+		auth.RequireAuth(http.HandlerFunc(profilHandler.GetMyProfile)),
+	).Methods("GET")
 
 	// Toutes les autres routes : ServeMux
 	router.PathPrefix("/").Handler(serverMux)
