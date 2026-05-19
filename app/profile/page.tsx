@@ -26,6 +26,42 @@ const mockSidebarUsers: SidebarUser[] = [
   { id: '6', name: 'Valentine L', initials: 'VL', online: false },
 ];
 
+const mockData: ProfilePageProps = {
+  user: {
+    firstName: 'Nathan',
+    lastName: 'Leonard',
+    username: 'nleonard',
+    email: 'nathan33.travail@gmail.com',
+    birthDate: '01/01/2000',
+    followersCount: 5,
+    initials: 'NL',
+  },
+  visibility: 'public',
+  following: [
+    { id: '1', name: 'Audrey D', initials: 'AD' },
+    { id: '2', name: 'Jade C', initials: 'JC' },
+    { id: '3', name: 'Nathan L', initials: 'NL' },
+    { id: '4', name: 'Nathan P', initials: 'NP' },
+    { id: '5', name: 'Valentine L', initials: 'VL' },
+  ],
+  followers: [
+    { id: '1', name: 'Audrey D', initials: 'AD' },
+    { id: '2', name: 'Jade C', initials: 'JC' },
+    { id: '3', name: 'Nathan L', initials: 'NL' },
+    { id: '4', name: 'Nathan P', initials: 'NP' },
+    { id: '5', name: 'Valentine L', initials: 'VL' },
+  ],
+  events: [
+    { id: '1', title: 'Zone01', subtitle: 'Event conférence', initials: '01' },
+    { id: '2', title: 'Gaming', subtitle: 'Test Deadline invaders', initials: 'GA' },
+    { id: '3', title: 'Parc expo', subtitle: 'Forum des métiers', initials: 'PE' },
+    { id: '4', title: 'Kindarena', subtitle: 'Codeur en Seine', initials: 'KI' },
+  ],
+  groups: [],
+  allUsers: [],
+  navItems: [],
+};
+
 function ProfileContent({
   data,
   headerUser,
@@ -79,39 +115,13 @@ function ProfileContent({
 }
 
 export default function Page() {
-  const [data, setData] = useState<ProfilePageProps | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<ProfilePageProps>(mockData);
 
   useEffect(() => {
     profileAction()
-      .then((result) => {
-        setData(result);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError('Impossible de charger le profil.');
-        setLoading(false);
-      });
+      .then((result) => setData(result))
+      .catch(() => {});
   }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-brand-text font-retro text-sm animate-pulse">
-          Chargement...
-        </p>
-      </div>
-    );
-  }
-
-  if (error || !data) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-red-400">{error ?? 'Données introuvables.'}</p>
-      </div>
-    );
-  }
 
   const headerUser: CurrentUser = {
     name: `${data.user.firstName} ${data.user.lastName[0]}.`,
