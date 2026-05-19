@@ -125,7 +125,7 @@ export default function NotificationList() {
       {/* En-tête */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="font-retro text-brand-border text-base">Notifications</h2>
+          <h2 className="font-bold text-[#49C7FF] text-base">Notifications</h2>
           {unreadCount > 0 && (
             <span className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold">
               {unreadCount}

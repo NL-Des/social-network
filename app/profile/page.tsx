@@ -83,7 +83,7 @@ function ProfileContent({
               {/* Informations personnelles */}
               <div className="bg-brand-card border border-brand-border rounded-2xl p-12 flex flex-col justify-between">
                 <div>
-                  <h2 className="font-retro text-brand-border text-base mb-5 text-center">
+                  <h2 className="font-bold text-[#49C7FF] text-base mb-5 text-center">
                     Informations personnelle
                   </h2>
                   <dl className="space-y-2 text-base">
@@ -107,7 +107,7 @@ function ProfileContent({
 
               {/* Visibilité */}
               <div className="bg-brand-card border border-brand-border  rounded-2xl p-12">
-                <h2 className="font-retro text-brand-border text-base mb-5 text-center">
+                <h2 className="font-bold text-[#49C7FF] text-base mb-5 text-center">
                   Visibilité
                 </h2>
                 <p className="text-brand-text text-base mb-4">
@@ -149,7 +149,7 @@ function ProfileContent({
             <div className="flex-1 grid grid-cols-3 gap-15">
               {/* Suivi(e)s */}
               <div className="bg-brand-card border border-brand-border  rounded-2xl p-5">
-                <h2 className="font-retro text-brand-border text-base mb-4 text-center">
+                <h2 className="font-bold text-[#49C7FF] text-base mb-4 text-center">
                   Suivi(e)s
                 </h2>
                 <div className="flex flex-col gap-1">
@@ -161,7 +161,7 @@ function ProfileContent({
 
               {/* Abonnés */}
               <div className="bg-brand-card border border-brand-border  rounded-2xl p-5">
-                <h2 className="font-retro text-brand-border text-base mb-4 text-center">
+                <h2 className="font-bold text-[#49C7FF] text-base mb-4 text-center">
                   Abonnés
                 </h2>
                 <div className="flex flex-col gap-1">
@@ -173,7 +173,7 @@ function ProfileContent({
 
               {/* Évènements */}
               <div className="bg-brand-card border border-brand-border  rounded-2xl p-5">
-                <h2 className="font-retro text-brand-border text-base mb-4 text-center">
+                <h2 className="font-bold text-[#49C7FF] text-base mb-4 text-center">
                   Évènements
                 </h2>
                 <div className="flex flex-col gap-2">

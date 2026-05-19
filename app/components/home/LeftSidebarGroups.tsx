@@ -25,7 +25,7 @@ export default function LeftSidebarGroups({ groups, activeId, onSelect }: LeftSi
 
   return (
     <aside className="h-full flex flex-col bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 gap-4">
-      <h2 className="font-retro text-brand-text text-base shrink-0">Groupes</h2>
+      <h2 className="font-bold text-[#49C7FF] text-base shrink-0">Groupes</h2>
 
       <input
         value={search}

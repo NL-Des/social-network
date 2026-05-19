@@ -22,7 +22,7 @@ export default function RightSidebar({ groups, users }: RightSidebarProps) {
   return (
     <aside className="h-full overflow-y-auto bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-6">
       <section>
-        <h2 className="font-retro text-brand-text text-base mb-5">Mes Groupes</h2>
+        <h2 className="font-bold text-[#49C7FF] text-base mb-5">Mes Groupes</h2>
         <div className="flex flex-col gap-4">
           {groups.map((group) => (
             <Link
@@ -41,7 +41,7 @@ export default function RightSidebar({ groups, users }: RightSidebarProps) {
       </section>
 
       <section>
-        <h2 className="font-retro text-brand-text text-base mb-5">Utilisateurs</h2>
+        <h2 className="font-bold text-[#49C7FF] text-base mb-5">Utilisateurs</h2>
         <div className="flex flex-col gap-3">
           {users.map((user) => (
             <Link
