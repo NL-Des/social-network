@@ -2,7 +2,10 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
+	appErrors "social-network/backend/internal/errors"
 	"social-network/backend/internal/model"
+
 	/* "social-network/backend/internal/model" */
 	"time"
 )
@@ -11,15 +14,14 @@ type CommentRepo struct {
 	db *sql.DB
 }
 
-func NewCommentRepo(db *sql.DB) *CommentRepo{
+func NewCommentRepo(db *sql.DB) *CommentRepo {
 	return &CommentRepo{db: db}
 }
 
 /*
 * Création d'un nouveau commentaire dans la base de données
 * Paramètres : ID du post, ID de l'auteur contenu du commentaire
-
-*/
+ */
 func (r *CommentRepo) CreateNewComment(postID int, authorID, content string) error {
 	_, err := r.db.Exec(
 		`INSERT INTO comments (authorID, content)
@@ -27,13 +29,16 @@ func (r *CommentRepo) CreateNewComment(postID int, authorID, content string) err
 		WHERE postID = ?
 		`, authorID, content, postID)
 
-		return err
+	if err != nil {
+		return appErrors.New(appErrors.CodeInternal, "impossible d'enregistrer le commentaire", err)
+	}
+	return nil
 }
 
 /*
 * Mise à jour d'un commentaire dans la base de données après modification par l'utilisateur
 * Paramètres : ID du commentaire, contenu
-*/
+ */
 func (r *CommentRepo) UpdateExistingComment(commentID int, content string) error {
 	updateTime := time.Now()
 
@@ -42,26 +47,32 @@ func (r *CommentRepo) UpdateExistingComment(commentID int, content string) error
 		WHERE ID = ?
 		`, content, updateTime, commentID)
 
-	return err
+	if err != nil {
+		return appErrors.New(appErrors.CodeInternal, "impossible de modifier le commentaire", err)
+	}
+	return nil
 }
 
 /*
 * Suppression d'un commentaire de la base de données par l'utilisateur ou par un modérateur
 * Paramètres : ID du Comment
-*/
+ */
 func (r *CommentRepo) DeleteExistingComment(commentID int) error {
-		_, err := r.db.Exec(`
+	_, err := r.db.Exec(`
 		DELETE FROM comments
 		WHERE ID = ?
 		`, commentID)
 
-		return err
+	if err != nil {
+		return appErrors.New(appErrors.CodeInternal, "impossible de supprimer le commentaire", err)
+	}
+	return nil
 }
 
 /*
 * Récupère l'ID de l'auteur d'un commentaire
 * Paramètres : ID du post
-*/
+ */
 func (r *CommentRepo) GetCommentAuthorID(commentID int) (string, error) {
 	row := r.db.QueryRow(`
 	SELECT authorID
@@ -73,7 +84,10 @@ func (r *CommentRepo) GetCommentAuthorID(commentID int) (string, error) {
 
 	err := row.Scan(&authorID)
 	if err != nil || authorID == "" {
-		return "", err
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", appErrors.New(appErrors.CodeNotFound, "commentaire introuvable", err)
+		}
+		return "", appErrors.New(appErrors.CodeInternal, "erreur de lecture du commentaire", err)
 	}
 
 	return authorID, nil
@@ -82,16 +96,16 @@ func (r *CommentRepo) GetCommentAuthorID(commentID int) (string, error) {
 /*
 * Récupère tous les commentaires d'un post
 * Paramètres : ID du post
-*/
+ */
 func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error) {
 	rows, err := r.db.Query(
 		`SELECT c.ID, c.content, c.createdat, c.updatedat, u.username, u.avatar
 		FROM comments c
 		JOIN users u ON c.authorID = u.ID
 		WHERE postID = ?
-		`,postID)
-		if err != nil {
-		return nil, err
+		`, postID)
+	if err != nil {
+		return nil, appErrors.New(appErrors.CodeInternal, "erreur lors de la récupération de la liste des commentaires", err)
 	}
 	defer rows.Close()
 
@@ -99,15 +113,15 @@ func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error)
 	for rows.Next() {
 		comment := model.Comment{}
 		if err := rows.Scan(&comment.ID, &comment.Content, &comment.CreatedAt, &comment.Author.Username, &comment.Author.ProfilePicture); err != nil {
-			return nil, err
+			return nil, appErrors.New(appErrors.CodeInternal, "erreur lors de l'extraction d'un commentaire", err)
 		}
-		
+
 		comments = append(comments, comment)
 	}
 
 	if err := rows.Err(); err != nil {
-    return nil, err
+		return nil, appErrors.New(appErrors.CodeInternal, "erreur de curseur sur la liste des commentaires", err)
+	}
+
+	return comments, nil
 }
-   
-    return comments, nil
-} 

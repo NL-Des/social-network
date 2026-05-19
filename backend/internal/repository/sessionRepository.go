@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	appErrors "social-network/backend/internal/errors"
 	"time"
 )
 
@@ -20,7 +21,10 @@ func (r *SessionRepo) CreateSession(token string, userID int, createdAt time.Tim
 		VALUES ($1, $2, $3, $4)
 	`, token, userID, createdAt, expiresAt)
 
-	return err
+	if err != nil {
+		return appErrors.New(appErrors.CodeInternal, "erreur lors de la persistance de la session", err)
+	}
+	return nil
 }
 
 func (r *SessionRepo) GetSession(token string) (int, error) {
@@ -34,7 +38,10 @@ func (r *SessionRepo) GetSession(token string) (int, error) {
 	`, token).Scan(&userID, &expires)
 
 	if err != nil {
-		return 0, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, appErrors.New(appErrors.CodeNotFound, "aucune session active trouvée pour ce token", err)
+		}
+		return 0, appErrors.New(appErrors.CodeInternal, "erreur de lecture de la session", err)
 	}
 
 	if time.Now().After(expires) {
@@ -59,7 +66,7 @@ func (r *SessionRepo) SessionExists(userID int) (string, bool, error) {
 	}
 
 	if err != nil {
-		return "", false, err
+		return "", false, appErrors.New(appErrors.CodeInternal, "erreur de vérification d'existence de la session", err)
 	}
 
 	return token, true, nil
@@ -70,5 +77,8 @@ func (r *SessionRepo) DeleteSession(token string) error {
 		DELETE FROM session
 		WHERE token = $1
 	`, token)
-	return err
+	if err != nil {
+		return appErrors.New(appErrors.CodeInternal, "erreur lors de la suppression de la session", err)
+	}
+	return nil
 }

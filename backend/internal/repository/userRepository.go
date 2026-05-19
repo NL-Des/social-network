@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	appErrors "social-network/backend/internal/errors"
 	"social-network/backend/internal/model"
 )
 
@@ -33,7 +34,10 @@ func (r *UserRepo) GetFullProfileByID(id int) (model.FullProfile, error) {
 		FROM users WHERE id = $1
 	`, id).Scan(&profile.FirstName, &profile.LastName, &profile.Username, &profile.Email, &birthDate, &isprivate)
 	if err != nil {
-		return model.FullProfile{}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return model.FullProfile{}, appErrors.New(appErrors.CodeNotFound, "le profil utilisateur demandé n'existe pas", err)
+		}
+		return model.FullProfile{}, appErrors.New(appErrors.CodeInternal, "erreur serveur lors de la récupération du profil", err)
 	}
 
 	profile.BirthDate = birthDate.Format("2006-01-02")
@@ -66,7 +70,10 @@ func (r *UserRepo) GetProfileByID(id int) (model.MeResponse, error) {
     WHERE id = $1
   `, id).Scan(&firstname, &lastname, &pseudo)
 	if err != nil {
-		return model.MeResponse{}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return model.MeResponse{}, appErrors.New(appErrors.CodeNotFound, "utilisateur introuvable", err)
+		}
+		return model.MeResponse{}, appErrors.New(appErrors.CodeInternal, "erreur serveur", err)
 	}
 
 	// Récupération du nombre total de followers pour cet utilisateur
@@ -75,7 +82,7 @@ func (r *UserRepo) GetProfileByID(id int) (model.MeResponse, error) {
     SELECT COUNT(*) FROM followers WHERE followingID = $1
   `, id).Scan(&followersCount)
 	if err != nil {
-		return model.MeResponse{}, err
+		return model.MeResponse{}, appErrors.New(appErrors.CodeInternal, "erreur serveur", err)
 	}
 
 	// Formatage du nom d'affichage : "John Doe" -> "John D"
@@ -122,7 +129,10 @@ func (r *UserRepo) GetUserbyID(id int) (model.User, error) {
 	)
 
 	if err != nil {
-		return model.User{}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return model.User{}, appErrors.New(appErrors.CodeNotFound, "compte utilisateur inexistant", err)
+		}
+		return model.User{}, appErrors.New(appErrors.CodeInternal, "erreur lors du chargement des données utilisateur", err)
 	}
 	return user, nil
 }
@@ -141,12 +151,12 @@ func (r *UserRepo) GetUserCredsbyEmail(email string) (model.LoginUser, error) {
 		&user.Password,
 	)
 
-	if err == sql.ErrNoRows {
-		return model.LoginUser{}, errors.New("Email inconnu")
-	}
-
 	if err != nil {
-		return model.LoginUser{}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			// TRADUCTION : Remplacement du raw error par notre AppError typée
+			return model.LoginUser{}, appErrors.New(appErrors.CodeNotFound, "identifiants incorrects (email inconnu)", err)
+		}
+		return model.LoginUser{}, appErrors.New(appErrors.CodeInternal, "erreur critique lors de l'authentification", err)
 	}
 	return user, nil
 }
@@ -167,7 +177,7 @@ func (r *UserRepo) UserExists(email, username string) (bool, string, error) {
 	}
 
 	if err != nil {
-		return false, "", err
+		return false, "", appErrors.New(appErrors.CodeInternal, "erreur de vérification des doublons", err)
 	}
 
 	// On identifie lequel des deux champs pose problème pour retourner un message d'erreur précis au front
@@ -210,5 +220,8 @@ func (r *UserRepo) SaveUser(user model.RegisterUser) error {
 		user.Description,
 	)
 
-	return err
+	if err != nil {
+		return appErrors.New(appErrors.CodeInternal, "impossible d'enregistrer le nouvel utilisateur", err)
+	}
+	return nil
 }
