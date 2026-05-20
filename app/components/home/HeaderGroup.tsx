@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import NotificationList from './notification'
 import { CurrentUser } from './Header'
+import { logoutAction } from '@/app/auth/logout/actions'
 
 const NAV_LINKS = [
   { label: 'Accueil',  href: '/'         },
@@ -84,6 +85,13 @@ export default function HeaderGroup({ user, groupName }: HeaderGroupProps) {
               </div>
             )}
           </div>
+
+          <button
+            onClick={logoutAction}
+            className="text-red-400 hover:text-red-300 transition-colors text-lg px-5 py-2 rounded-lg"
+          >
+            Déconnexion
+          </button>
         </nav>
       </div>
     </header>

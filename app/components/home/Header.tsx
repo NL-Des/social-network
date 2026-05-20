@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import NotificationList from './notification'
+import { logoutAction } from '@/app/auth/logout/actions'
 
 export interface CurrentUser {
   name: string
@@ -83,6 +84,13 @@ export default function Header({ user }: { user: CurrentUser }) {
               </div>
             )}
           </div>
+
+          <button
+            onClick={logoutAction}
+            className="text-red-400 hover:text-red-300 transition-colors text-lg px-5 py-2 rounded-lg"
+          >
+            Déconnexion
+          </button>
         </nav>
       </div>
     </header>
