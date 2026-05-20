@@ -14,7 +14,7 @@ const mockGroupList: GroupItem[] = [
   { id: '2', name: 'Dev Frontend',  initials: 'DF', membersCount: '3,4k', description: 'Communauté dédiée au développement frontend : React, Next.js, CSS, performance et accessibilité.' },
   { id: '3', name: 'Design & UX',   initials: 'DU', membersCount: '1,2k', description: 'Échanges autour du design d\'interface, de l\'expérience utilisateur et des outils créatifs.' },
   { id: '4', name: 'Backend Go',    initials: 'BG', membersCount: '214',  description: 'Groupe dédié au langage Go : patterns, performances, APIs et bonnes pratiques.' },
-  { id: '5', name: 'Open Source',   initials: 'OS', membersCount: '5,1k', description: 'Contributeurs et défenseurs de l\'open source. Projets, discussions et entraide.' },
+  { id: '5', name: 'Route de test',   initials: 'OS', membersCount: '5,1k', description: 'Contributeurs et défenseurs de l\'open source. Projets, discussions et entraide.' },
 ]
 
 const mockGroups: Group[] = mockGroupList.map(({ id, name, membersCount }) => ({ id, name, membersCount }))
@@ -69,7 +69,11 @@ export default function GroupesPage() {
             <LeftSidebarGroups
               groups={mockGroupList}
               activeId={activeId}
-              onSelect={setActiveId}
+              // Déviation pour accéder et tester la page inside-groups
+              onSelect={(id) => {
+                if (id === '5') { router.push('/inside-groups'); return }
+                setActiveId(id)
+              }}
             />
           </div>
 
