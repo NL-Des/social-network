@@ -57,16 +57,16 @@ export default function Comments({ post, comments }: CommentsProps) {
       <div className="flex-1 overflow-hidden bg-brand-card border border-brand-border rounded-2xl flex flex-col">
 
         {/* Liste des commentaires */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 flex flex-col gap-3">
           {localComments.map((c) => (
-            <div key={c.id} className="flex gap-3">
+            <div key={c.id} className="bg-white/5 border border-brand-border/60 rounded-xl px-4 py-3 flex gap-3 shadow-[0_0_8px_rgba(73,199,255,0.08)]">
               <div className="w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
                 {c.author.initials}
               </div>
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col gap-1">
                 <p className="text-sm">
-                  <span className="font-semibold text-brand-border">{c.author.name}</span>
-                  <span className="text-brand-text/60 ml-2">{c.date}</span>
+                  <span className="font-bold text-white">{c.author.name}</span>
+                  <span className="text-brand-text/50 ml-2 font-normal">{c.date}</span>
                 </p>
                 <p className="text-brand-text text-base leading-relaxed">{c.text}</p>
               </div>

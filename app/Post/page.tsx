@@ -67,10 +67,10 @@ export default function PostPage() {
 
   return (
     <div className="bg-background h-screen flex flex-col overflow-hidden">
-      <HeaderPost user={user} postTitle="Route de test" />
+      <HeaderPost user={user} postTitle="Titre à lier aux données à importer pour le post" />
 
       <div className="pt-26 flex-1 overflow-hidden px-4 pb-4">
-        <div className="h-full grid grid-cols-[280px_1fr_264px] gap-4 pt-4">
+        <div className="h-full grid grid-cols-[280px_1fr_264px] grid-rows-1 gap-4 pt-4">
 
           {/* Colonne gauche — membres du groupe */}
           <div className="h-full">

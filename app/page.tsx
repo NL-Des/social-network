@@ -23,6 +23,11 @@ const mockPosts: Post[] = [
     author: { name: 'Bulle Doe', initials: 'BD' },
     content: `Les WebSockets, c'est le temps réel au cœur du web ⚡\nUne connexion continue pour des échanges instantanés\nChats, notifications, jeux... tout devient fluide et vivant\nMoins d'attente, plus d'interaction : le web respire en direct`,
   },
+  {
+    id: '4',
+    author: { name: 'Bulle Doe', initials: 'BD' },
+    content: `Les WebSockets, c'est le temps réel au cœur du web ⚡\nUne connexion continue pour des échanges instantanés\nChats, notifications, jeux... tout devient fluide et vivant\nMoins d'attente, plus d'interaction : le web respire en direct`,
+  },
 ]
 
 const mockGroups: Group[] = [
