@@ -3,6 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+
+	appErrors "social-network/backend/internal/errors"
 	"social-network/backend/internal/service"
 )
 
@@ -14,45 +16,34 @@ func NewMeHandler(ps *service.ProfileService) *MeHandler {
 	return &MeHandler{profileService: ps}
 }
 
-func (h *MeHandler) HandleMe(w http.ResponseWriter, r *http.Request) {
+func (h *MeHandler) HandleMe(w http.ResponseWriter, r *http.Request) error {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
+		return appErrors.New(appErrors.CodeUnauthorized, "Accès refusé : session introuvable", nil)
 	}
 
 	profile, err := h.profileService.GetProfile(userID)
 	if err != nil {
-		http.Error(w, "user not found", http.StatusNotFound)
-		return
+		return err
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(profile)
+	_ = json.NewEncoder(w).Encode(profile)
+	return nil
 }
 
-func (h *MeHandler) HandleProfile(w http.ResponseWriter, r *http.Request) {
+func (h *MeHandler) HandleProfile(w http.ResponseWriter, r *http.Request) error {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
+		return appErrors.New(appErrors.CodeUnauthorized, "Accès refusé : session introuvable", nil)
 	}
 
 	profile, err := h.profileService.GetFullProfile(userID)
 	if err != nil {
-		http.Error(w, "user not found", http.StatusNotFound)
-		return
-	}
-
-	response := map[string]interface{}{
-		"user":     profile,
-		"following": []interface{}{},
-		"followers": []interface{}{},
-		"events":   []interface{}{},
-		"groups":   []interface{}{},
-		"allUsers": []interface{}{},
+		return err
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(profile)
+	return nil
 }

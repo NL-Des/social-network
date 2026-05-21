@@ -49,14 +49,15 @@ func main() {
 	mux := http.NewServeMux()
 	// Route principale
 	mux.HandleFunc("/", handlers.HomeHandler)
-	mux.HandleFunc("/auth/login", loginHandler.LoginHandler)
-	mux.HandleFunc("/auth/register", registerHandler.RegisterHandler)
-	mux.HandleFunc("/auth/logout", logoutHandler.HandleLogout)
+	// Intégration du middleware ErrorHandler autour des handlers adaptés
+	mux.HandleFunc("/auth/login", middleware.ErrorHandler(loginHandler.LoginHandler))
+	mux.HandleFunc("/auth/register", middleware.ErrorHandler(registerHandler.RegisterHandler))
+	mux.HandleFunc("/auth/logout", middleware.ErrorHandler(logoutHandler.HandleLogout))
 
-	// Routes protégées
-	mux.HandleFunc("/user/me", authMiddleware.RequireAuth(meHandler.HandleMe))
-	mux.HandleFunc("/user/profile", authMiddleware.RequireAuth(meHandler.HandleProfile))
-	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
+	// Routes protégées : L'ErrorHandler englobe le package complet (Auth + Handler)
+	mux.HandleFunc("/user/me", middleware.ErrorHandler(authMiddleware.RequireAuth(meHandler.HandleMe)))
+	mux.HandleFunc("/user/profile", middleware.ErrorHandler(authMiddleware.RequireAuth(meHandler.HandleProfile)))
+	mux.HandleFunc("/test", middleware.ErrorHandler(authMiddleware.RequireAuth(handlers.TestAuthHandler)))
 
 	// Démarrer le serveur
 	fmt.Println("Démarrage sur http://localhost:5090")

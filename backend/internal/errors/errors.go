@@ -8,6 +8,7 @@ const (
 	CodeForbidden    = "FORBIDDEN"
 	CodeInvalidInput = "INVALID_INPUT"
 	CodeInternal     = "INTERNAL"
+	CodeUnauthorized = "UNAUTHORIZED"
 )
 
 // 2. Structure pour stocker les erreurs de validation de formulaires

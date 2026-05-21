@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
+
+	appErrors "social-network/backend/internal/errors"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/service"
 )
@@ -14,93 +15,61 @@ type RegisterHandler struct {
 	UserService *service.UserService
 }
 
-type RegisterResponse struct {
-	Sucess bool `json:"success"`
-}
-
 func NewRegisterHandler(us *service.UserService) *RegisterHandler {
 	return &RegisterHandler{UserService: us}
 }
-func (rh *RegisterHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	// permet aux deux serveurs de communiquer sans que le navigateur les bloque
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	fmt.Println("Requête à /registerHandler")
-
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
+func (rh *RegisterHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) error {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
-		return
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return nil
 	}
 
 	var user model.RegisterUser
-	// On autorise par exemple 10 Mo de données
-	const maxMemory = 50 << 20 // 20 * 1024 * 1024
-	err := r.ParseMultipartForm(maxMemory)
-	if err != nil {
-		http.Error(w, "Impossible d'analyser le formulaire", http.StatusBadRequest)
-		return
-	}
 
-	// Récupération du fichier image
-	file, header, err := r.FormFile("profilePicture")
-	if err != nil && err != http.ErrMissingFile {
-		http.Error(w, "Erreur lecture image", http.StatusBadRequest)
-		fmt.Println("Erreur de lecture de l'image avatar")
-		return
-	}
-	if file != nil {
-		// r.FormFile() ouvre un flux de lecture vers le fichier uploadé temporaire. Si pas fermé le flux reste ouvert jusqu'a la fin du programme
-		defer file.Close()
+	// Traitement multipart (si présent)
+	err := r.ParseMultipartForm(10 << 20)
+	if err == nil {
+		file, header, fileErr := r.FormFile("profilePicture")
+		if fileErr == nil {
+			defer file.Close()
+			fileBytes, readErr := io.ReadAll(file)
+			if readErr != nil {
+				return appErrors.New(appErrors.CodeInternal, "Erreur lors de la lecture de l'avatar", readErr)
+			}
 
-		// Lire le contenu du fichier
-		fileBytes, err := io.ReadAll(file)
-		if err != nil {
-			http.Error(w, "Erreur lecture fichier", http.StatusInternalServerError)
-			fmt.Println("Erreur de lecture du fichier avatar")
-			return
+			const UploadDir = "../public/images/profil/"
+			savePath := UploadDir + header.Filename
+			writeErr := os.WriteFile(savePath, fileBytes, 0644)
+			if writeErr != nil {
+				return appErrors.New(appErrors.CodeInternal, "Erreur de stockage physique de l'avatar", writeErr)
+			}
+			user.ProfilePicture = savePath
 		}
 
-		// Sauvegarder sur disque
-		const UploadDir = "../public/images/profil/"
-		savePath := UploadDir + header.Filename
-		// os.WriteFile ecrit dans le dossier uploads qui est a la racine du dossier ou est lancer le run
-		err = os.WriteFile(savePath, fileBytes, 0644)
-		if err != nil {
-			http.Error(w, "Erreur sauvegarde fichier", http.StatusInternalServerError)
-			fmt.Println("Erreur de sauvegarde de l'avatar")
-			return
+		user.Name = r.FormValue("name")
+		user.FirstName = r.FormValue("firstName")
+		user.Birthday = r.FormValue("birthday")
+		user.Email = r.FormValue("email")
+		user.Password = r.FormValue("password")
+		user.ConfirmPassword = r.FormValue("confirmPassword")
+		user.Username = r.FormValue("userName")
+		user.Description = r.FormValue("description")
+	} else {
+		// Alternative si c'est du JSON brut sans fichier
+		if decodeErr := json.NewDecoder(r.Body).Decode(&user); decodeErr != nil {
+			return appErrors.New(appErrors.CodeInvalidInput, "JSON invalide", decodeErr)
 		}
-		user.ProfilePicture = savePath
 	}
 
-	user.Name = r.FormValue("name")
-	user.FirstName = r.FormValue("firstName")
-	user.Birthday = r.FormValue("birthday")
-	user.Email = r.FormValue("email")
-	user.Password = r.FormValue("password")
-	user.ConfirmPassword = r.FormValue("confirmPassword")
-	user.Username = r.FormValue("userName")
-	user.Description = r.FormValue("description")
-	/* 	user.ProfilePicture = r.FormValue("profilePicture") */
-	user.IsPrivate = true
-
+	// Appel du service (renvoie des AppError typées de validation ou de conflit)
 	err = rh.UserService.Register(user)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return err
 	}
 
-	response := RegisterResponse{
-		Sucess: true,
-	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode((response))
-
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
+	return nil
 }

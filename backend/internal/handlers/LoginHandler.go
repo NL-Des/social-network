@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	appErrors "social-network/backend/internal/errors"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/service"
 	"time"
@@ -22,42 +23,30 @@ func NewLoginHandler(us *service.UserService, ss *service.SessionService) *Login
 	return &LoginHandler{UserService: us, SessionService: ss}
 }
 
-func (lh *LoginHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (lh *LoginHandler) LoginHandler(w http.ResponseWriter, r *http.Request) error {
 	fmt.Println("Requête à LoginHandler")
-	// permet aux deux serveurs de communiquer sans que le navigateur les bloque
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
 	if r.Method != http.MethodPost {
-		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
-		return
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return nil
 	}
 
 	var credentials model.LoginUser
-
 	err := json.NewDecoder(r.Body).Decode(&credentials)
 	if err != nil {
-		http.Error(w, "Erreur de lecture du JSON", http.StatusBadRequest)
-		return
+		return appErrors.New(appErrors.CodeInvalidInput, "Erreur de lecture du corps JSON", err)
 	}
 
 	//-- Vérifier credentials à la tentative de connexion --
 	user, err := lh.UserService.Login(credentials.Email, credentials.Password)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return err
 	}
 
 	//-- Générer session et créer cookie --
 	token, err := lh.SessionService.CreateSession(user.ID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	http.SetCookie(w, &http.Cookie{
@@ -75,4 +64,5 @@ func (lh *LoginHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode((response))
 
+	return nil
 }

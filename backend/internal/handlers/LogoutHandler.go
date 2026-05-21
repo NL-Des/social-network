@@ -14,19 +14,17 @@ func NewLogoutHandler(ss *service.SessionService) *LogoutHandler {
 	return &LogoutHandler{SessionService: ss}
 }
 
-func (h *LogoutHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
+func (h *LogoutHandler) HandleLogout(w http.ResponseWriter, r *http.Request) error {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
-		return
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return nil
 	}
 
 	cookie, err := r.Cookie("session_token")
 	if err == nil {
-		//suppression côté db
-		h.SessionService.DeleteSession(cookie.Value)
+		_ = h.SessionService.DeleteSession(cookie.Value)
 	}
 
-	// envoi d'un cookie vide pour suppression côté client
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
 		Value:    "",
@@ -36,7 +34,6 @@ func (h *LogoutHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	})
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]bool{
-		"success": true,
-	})
+	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
+	return nil
 }

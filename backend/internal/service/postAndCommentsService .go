@@ -2,13 +2,14 @@ package service
 
 import (
 	"fmt"
+	appErrors "social-network/backend/internal/errors"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/repository"
 )
 
 type PostAndCommentsService struct {
-	postRepo *repository.PostRepo
-	tagRepo *repository.TagRepo
+	postRepo    *repository.PostRepo
+	tagRepo     *repository.TagRepo
 	commentRepo *repository.CommentRepo
 }
 
@@ -17,17 +18,17 @@ func NewPostAndCommentsService(pr *repository.PostRepo, tr *repository.TagRepo, 
 }
 
 /*
-* Gère toutes les fonctions pour la création d'un nouveau post 
+* Gère toutes les fonctions pour la création d'un nouveau post
 * 1. Ajout du post dans la base de données puis récupération de son ID
 * 2. Ajout des tags liés au post dans la base de données
 * Paramètres : ID du posteur et postData (titre, contenu, confidentialité, tags)
-*/
+ */
 func (s *PostAndCommentsService) CreateNewPost(authorID string, postData model.Post) error {
 	err := s.postRepo.CreateNewPost(authorID, postData)
 	if err != nil {
 		return err
 	}
-	
+
 	postID, err := s.postRepo.GetPostIDFromContent(authorID, postData.Content)
 	if err != nil {
 		return err
@@ -44,15 +45,18 @@ func (s *PostAndCommentsService) CreateNewPost(authorID string, postData model.P
 /*
 * Gère la fonction d'ajout de commentaire sur un post
 * Paramètres : ID du commentaire, ID du posteur
-*/
+ */
 func (s *PostAndCommentsService) AddCommentOnPost(postID int, authorID string, content string) error {
+	if content == "" {
+		return appErrors.New(appErrors.CodeInvalidInput, "le contenu du commentaire ne peut pas être vide", nil)
+	}
 	return s.commentRepo.CreateNewComment(postID, authorID, content)
 }
 
 /*
 * Gère la suppression d'un post par l'utilisateur ou par un administrateur du site
-* Paramètres : ID du post, mode admin/user 
-*/
+* Paramètres : ID du post, mode admin/user
+ */
 func (s *PostAndCommentsService) DeletePost(postID int, mode string) error {
 	err := s.postRepo.DeleteExistingPost(postID)
 	if err != nil {
@@ -73,8 +77,8 @@ func (s *PostAndCommentsService) DeletePost(postID int, mode string) error {
 
 /*
 * Gère la suppression d'un commentaire par l'utilisateur ou par un administrateur du site
-* Paramètres : ID du post, mode admin/user 
-*/
+* Paramètres : ID du post, mode admin/user
+ */
 func (s *PostAndCommentsService) DeleteComment(commentID int, mode string) error {
 	err := s.commentRepo.DeleteExistingComment(commentID)
 	if err != nil {
@@ -94,19 +98,26 @@ func (s *PostAndCommentsService) DeleteComment(commentID int, mode string) error
 }
 
 /*
-* Gère la modification d'un post 
+* Gère la modification d'un post
 * 1. Met à jour content, title et privacy
 * 2. Vérifie si des tags ont été ajoutés et les ajoute si c'est le cas
-* Paramètres : model.Post complet 
-*/
+* Paramètres : model.Post complet
+ */
 func (s *PostAndCommentsService) EditPost(postData model.Post) error {
 	err := s.postRepo.UpdateExistingPost(postData)
 	if err != nil {
 		return err
 	}
 
-	s.tagRepo.DeletePostTags(postData.ID)
-	s.tagRepo.AddPostTags(postData.ID, postData.Tags)
+	err = s.tagRepo.DeletePostTags(postData.ID)
+	if err != nil {
+		return err
+	}
+
+	err = s.tagRepo.AddPostTags(postData.ID, postData.Tags)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -114,15 +125,18 @@ func (s *PostAndCommentsService) EditPost(postData model.Post) error {
 /*
 * Gère la modification d'un commentaire
 * Paramètres : ID du commentaire, nouveau contenu du commentaire
-*/ 
+ */
 func (s *PostAndCommentsService) EditComment(commentID int, content string) error {
+	if content == "" {
+		return appErrors.New(appErrors.CodeInvalidInput, "le commentaire ne peut pas être vide", nil)
+	}
 	return s.commentRepo.UpdateExistingComment(commentID, content)
 }
 
 /*
 * Gère la récupération d'un post et de ses commentaires pour l'afficher
 * Paramètres : ID du post
-*/
+ */
 /* func (s *PostAndCommentsService) DisplayPostAndComments(postID int) (model.Post, error) {
 	post, err := s.postRepo.GetPostFromID(postID)
 	if err != nil {

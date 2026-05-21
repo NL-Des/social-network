@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	appErrors "social-network/backend/internal/errors"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/repository"
 
@@ -32,10 +33,11 @@ func (s *UserService) Register(userData model.RegisterUser) error {
 	}
 	if exists {
 		if field == "email" {
-			return errors.New("email déjà utilisé")
+			// On utilise CodeInvalidInput (ou un CodeConflict si tu préfères) pour bloquer proprement le front
+			return appErrors.New(appErrors.CodeInvalidInput, "cet email est déjà utilisé par un autre compte", nil)
 		}
 		if field == "username" {
-			return errors.New("username déjà utilisé")
+			return appErrors.New(appErrors.CodeInvalidInput, "ce nom d'utilisateur est déjà pris", nil)
 		}
 	}
 
@@ -54,13 +56,11 @@ func (s *UserService) Register(userData model.RegisterUser) error {
 // Password et confirmPassword identiques.
 func (s *UserService) validateUserData(user model.RegisterUser) (model.RegisterUser, error) {
 	if user.Email == "" || user.Password == "" {
-		err := errors.New("email ou mot de passe vide")
-		return model.RegisterUser{}, err
+		return model.RegisterUser{}, appErrors.New(appErrors.CodeInvalidInput, "l'email et le mot de passe ne peuvent pas être vides", nil)
 	}
 
 	if user.Password != user.ConfirmPassword {
-		err := errors.New("les mots de passe ne sont pas identiques")
-		return model.RegisterUser{}, err
+		return model.RegisterUser{}, appErrors.New(appErrors.CodeInvalidInput, "les mots de passe saisis ne sont pas identiques", nil)
 	}
 
 	validUser := user
@@ -93,13 +93,19 @@ func (s *UserService) Login(email, password string) (model.LoginUser, error) {
 	// Récupération des credentials enregistrés
 	user, err := s.userRepo.GetUserCredsbyEmail(email)
 	if err != nil {
+		// Si le repo a renvoyé CodeNotFound (email inconnu), on intercepte pour ne pas donner d'indice aux hackers
+		var appErr *appErrors.AppError
+		if errors.As(err, &appErr) && appErr.Code == appErrors.CodeNotFound {
+			return model.LoginUser{}, appErrors.New(appErrors.CodeUnauthorized, "identifiants incorrects", nil)
+		}
 		return model.LoginUser{}, err
 	}
 
 	// Comparaison des mots de passe hashés
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return model.LoginUser{}, errors.New("mot de passe incorrect")
+		// Le mot de passe est faux -> 401 Unauthorized uniforme
+		return model.LoginUser{}, appErrors.New(appErrors.CodeUnauthorized, "identifiants incorrects", nil)
 	}
 
 	return user, nil
