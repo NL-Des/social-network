@@ -83,7 +83,7 @@ export default function InsideGroupPage() {
 
           {/* Colonne gauche — membres du groupe */}
           <div className="h-full">
-            <LeftSidebarGroupListOfUsers users={mockSidebarUsers} />
+            <LeftSidebarGroupListOfUsers users={mockSidebarUsers} groupName="Route de test" />
           </div>
 
           {/* Colonne centre — fil de posts du groupe */}
