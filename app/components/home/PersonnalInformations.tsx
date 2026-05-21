@@ -45,7 +45,16 @@ export default function PersonnalInformations({ user }: PersonnalInformationsPro
         </dl>
       </div>
 
-      <div ref={formRef} className="relative mt-5">
+      <div className="flex gap-3 mt-5">
+        <button className="flex-1 py-2 px-4 rounded-lg border border-brand-border text-brand-text text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95">
+          S&apos;Abonner
+        </button>
+        <button className="flex-1 py-2 px-4 rounded-lg border border-brand-border text-brand-text text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95">
+          Se Désabonner
+        </button>
+      </div>
+
+      <div ref={formRef} className="relative mt-3">
         <button
           onClick={() => setFormOpen((o) => !o)}
           className={`w-full py-2 px-4 rounded-lg border border-brand-border text-brand-text text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95 ${

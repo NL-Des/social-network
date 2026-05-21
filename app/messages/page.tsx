@@ -11,11 +11,11 @@ import Messages, { Message } from '@/app/components/home/Messages'
 
 const mockConversations: Conversation[] = [
   { id: '1', name: 'Audrey D',    initials: 'AD', online: true,  unread: 1 },
-  { id: '2', name: 'Jade C',      initials: 'JC', online: true  },
-  { id: '3', name: 'Mathis P',    initials: 'MP', online: false },
+  { id: '2', name: 'Jade C',      initials: 'JC', online: true             },
+  { id: '3', name: 'Mathis P',    initials: 'MP', online: false            },
   { id: '4', name: 'Nathan L',    initials: 'NL', online: false, unread: 1 },
-  { id: '5', name: 'Nathan P',    initials: 'NP', online: false },
-  { id: '6', name: 'Valentine L', initials: 'VL', online: false },
+  { id: '5', name: 'Nathan P',    initials: 'NP', online: false            },
+  { id: '6', name: 'Valentine L', initials: 'VL', online: false            },
 ]
 
 const mockMessages: Record<string, Message[]> = {
@@ -41,12 +41,12 @@ const mockGroups: Group[] = [
 ]
 
 const mockSidebarUsers: SidebarUser[] = [
-  { id: '1', name: 'Audrey D',    initials: 'AD', online: true  },
-  { id: '2', name: 'Jade C',      initials: 'JC', online: true  },
-  { id: '3', name: 'Mathis P',    initials: 'MP', online: false },
-  { id: '4', name: 'Nathan L',    initials: 'NL', online: false },
-  { id: '5', name: 'Nathan P',    initials: 'NP', online: false },
-  { id: '6', name: 'Valentine L', initials: 'VL', online: false },
+  { id: '1', name: 'Audrey D',    initials: 'AD', online: true,  following: true  },
+  { id: '2', name: 'Jade C',      initials: 'JC', online: true,  following: true  },
+  { id: '3', name: 'Mathis P',    initials: 'MP', online: false, following: false },
+  { id: '4', name: 'Nathan L',    initials: 'NL', online: false, following: true  },
+  { id: '5', name: 'Nathan P',    initials: 'NP', online: false, following: false },
+  { id: '6', name: 'Valentine L', initials: 'VL', online: false, following: false },
 ]
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ export default function MessagesPage() {
     <div className="bg-background h-screen flex flex-col overflow-hidden">
       <Header user={user} />
 
-      <div className="pt-[104px] flex-1 overflow-hidden px-4 pb-4">
+      <div className="pt-26 flex-1 overflow-hidden px-4 pb-4">
         <div className="h-full grid grid-cols-[280px_1fr_264px] grid-rows-1 gap-4 pt-4">
 
           {/* Colonne gauche — conversations */}

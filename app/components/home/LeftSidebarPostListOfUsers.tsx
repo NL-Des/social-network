@@ -5,6 +5,7 @@ export interface SidebarUser {
   name: string
   initials: string
   online: boolean
+  following?: boolean
 }
 
 interface LeftSidebarPostListOfUsersProps {

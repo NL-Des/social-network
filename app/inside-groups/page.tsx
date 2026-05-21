@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import HeaderGroup from '@/app/components/home/HeaderGroup'
 import { CurrentUser } from '@/app/components/home/Header'
 import LeftSidebarGroupListOfUsers, { SidebarUser } from '@/app/components/home/LeftSidebarGroupListOfUsers'
-import RightSidebarGroupListOfConversations, { Conversation } from '@/app/components/home/RightSidebarGroupListOfConversations'
+import RightSidebarGroupListOfConversations, { Conversation, GroupEvent } from '@/app/components/home/RightSidebarGroupListOfConversations'
 import PostCard, { Post, CreatePostButton } from '@/app/components/home/PostCard'
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -37,13 +37,48 @@ const mockPosts: Post[] = [
   },
 ]
 
+const mockEvents: GroupEvent[] = [
+  {
+    id: '1', title: 'Conférence Zone01', description: 'Présentation des projets étudiants',
+    date: '2026-06-10', time: '14:00', registered: true,
+    attendees: [
+      { id: '1', name: 'Audrey D',    initials: 'AD' },
+      { id: '2', name: 'Nathan L',    initials: 'NL' },
+      { id: '3', name: 'Jade C',      initials: 'JC' },
+    ],
+  },
+  {
+    id: '2', title: 'Gaming Night', description: 'Test Deadline Invaders en équipe',
+    date: '2026-06-14', time: '20:00', registered: false,
+    attendees: [
+      { id: '1', name: 'Mathis P',    initials: 'MP' },
+      { id: '2', name: 'Valentine L', initials: 'VL' },
+    ],
+  },
+  {
+    id: '3', title: 'Forum des métiers', description: 'Rencontres professionnelles au Parc expo',
+    date: '2026-06-20', time: '09:00', registered: false,
+    attendees: [],
+  },
+  {
+    id: '4', title: 'Codeur en Seine', description: 'Meetup dev au Kindarena',
+    date: '2026-07-03', time: '18:30', registered: true,
+    attendees: [
+      { id: '1', name: 'Audrey D',    initials: 'AD' },
+      { id: '2', name: 'Nathan L',    initials: 'NL' },
+      { id: '3', name: 'Nathan P',    initials: 'NP' },
+      { id: '4', name: 'Jade C',      initials: 'JC' },
+    ],
+  },
+]
+
 const mockSidebarUsers: SidebarUser[] = [
-  { id: '1', name: 'Audrey D',    initials: 'AD', online: true  },
-  { id: '2', name: 'Jade C',      initials: 'JC', online: true  },
-  { id: '3', name: 'Mathis P',    initials: 'MP', online: false },
-  { id: '4', name: 'Nathan L',    initials: 'NL', online: false },
-  { id: '5', name: 'Nathan P',    initials: 'NP', online: false },
-  { id: '6', name: 'Valentine L', initials: 'VL', online: false },
+  { id: '1', name: 'Audrey D',    initials: 'AD', online: true,  following: true  },
+  { id: '2', name: 'Jade C',      initials: 'JC', online: true,  following: true  },
+  { id: '3', name: 'Mathis P',    initials: 'MP', online: false, following: false },
+  { id: '4', name: 'Nathan L',    initials: 'NL', online: false, following: true  },
+  { id: '5', name: 'Nathan P',    initials: 'NP', online: false, following: false },
+  { id: '6', name: 'Valentine L', initials: 'VL', online: false, following: false },
 ]
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -102,6 +137,7 @@ export default function InsideGroupPage() {
               conversations={mockMembers}
               activeId={activeId}
               onSelect={setActiveId}
+              events={mockEvents}
             />
           </div>
 

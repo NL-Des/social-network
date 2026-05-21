@@ -45,7 +45,7 @@ export default function LeftSidebar({ conversations, activeId, onSelect }: LeftS
                 : 'hover:bg-white/5'
             }`}
           >
-            <div className="relative flex-shrink-0 flex items-center">
+            <div className="relative shrink-0 flex items-center">
               {c.online && (
                 <span className="absolute -left-2.5 w-2 h-2 bg-green-500 rounded-full" />
               )}
@@ -57,7 +57,7 @@ export default function LeftSidebar({ conversations, activeId, onSelect }: LeftS
             <span className="flex-1 text-white text-base truncate">{c.name}</span>
 
             {c.unread ? (
-              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold">
+              <span className="shrink-0 w-5 h-5 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold">
                 {c.unread}
               </span>
             ) : null}
