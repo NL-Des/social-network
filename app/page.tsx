@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Header, { CurrentUser } from './components/home/Header'
 import SearchFilter, { FilterItem } from './components/home/SearchFilter'
-import PostCard, { Post } from './components/home/PostCard'
+import PostCard, { Post, CreatePostButton } from './components/home/PostCard'
 import RightSidebar, { Group, SidebarUser } from './components/home/RightSidebar'
 
 const mockPosts: Post[] = [
@@ -23,6 +23,11 @@ const mockPosts: Post[] = [
     author: { name: 'Bulle Doe', initials: 'BD' },
     content: `Les WebSockets, c'est le temps réel au cœur du web ⚡\nUne connexion continue pour des échanges instantanés\nChats, notifications, jeux... tout devient fluide et vivant\nMoins d'attente, plus d'interaction : le web respire en direct`,
   },
+  {
+    id: '4',
+    author: { name: 'Bulle Doe', initials: 'BD' },
+    content: `Les WebSockets, c'est le temps réel au cœur du web ⚡\nUne connexion continue pour des échanges instantanés\nChats, notifications, jeux... tout devient fluide et vivant\nMoins d'attente, plus d'interaction : le web respire en direct`,
+  },
 ]
 
 const mockGroups: Group[] = [
@@ -32,12 +37,12 @@ const mockGroups: Group[] = [
 ]
 
 const mockUsers: SidebarUser[] = [
-  { id: '1', name: 'Audrey D', initials: 'AD', online: true },
-  { id: '2', name: 'Jade C', initials: 'JC', online: true },
-  { id: '3', name: 'Mathis P', initials: 'MP', online: false },
-  { id: '4', name: 'Nathan L', initials: 'NL', online: false },
-  { id: '5', name: 'Nathan P', initials: 'NP', online: false },
-  { id: '6', name: 'Valentine L', initials: 'VL', online: false },
+  { id: '1', name: 'Audrey D',    initials: 'AD', online: true,  following: true  },
+  { id: '2', name: 'Jade C',      initials: 'JC', online: true,  following: true  },
+  { id: '3', name: 'Mathis P',    initials: 'MP', online: false, following: false },
+  { id: '4', name: 'Nathan L',    initials: 'NL', online: false, following: true  },
+  { id: '5', name: 'Nathan P',    initials: 'NP', online: false, following: false },
+  { id: '6', name: 'Valentine L', initials: 'VL', online: false, following: false },
 ]
 
 const mockFilters: FilterItem[] = [
@@ -89,10 +94,13 @@ export default function HomePage() {
           </div>
 
           {/* Colonne centre — feed */}
-          <div className="overflow-y-auto flex flex-col gap-4">
-            {mockPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="overflow-y-auto flex flex-col gap-4 flex-1">
+              {mockPosts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+            <CreatePostButton />
           </div>
 
           {/* Colonne droite — groupes & utilisateurs */}

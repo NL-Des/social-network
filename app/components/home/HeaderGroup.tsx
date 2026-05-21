@@ -4,14 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import NotificationList from './notification'
+import { CurrentUser } from './Header'
 import { logoutAction } from '@/app/auth/logout/actions'
-
-export interface CurrentUser {
-  name: string
-  username: string
-  followers: number
-  initials: string
-}
 
 const NAV_LINKS = [
   { label: 'Accueil',  href: '/'         },
@@ -19,12 +13,16 @@ const NAV_LINKS = [
   { label: 'Messages', href: '/messages' },
 ]
 
-export default function Header({ user }: { user: CurrentUser }) {
+interface HeaderGroupProps {
+  user: CurrentUser
+  groupName: string
+}
+
+export default function HeaderGroup({ user, groupName }: HeaderGroupProps) {
   const pathname = usePathname()
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
 
-  // Ferme le panneau si on clique en dehors
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
@@ -50,6 +48,10 @@ export default function Header({ user }: { user: CurrentUser }) {
           </div>
         </Link>
 
+        <span className="absolute left-1/2 -translate-x-1/2 text-white font-bold text-xl">
+          {groupName}
+        </span>
+
         <nav className="flex items-center gap-3">
           {NAV_LINKS.map((link) => (
             <Link
@@ -65,7 +67,6 @@ export default function Header({ user }: { user: CurrentUser }) {
             </Link>
           ))}
 
-          {/* Bouton Notifications + panneau déroulant */}
           <div ref={notifRef} className="relative">
             <button
               onClick={() => setNotifOpen((o) => !o)}
