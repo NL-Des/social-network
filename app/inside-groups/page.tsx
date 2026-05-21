@@ -6,7 +6,7 @@ import HeaderGroup from '@/app/components/home/HeaderGroup'
 import { CurrentUser } from '@/app/components/home/Header'
 import LeftSidebarGroupListOfUsers, { SidebarUser } from '@/app/components/home/LeftSidebarGroupListOfUsers'
 import RightSidebarGroupListOfConversations, { Conversation } from '@/app/components/home/RightSidebarGroupListOfConversations'
-import PostCard, { Post } from '@/app/components/home/PostCard'
+import PostCard, { Post, CreatePostButton } from '@/app/components/home/PostCard'
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
@@ -87,10 +87,13 @@ export default function InsideGroupPage() {
           </div>
 
           {/* Colonne centre — fil de posts du groupe */}
-          <div className="overflow-y-auto flex flex-col gap-4">
-            {mockPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="overflow-y-auto flex flex-col gap-4 flex-1">
+              {mockPosts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+            <CreatePostButton />
           </div>
 
           {/* Colonne droite — conversations */}

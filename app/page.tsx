@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Header, { CurrentUser } from './components/home/Header'
 import SearchFilter, { FilterItem } from './components/home/SearchFilter'
-import PostCard, { Post } from './components/home/PostCard'
+import PostCard, { Post, CreatePostButton } from './components/home/PostCard'
 import RightSidebar, { Group, SidebarUser } from './components/home/RightSidebar'
 
 const mockPosts: Post[] = [
@@ -94,10 +94,13 @@ export default function HomePage() {
           </div>
 
           {/* Colonne centre — feed */}
-          <div className="overflow-y-auto flex flex-col gap-4">
-            {mockPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="overflow-y-auto flex flex-col gap-4 flex-1">
+              {mockPosts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+            <CreatePostButton />
           </div>
 
           {/* Colonne droite — groupes & utilisateurs */}
