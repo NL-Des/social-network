@@ -7,7 +7,7 @@ import PersonnalInformations from '@/app/components/home/PersonnalInformations';
 import VisibilityAccount from '@/app/components/home/VisibilityAccount';
 import Followers from '@/app/components/home/Followers';
 import Subscribers from '@/app/components/home/Subscribers';
-import Events from '@/app/components/home/Events';
+import PostCard, { Post } from '@/app/components/home/PostCard';
 import profileAction from './actions';
 import type { ProfilePageProps } from './actions';
 
@@ -24,6 +24,34 @@ const mockSidebarUsers: SidebarUser[] = [
   { id: '4', name: 'Nathan L', initials: 'NL', online: false },
   { id: '5', name: 'Nathan P', initials: 'NP', online: false },
   { id: '6', name: 'Valentine L', initials: 'VL', online: false },
+];
+
+const mockUserPosts: Post[] = [
+  {
+    id: '1',
+    author: { name: 'Miaou', initials: 'NL' },
+    content: `Première semaine sur le projet réseau social 🚀\nLes fondations du front sont en place, Next.js tourne bien.\nHâte d'attaquer l'intégration avec le back Go !`,
+  },
+  {
+    id: '2',
+    author: { name: 'Miaou', initials: 'NL' },
+    content: `Retour sur Tailwind CSS après quelques jours d'utilisation 🎨\nLa logique utilitaire fait vraiment gagner du temps sur la mise en page.\nPas de CSS custom, tout reste cohérent et lisible.`,
+  },
+  {
+    id: '3',
+    author: { name: 'Miaou', initials: 'NL' },
+    content: `PostgreSQL + Go, un duo redoutable ⚙️\nLes requêtes sont rapides et le typage fort côté Go évite beaucoup d'erreurs.\nVivement la phase d'intégration complète.`,
+  },
+  {
+    id: '4',
+    author: { name: 'Miaou', initials: 'NL' },
+    content: `PostgreSQL + Go, un duo redoutable ⚙️\nLes requêtes sont rapides et le typage fort côté Go évite beaucoup d'erreurs.\nVivement la phase d'intégration complète.`,
+  },
+  {
+    id: '5',
+    author: { name: 'Miaou', initials: 'NL' },
+    content: `PostgreSQL + Go, un duo redoutable ⚙️\nLes requêtes sont rapides et le typage fort côté Go évite beaucoup d'erreurs.\nVivement la phase d'intégration complète.`,
+  },
 ];
 
 const mockData: ProfilePageProps = {
@@ -51,12 +79,7 @@ const mockData: ProfilePageProps = {
     { id: '4', name: 'Nathan P', initials: 'NP' },
     { id: '5', name: 'Valentine L', initials: 'VL' },
   ],
-  events: [
-    { id: '1', title: 'Zone01', subtitle: 'Event conférence', initials: '01' },
-    { id: '2', title: 'Gaming', subtitle: 'Test Deadline invaders', initials: 'GA' },
-    { id: '3', title: 'Parc expo', subtitle: 'Forum des métiers', initials: 'PE' },
-    { id: '4', title: 'Kindarena', subtitle: 'Codeur en Seine', initials: 'KI' },
-  ],
+  events: [],
   groups: [],
   allUsers: [],
   navItems: [],
@@ -96,11 +119,15 @@ function ProfileContent({
               <VisibilityAccount visibility={visibility} onChange={setVisibility} />
             </div>
 
-            {/* Ligne basse : suivi(e)s + abonnés + évènements */}
-            <div className="flex-1 grid grid-cols-3 gap-15">
+            {/* Ligne basse : suivi(e)s + abonnés + posts */}
+            <div className="flex-1 grid grid-cols-3 gap-15 overflow-hidden">
               <Followers following={data.following} />
               <Subscribers followers={data.followers} />
-              <Events events={data.events} />
+              <div className="overflow-y-auto flex flex-col gap-4">
+                {mockUserPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
             </div>
           </div>
 
