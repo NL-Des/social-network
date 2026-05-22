@@ -2,42 +2,31 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Header, { CurrentUser } from '@/app/components/home/Header'
-import RightSidebar, { Group, SidebarUser } from '@/app/components/home/RightSidebar'
-import LeftSidebar, { Conversation } from '@/app/components/home/LeftSidebar'
-import Messages, { Message } from '@/app/components/home/Messages'
+import HeaderPost from '@/app/components/home/HeaderPost'
+import { CurrentUser } from '@/app/components/home/Header'
+import LeftSidebarPostListOfUsers, { SidebarUser } from '@/app/components/home/LeftSidebarPostListOfUsers'
+import RightSidebar, { Group } from '@/app/components/home/RightSidebar'
+import Comments, { Post, Comment } from '@/app/components/home/Comments'
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
-
-const mockConversations: Conversation[] = [
-  { id: '1', name: 'Audrey D',    initials: 'AD', online: true,  unread: 1 },
-  { id: '2', name: 'Jade C',      initials: 'JC', online: true             },
-  { id: '3', name: 'Mathis P',    initials: 'MP', online: false            },
-  { id: '4', name: 'Nathan L',    initials: 'NL', online: false, unread: 1 },
-  { id: '5', name: 'Nathan P',    initials: 'NP', online: false            },
-  { id: '6', name: 'Valentine L', initials: 'VL', online: false            },
-]
-
-const mockMessages: Record<string, Message[]> = {
-  '4': [
-    { id: '1', from: 'me',   senderName: 'Moi',      text: 'Hello, comment tu vas ?',                                     date: '27/03/2026' },
-    { id: '2', from: 'them', senderName: 'Nathan L',  text: 'Ça va bien, merci, et toi ?',                                date: '27/03/2026' },
-    { id: '3', from: 'me',   senderName: 'Moi',      text: 'Super, quand est-ce que tu viens travailler sur le projet ?', date: '27/03/2026' },
-  ],
-  '1': [
-    { id: '1', from: 'them', senderName: 'Audrey D', text: 'On se retrouve à 18h ?', date: '26/03/2026' },
-    { id: '2', from: 'me',   senderName: 'Moi',      text: 'Oui, bonne idée !',      date: '26/03/2026' },
-  ],
-  '2': [
-    { id: '1', from: 'them', senderName: 'Jade C', text: 'Check ce repo !', date: '25/03/2026' },
-    { id: '2', from: 'me',   senderName: 'Moi',    text: 'Top, merci !',    date: '25/03/2026' },
-  ],
-}
 
 const mockGroups: Group[] = [
   { id: '1', name: 'Photo Urbaine', membersCount: '890'  },
   { id: '2', name: 'Dev Frontend',  membersCount: '3,4k' },
   { id: '3', name: 'Design & UX',   membersCount: '1,2k' },
+]
+
+const mockPost: Post = {
+  id: '1',
+  author: { name: 'Audrey D', initials: 'AD' },
+  content: `Bienvenue dans le groupe Route de test 🚀\nN'hésitez pas à partager vos avancées et poser vos questions.\nOn est là pour s'entraider !`,
+}
+
+const mockComments: Comment[] = [
+  { id: '1', author: { name: 'Nathan L',  initials: 'NL' }, text: 'Super initiative, hâte de voir la suite !',               date: '27/03/2026' },
+  { id: '2', author: { name: 'Jade C',    initials: 'JC' }, text: 'Merci pour le partage, très utile pour le sprint.',       date: '27/03/2026' },
+  { id: '3', author: { name: 'Mathis P',  initials: 'MP' }, text: 'Je serai là vendredi pour la démo, pas de souci.',        date: '28/03/2026' },
+  { id: '4', author: { name: 'Audrey D',  initials: 'AD' }, text: 'Parfait, on fait le point ensemble avant la présentation.', date: '28/03/2026' },
 ]
 
 const mockSidebarUsers: SidebarUser[] = [
@@ -51,11 +40,10 @@ const mockSidebarUsers: SidebarUser[] = [
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function MessagesPage() {
+export default function PostPage() {
   const router = useRouter()
   const [user, setUser]       = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeId, setActiveId] = useState<string>('4')
 
   useEffect(() => {
     fetch('/api/me')
@@ -77,34 +65,24 @@ export default function MessagesPage() {
 
   if (!user) return null
 
-  const activeConversation = mockConversations.find((c) => c.id === activeId) ?? mockConversations[0]
-
   return (
     <div className="bg-background h-screen flex flex-col overflow-hidden">
-      <Header user={user} />
+      <HeaderPost user={user} postTitle="Titre à lier aux données à importer pour le post" />
 
       <div className="pt-26 flex-1 overflow-hidden px-4 pb-4">
         <div className="h-full grid grid-cols-[280px_1fr_264px] grid-rows-1 gap-4 pt-4">
 
-          {/* Colonne gauche — conversations */}
+          {/* Colonne gauche — membres du groupe */}
           <div className="h-full">
-            <LeftSidebar
-              conversations={mockConversations}
-              activeId={activeId}
-              onSelect={setActiveId}
-            />
+            <LeftSidebarPostListOfUsers users={mockSidebarUsers} />
           </div>
 
-          {/* Colonne centre — messages */}
+          {/* Colonne centre — post & commentaires */}
           <div className="h-full">
-            <Messages
-              key={activeConversation.id}
-              conversation={activeConversation}
-              initialMessages={mockMessages[activeConversation.id] ?? []}
-            />
+            <Comments post={mockPost} comments={mockComments} />
           </div>
 
-          {/* Colonne droite — sidebar */}
+          {/* Colonne droite — groupes & utilisateurs */}
           <div className="h-full">
             <RightSidebar groups={mockGroups} users={mockSidebarUsers} />
           </div>
