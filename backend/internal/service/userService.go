@@ -5,6 +5,7 @@ import (
 	appErrors "social-network/backend/internal/errors"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/repository"
+	"unicode"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -54,6 +55,7 @@ func (s *UserService) Register(userData model.RegisterUser) error {
 
 // Vérification || Email et passeword non vides.
 // Password et confirmPassword identiques.
+
 func (s *UserService) validateUserData(user model.RegisterUser) (model.RegisterUser, error) {
 	if user.Email == "" || user.Password == "" {
 		return model.RegisterUser{}, appErrors.New(appErrors.CodeInvalidInput, "l'email et le mot de passe ne peuvent pas être vides", nil)
@@ -62,6 +64,34 @@ func (s *UserService) validateUserData(user model.RegisterUser) (model.RegisterU
 	if user.Password != user.ConfirmPassword {
 		return model.RegisterUser{}, appErrors.New(appErrors.CodeInvalidInput, "les mots de passe saisis ne sont pas identiques", nil)
 	}
+
+	// 💡 NOUVELLE VÉRIFICATION : Sécurité du mot de passe
+	var hasUpper, hasDigit bool
+
+	// 1. Vérification de la longueur minimale
+	if len(user.Password) < 8 {
+		return model.RegisterUser{}, appErrors.New(appErrors.CodeInvalidInput, "le mot de passe doit contenir au moins 8 caractères", nil)
+	}
+
+	// 2. On parcourt chaque caractère pour valider les critères requis
+	for _, char := range user.Password {
+		switch {
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsDigit(char):
+			hasDigit = true
+		}
+	}
+
+	// 3. Validation des flags de sécurité
+	if !hasUpper {
+		return model.RegisterUser{}, appErrors.New(appErrors.CodeInvalidInput, "le mot de passe doit contenir au moins une lettre majuscule", nil)
+	}
+	if !hasDigit {
+		return model.RegisterUser{}, appErrors.New(appErrors.CodeInvalidInput, "le mot de passe doit contenir au moins un chiffre", nil)
+	}
+
+	// Fin de la vérification de sécurité
 
 	validUser := user
 
