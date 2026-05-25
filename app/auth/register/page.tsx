@@ -3,7 +3,7 @@ import {useState, useRef} from 'react';
 import Button from '@/app/components/ui/button';
 import InputStd from '@/app/components/ui/inputStd';
 import registerAction from './actions';
-import {useFormState} from 'react-dom';
+import {useActionState} from 'react';
 
 export default function RegisterPage() {
   // preview permet d'afficher quand l'image est selectionnée dans le formulaire
@@ -11,7 +11,7 @@ export default function RegisterPage() {
   // fileInputRef permet de detecter quand l'utilisateur selectionne un fichier
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const initialState = {error: null as string | null};
-  const [state, formAction] = useFormState(registerAction, initialState);
+  const [state, formAction, isPending] = useActionState(registerAction, initialState);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -36,7 +36,6 @@ export default function RegisterPage() {
       </div>
       <form
         action={formAction}
-        encType="multipart/form-data"
         className="bg-brand-card w-full max-w-6xl p-10 rounded-2xl border-1 border-brand-border shadow-neon py-20"
       >
         <div className="grid grid-cols-3  gap-10">
@@ -45,30 +44,33 @@ export default function RegisterPage() {
               type="text"
               placeholder="Nom"
               name="name"
+              required={true} 
               className="rounded-full text-center h-17"
             />
             <InputStd
               type="text"
               placeholder="Prénom"
               name="firstName"
+              required={true}
               className="rounded-full text-center h-17"
             />
             <InputStd
               type="text"
               placeholder="Date de naissance"
               name="birthday"
+              required={true}
               className="rounded-full text-center h-17"
             />
             <InputStd
-              type="text"
+              type="email"
               placeholder="e-mail"
               name="email"
+              required={true}
               className="rounded-full text-center h-17"
             />
           </div>
 
-          <label className="relative border-1 border-brand-border shadow-neon rounded-full aspect-square w-52 h-52 flex items-center justify-center overflow-hidden">
-            {' '}
+          <label className={`relative border-1 border-brand-border shadow-neon rounded-full aspect-square w-52 h-52 flex items-center justify-center overflow-hidden ${isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
             {preview ? (
               <>
                 <img
@@ -76,13 +78,15 @@ export default function RegisterPage() {
                   alt="preview"
                   className="w-full h-full object-cover"
                 />
-                <button
-                  type="button"
-                  onClick={handleRemoveImage}
-                  className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center"
-                >
-                  ✕
-                </button>
+                {!isPending && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                  >
+                    ✕
+                  </button>
+                )}
               </>
             ) : (
               <>
@@ -106,12 +110,14 @@ export default function RegisterPage() {
             type="password"
             placeholder="Mot de passe"
             name="password"
+            required={true}
             className="rounded-full text-center"
           ></InputStd>
           <InputStd
             type="password"
             placeholder="Confirmation mot de passe"
             name="confirmPassword"
+            required={true}
             className="rounded-full text-center"
           ></InputStd>
           <InputStd
@@ -125,11 +131,17 @@ export default function RegisterPage() {
             name="description"
             className="  col-span-3 row-span-5 h-full border-1 border-brand-border shadow-neon p-5 rounded-2xl text-brand-text"
           ></textarea>
+          {/* ZONE BANDEAU D'ERREUR UX / UI */}
           <div className="col-span-3 flex flex-col items-center gap-4">
             {state?.error && (
-              <p className="text-red-500 font-semibold">{state.error}</p>
+              <div className="bg-red-950/40 border border-red-500/50 text-red-200 p-4 rounded-xl text-sm font-sans w-2/3 text-center animate-fadeIn shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                ⚠ {state.error}
+              </div>
             )}
-            <Button className="w-50 text-brand-text">Inscription</Button>
+            {/* 2. EFFET INTERACTIF : Le bouton utilise automatiquement le style disabled */}
+            <Button className="w-50 text-brand-text" disabled={isPending}>
+              {isPending ? 'Inscription en cours...' : 'Inscription'}
+            </Button>
           </div>
         </div>
       </form>
