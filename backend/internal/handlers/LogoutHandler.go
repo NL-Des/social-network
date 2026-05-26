@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
+	appErrors "social-network/backend/internal/errors"
 	"social-network/backend/internal/service"
 )
 
@@ -22,9 +22,18 @@ func (h *LogoutHandler) HandleLogout(w http.ResponseWriter, r *http.Request) err
 
 	cookie, err := r.Cookie("session_token")
 	if err == nil {
-		_ = h.SessionService.DeleteSession(cookie.Value)
+		// Tentative de suppression en base de données
+		err = h.SessionService.DeleteSession(cookie.Value)
+		if err != nil {
+			return appErrors.New(
+				appErrors.CodeInternal,
+				"Impossible de fermer la session côté serveur",
+				err,
+			)
+		}
 	}
 
+	// On ne supprime le cookie du navigateur QUE si la DB a validé (ou s'il n'y avait pas de cookie)
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
 		Value:    "",
@@ -34,6 +43,7 @@ func (h *LogoutHandler) HandleLogout(w http.ResponseWriter, r *http.Request) err
 	})
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(`{"success":true}`))
 	return nil
 }

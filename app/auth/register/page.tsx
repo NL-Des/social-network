@@ -4,6 +4,7 @@ import Button from '@/app/components/ui/button';
 import InputStd from '@/app/components/ui/inputStd';
 import registerAction from './actions';
 import {useActionState} from 'react';
+import ErrorBanner from '@/app/components/ui/errorBanner';
 
 export default function RegisterPage() {
   // preview permet d'afficher quand l'image est selectionnée dans le formulaire
@@ -134,8 +135,12 @@ export default function RegisterPage() {
           {/* ZONE BANDEAU D'ERREUR UX / UI */}
           <div className="col-span-3 flex flex-col items-center gap-4">
             {state?.error && (
-              <div className="bg-red-950/40 border border-red-500/50 text-red-200 p-4 rounded-xl text-sm font-sans w-2/3 text-center animate-fadeIn shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-                ⚠ {state.error}
+              <div className="w-full max-w-md animate-fadeIn">
+                <ErrorBanner 
+                  message={state.error} 
+                  type="critical" 
+                  position="relative" 
+                />
               </div>
             )}
             {/* 2. EFFET INTERACTIF : Le bouton utilise automatiquement le style disabled */}

@@ -4,6 +4,7 @@ import { useActionState } from 'react'
 import loginAction from './actions'
 import Button from '@/app/components/ui/button'
 import Link from 'next/link'
+import ErrorBanner from '@/app/components/ui/errorBanner'
 
 export default function LoginForm() {
   // Gestion de l'état de la Server Action et du chargement (isPending)
@@ -16,10 +17,14 @@ export default function LoginForm() {
     >
       <div className="space-y-10">
         
-        {/* BANDEAU ERREUR UX : S'affiche uniquement en cas de retour négatif du Go */}
+        {/* 💡 ÉTAPE 2 : Intégration de l'ErrorBanner unifié en cas d'erreur de connexion */}
         {state?.error && (
-          <div className="bg-red-950/40 border border-red-500/50 text-red-200 p-4 rounded-xl text-sm font-sans animate-fadeIn text-left">
-            ⚠ {state.error}
+          <div className="animate-fadeIn text-left">
+            <ErrorBanner 
+              message={state.error} 
+              type="critical" 
+              position="relative" 
+            />
           </div>
         )}
 
@@ -53,7 +58,7 @@ export default function LoginForm() {
         <div>
           <Link
             href="/auth/register"
-            className="text-brand-text hover:underline text-sm font-sans block mt-4"
+            className="text-xs text-brand-text/60 hover:text-brand-text transition-colors mt-2 block"
           >
             Pas encore de compte ? S'inscrire
           </Link>

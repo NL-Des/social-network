@@ -9,7 +9,9 @@ import Followers from '@/app/components/home/Followers';
 import Subscribers from '@/app/components/home/Subscribers';
 import PostCard, { Post } from '@/app/components/home/PostCard';
 import profileAction from './actions';
+import { useRouter } from 'next/navigation';
 import type { ProfilePageProps } from './actions';
+import ErrorBanner from '@/app/components/ui/errorBanner';
 
 const mockGroups: Group[] = [
   { id: '1', name: 'Photo Urbaine', membersCount: '890' },
@@ -22,35 +24,18 @@ const mockSidebarUsers: SidebarUser[] = [
   { id: '2', name: 'Jade C',      initials: 'JC', online: true,  following: true  },
   { id: '3', name: 'Mathis P',    initials: 'MP', online: false, following: false },
   { id: '4', name: 'Nathan L',    initials: 'NL', online: false, following: true  },
-  { id: '5', name: 'Nathan P',    initials: 'NP', online: false, following: false },
-  { id: '6', name: 'Valentine L', initials: 'VL', online: false, following: false },
 ];
 
 const mockUserPosts: Post[] = [
   {
     id: '1',
-    author: { name: 'Miaou', initials: 'NL' },
-    content: `Première semaine sur le projet réseau social 🚀\nLes fondations du front sont en place, Next.js tourne bien.\nHâte d'attaquer l'intégration avec le back Go !`,
+    author: { name: 'Moi', initials: 'ME' },
+    content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
   },
   {
     id: '2',
-    author: { name: 'Miaou', initials: 'NL' },
-    content: `Retour sur Tailwind CSS après quelques jours d'utilisation 🎨\nLa logique utilitaire fait vraiment gagner du temps sur la mise en page.\nPas de CSS custom, tout reste cohérent et lisible.`,
-  },
-  {
-    id: '3',
-    author: { name: 'Miaou', initials: 'NL' },
-    content: `PostgreSQL + Go, un duo redoutable ⚙️\nLes requêtes sont rapides et le typage fort côté Go évite beaucoup d'erreurs.\nVivement la phase d'intégration complète.`,
-  },
-  {
-    id: '4',
-    author: { name: 'Miaou', initials: 'NL' },
-    content: `PostgreSQL + Go, un duo redoutable ⚙️\nLes requêtes sont rapides et le typage fort côté Go évite beaucoup d'erreurs.\nVivement la phase d'intégration complète.`,
-  },
-  {
-    id: '5',
-    author: { name: 'Miaou', initials: 'NL' },
-    content: `PostgreSQL + Go, un duo redoutable ⚙️\nLes requêtes sont rapides et le typage fort côté Go évite beaucoup d'erreurs.\nVivement la phase d'intégration complète.`,
+    author: { name: 'Moi', initials: 'ME' },
+    content: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
   },
 ];
 
@@ -58,58 +43,39 @@ const mockData: ProfilePageProps = {
   user: {
     firstName: 'Nathan',
     lastName: 'Leonard',
-    username: 'nleonard',
-    email: 'nathan33.travail@gmail.com',
-    birthDate: '01/01/2000',
-    followersCount: 5,
+    username: 'nathan_lnd',
+    email: 'nathan@example.com',
+    birthDate: '1998-05-12',
+    followersCount: 142,
     initials: 'NL',
   },
-  visibility: 'public',
-  following: [
-    { id: '1', name: 'Audrey D', initials: 'AD' },
-    { id: '2', name: 'Jade C', initials: 'JC' },
-    { id: '3', name: 'Nathan L', initials: 'NL' },
-    { id: '4', name: 'Nathan P', initials: 'NP' },
-    { id: '5', name: 'Valentine L', initials: 'VL' },
-  ],
-  followers: [
-    { id: '1', name: 'Audrey D', initials: 'AD' },
-    { id: '2', name: 'Jade C', initials: 'JC' },
-    { id: '3', name: 'Nathan L', initials: 'NL' },
-    { id: '4', name: 'Nathan P', initials: 'NP' },
-    { id: '5', name: 'Valentine L', initials: 'VL' },
-  ],
+  navItems: [],
+  following: [],
+  followers: [],
   events: [],
   groups: [],
   allUsers: [],
-  navItems: [],
 };
 
-function ProfileContent({
-  data,
-  headerUser,
-}: {
+interface ProfileContentProps {
   data: ProfilePageProps;
   headerUser: CurrentUser;
-}) {
-  const [visibility, setVisibility] = useState<'private' | 'public'>(
-    data.visibility ?? 'public'
-  );
+}
+
+function ProfileContent({ data, headerUser }: ProfileContentProps) {
+  const [visibility, setVisibility] = useState<'private' | 'public'>(data.visibility ?? 'public');
 
   return (
-    <div className="bg-background h-screen flex flex-col overflow-hidden">
+    <div className="w-full min-h-screen bg-background p-4 flex flex-col gap-6 font-sans">
       <Header user={headerUser} />
 
-      <div className="pt-26 flex-1 overflow-hidden px-4 pb-4">
-        <div className="grid grid-cols-[1fr_264px] gap-15 pt-4 h-full">
-          {/* Contenu principal */}
-          <div className="flex flex-col gap-15 h-full">
-            {/* Ligne haute : avatar + informations + visibilité */}
-            <div className="flex-1 grid grid-cols-[auto_1fr_1fr] gap-15 items-stretch">
-              {/* Grand avatar */}
-              <div className="flex items-center justify-center px-4">
-                <div className="w-100 h-100 rounded-full bg-gray-600 flex items-center justify-center shadow-neon ring-4 ring-brand-border/30">
-                  <span className="text-5xl font-extrabold text-white tracking-tight">
+      <div className="flex-1 pt-24 overflow-hidden">
+        <div className="h-[calc(100vh-120px)] grid grid-cols-[1fr_320px] gap-6">
+          <div className="flex flex-col gap-6 overflow-hidden">
+            <div className="bg-brand-card border border-brand-border rounded-2xl p-6 flex gap-6 items-center justify-between shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 rounded-full bg-gray-600 flex items-center justify-center border-2 border-brand-border shadow-neon">
+                  <span className="text-white text-2xl font-bold">
                     {data.user.initials}
                   </span>
                 </div>
@@ -119,7 +85,6 @@ function ProfileContent({
               <VisibilityAccount visibility={visibility} onChange={setVisibility} />
             </div>
 
-            {/* Ligne basse : suivi(e)s + abonnés + posts */}
             <div className="flex-1 grid grid-cols-3 gap-15 overflow-hidden">
               <Followers following={data.following} />
               <Subscribers followers={data.followers} />
@@ -131,7 +96,6 @@ function ProfileContent({
             </div>
           </div>
 
-          {/* Sidebar droite */}
           <div className="h-full">
             <RightSidebar groups={mockGroups} users={mockSidebarUsers} />
           </div>
@@ -143,12 +107,24 @@ function ProfileContent({
 
 export default function Page() {
   const [data, setData] = useState<ProfilePageProps>(mockData);
+  const [globalError, setGlobalError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    profileAction()
-      .then((result) => setData(result))
-      .catch(() => {});
-  }, []);
+    profileAction().then((result) => {
+      if (result.success) {
+        setData(result.data);
+      } else {
+        if (result.error === 'unauthorized') { // redirection vers login si non autorisé
+          router.push('/auth/login');
+        } else if (result.error === 'server_error') {
+          setGlobalError("Le serveur ne fonctionne pas correctement. Réessayez plus tard.");
+        } else {
+          setGlobalError(result.error);
+        }
+      }
+    });
+  }, [router]);
 
   const headerUser: CurrentUser = {
     name: `${data.user.firstName} ${data.user.lastName[0]}.`,
@@ -157,5 +133,17 @@ export default function Page() {
     initials: data.user.initials,
   };
 
-  return <ProfileContent data={data} headerUser={headerUser} />;
+  return (
+    <>
+      {globalError && (
+        <ErrorBanner 
+          message={globalError} 
+          type="critical"
+          position="fixed"
+          onClose={() => setGlobalError(null)} 
+        />
+      )}
+      <ProfileContent data={data} headerUser={headerUser} />
+    </>
+  );
 }

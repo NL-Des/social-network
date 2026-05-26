@@ -6,7 +6,7 @@ export async function GET() {
   const sessionToken = cookieStore.get('session_token')
 
   if (!sessionToken) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    return NextResponse.json({ error: 'Accès refusé : session expirée ou introuvable' }, { status: 401 })
   }
 
   const response = await fetch('http://localhost:5090/user/me', {
@@ -15,8 +15,16 @@ export async function GET() {
     },
   })
 
+  if (response.status === 401) {
+      return NextResponse.json({ error: 'Session expirée, veuillez vous reconnecter' }, { status: 401 })
+    }
+
+  if (response.status === 500) {
+    return NextResponse.json({ error: 'Le serveur ne fonctionne pas correctement. Réessayez plus tard.' }, { status: 500 })
+  }
+
   if (!response.ok) {
-    return NextResponse.json({ error: 'Failed to fetch profile' }, { status: response.status })
+    return NextResponse.json({ error: 'Impossible de charger le profil' }, { status: response.status })
   }
 
   const data = await response.json()
