@@ -5,8 +5,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import NotificationList from './notification'
 import { logoutAction } from '@/app/auth/logout/actions'
-
-// 💡 ÉTAPE 1 : Importation de ton composant réutilisable
 import ErrorBanner from '@/app/components/ui/errorBanner'
 
 export interface CurrentUser {
@@ -73,7 +71,7 @@ export default function Header({ user }: { user: CurrentUser }) {
 
   return (
     <>
-      {/* 💡 ÉTAPE 2 : On affiche l'ErrorBanner en z-50 */}
+      {/*On affiche l'ErrorBanner en z-50 */}
       {errorMsg && (
         <ErrorBanner 
           message={errorMsg} 
