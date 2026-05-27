@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Header, { CurrentUser } from './components/home/Header'
 import SearchFilter, { FilterItem } from './components/home/SearchFilter'
 import PostCard, { Post, CreatePostButton } from './components/home/PostCard'
-import RightSidebar, { Group, SidebarUser } from './components/home/RightSidebar'
+import RightSidebar, { Group } from './components/home/RightSidebar'
 
 const mockPosts: Post[] = [
   {
@@ -36,15 +36,6 @@ const mockGroups: Group[] = [
   { id: '3', name: 'Design & UX', membersCount: '1,2k' },
 ]
 
-const mockUsers: SidebarUser[] = [
-  { id: '1', name: 'Audrey D',    initials: 'AD', online: true,  following: true  },
-  { id: '2', name: 'Jade C',      initials: 'JC', online: true,  following: true  },
-  { id: '3', name: 'Mathis P',    initials: 'MP', online: false, following: false },
-  { id: '4', name: 'Nathan L',    initials: 'NL', online: false, following: true  },
-  { id: '5', name: 'Nathan P',    initials: 'NP', online: false, following: false },
-  { id: '6', name: 'Valentine L', initials: 'VL', online: false, following: false },
-]
-
 const mockFilters: FilterItem[] = [
   { label: 'Groupe', count: 3 },
   { label: 'Notifications', count: 5 },
@@ -53,21 +44,16 @@ const mockFilters: FilterItem[] = [
 
 export default function HomePage() {
   const router = useRouter()
-  const [user, setUser] = useState<CurrentUser | null>(null)
+  const [user, setUser]       = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch('/api/me')
       .then((res) => {
-        if (!res.ok) {
-          router.replace('/auth/login')
-          return null
-        }
+        if (!res.ok) { router.replace('/auth/login'); return null }
         return res.json()
       })
-      .then((data) => {
-        if (data) setUser(data)
-      })
+      .then((data) => { if (data) setUser(data) })
       .finally(() => setLoading(false))
   }, [router])
 
@@ -88,12 +74,10 @@ export default function HomePage() {
       <div className="pt-[104px] flex-1 overflow-hidden px-4 pb-4">
         <div className="h-full grid grid-cols-[312px_1fr_264px] gap-4 pt-4">
 
-          {/* Colonne gauche — filtres */}
           <div className="h-full">
             <SearchFilter filters={mockFilters} />
           </div>
 
-          {/* Colonne centre — feed */}
           <div className="flex flex-col h-full overflow-hidden">
             <div className="overflow-y-auto flex flex-col gap-4 flex-1">
               {mockPosts.map((post) => (
@@ -103,9 +87,8 @@ export default function HomePage() {
             <CreatePostButton />
           </div>
 
-          {/* Colonne droite — groupes & utilisateurs */}
           <div className="h-full">
-            <RightSidebar groups={mockGroups} users={mockUsers} />
+            <RightSidebar groups={mockGroups} />
           </div>
 
         </div>

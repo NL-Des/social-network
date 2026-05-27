@@ -3,7 +3,7 @@ import {useState, useRef} from 'react';
 import Button from '@/app/components/ui/button';
 import InputStd from '@/app/components/ui/inputStd';
 import registerAction from './actions';
-import {useFormState} from 'react-dom';
+import {useActionState} from 'react';
 
 export default function RegisterPage() {
   // preview permet d'afficher quand l'image est selectionnée dans le formulaire
@@ -11,7 +11,7 @@ export default function RegisterPage() {
   // fileInputRef permet de detecter quand l'utilisateur selectionne un fichier
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const initialState = {error: null as string | null};
-  const [state, formAction] = useFormState(registerAction, initialState);
+  const [state, formAction] = useActionState(registerAction, initialState);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

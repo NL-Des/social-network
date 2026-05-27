@@ -7,84 +7,140 @@ import (
 )
 
 type Hub struct {
-	//Map des clients connectés : plus efficace qu'une liste. Le booléen est toujours égal à VRAI
-    Clients    map[*Client]bool 
-	//Channels de connection et déconnection: 
-	// Un client qui se connecte/déconnecte est envoyé dessus, 
-	// le hub écoute en permanence et agit en conséquence
-    Register   chan *Client
-    Unregister chan *Client
-	//Nécessaire pour la lecture/écriture simultanée dans clients via des goroutines
-    Mu         sync.RWMutex
-    Quit       chan struct{} // Pour fermer le hub lors des tests
-    OnMessage func(c *Client, raw []byte) //Temporaires, Pour les tests
-    
+	Clients    map[*Client]bool
+	Register   chan *Client
+	Unregister chan *Client
+	Mu         sync.RWMutex
+	Quit       chan struct{}
+	OnMessage  func(c *Client, raw []byte)
 }
 
 type MessageWs struct {
-    Type string      `json:"type"`
-    Data interface{} `json:"data"`
+	Type string      `json:"type"`
+	Data interface{} `json:"data"`
 }
 
-
-// Constructeur : créé un hub vide
 func NewHub() *Hub {
-    return &Hub{
-        Clients:    make(map[*Client]bool),
-        Register:   make(chan *Client),
-        Unregister: make(chan *Client),
-        Quit:       make(chan struct{}),
-    }
+	return &Hub{
+		Clients:    make(map[*Client]bool),
+		Register:   make(chan *Client),
+		Unregister: make(chan *Client),
+		Quit:       make(chan struct{}),
+	}
 }
-
-//Coeur du hub : doit être lancé en goroutine.
-//Écoute permanente des channels register et unregister
-
-//Le mu.Lock/Unlock sert à vérouiller/dévérouiller l'écriture sur la map clients à une seule goroutine. 
-//Nécessaire pour éviter d'avoir plusieurs goroutine qui tentent de modifier la même variable en même temps.
 
 func (h *Hub) Run() {
-    for {
-        select {
-        case client := <-h.Register:
-            h.Mu.Lock()
-            h.Clients[client] = true
-            h.Mu.Unlock()
-		
-        case client := <-h.Unregister:
-            h.Mu.Lock()
-            if _, ok := h.Clients[client]; ok {
-                delete(h.Clients, client)
-                close(client.Send)
-            }
-            h.Mu.Unlock()
-            case <-h.Quit:
-                return
-        }
-    }
+	for {
+		select {
+		case client := <-h.Register:
+			h.Mu.Lock()
+			h.Clients[client] = true
+			onlineIDs := h.onlineUserIDsLocked(client.UserID)
+			h.Mu.Unlock()
+
+			go h.sendToClient(client, MessageWs{
+				Type: "users_online",
+				Data: map[string]interface{}{"user_ids": onlineIDs},
+			})
+			go h.BroadcastToAll(MessageWs{
+				Type: "user_online",
+				Data: map[string]interface{}{"user_id": client.UserID},
+			}, client.UserID)
+
+		case client := <-h.Unregister:
+			var broadcast bool
+			h.Mu.Lock()
+			if _, ok := h.Clients[client]; ok {
+				delete(h.Clients, client)
+				close(client.Send)
+				broadcast = !h.userIsConnectedLocked(client.UserID)
+			}
+			h.Mu.Unlock()
+
+			if broadcast {
+				go h.BroadcastToAll(MessageWs{
+					Type: "user_offline",
+					Data: map[string]interface{}{"user_id": client.UserID},
+				}, -1)
+			}
+
+		case <-h.Quit:
+			return
+		}
+	}
 }
 
-//Un utilisateurs peut avoir plusieurs clients (plusieurs onglet, plusieurs navigateurs, etc.)
-//La fonction transmet le message à tous les clients d'un même utilisateur
+func (h *Hub) onlineUserIDsLocked(excludeUserID int64) []int64 {
+	seen := make(map[int64]bool)
+	ids := make([]int64, 0)
+	for c := range h.Clients {
+		if c.UserID != excludeUserID && !seen[c.UserID] {
+			seen[c.UserID] = true
+			ids = append(ids, c.UserID)
+		}
+	}
+	return ids
+}
+
+func (h *Hub) userIsConnectedLocked(userID int64) bool {
+	for c := range h.Clients {
+		if c.UserID == userID {
+			return true
+		}
+	}
+	return false
+}
+
+func (h *Hub) sendToClient(client *Client, msg MessageWs) {
+	jsonBytes, err := utils.EncodeMessage(msg)
+	if err != nil {
+		return
+	}
+	select {
+	case client.Send <- jsonBytes:
+	default:
+	}
+}
+
+func (h *Hub) BroadcastToAll(message MessageWs, excludeUserID int64) {
+	h.Mu.RLock()
+	defer h.Mu.RUnlock()
+
+	jsonBytes, err := utils.EncodeMessage(message)
+	if err != nil {
+		return
+	}
+	for client := range h.Clients {
+		if client.UserID == excludeUserID {
+			continue
+		}
+		select {
+		case client.Send <- jsonBytes:
+		default:
+		}
+	}
+}
+
 func (h *Hub) BroadcastToUser(userID int64, message MessageWs) {
-    h.Mu.RLock()
-    defer h.Mu.RUnlock()
+	h.Mu.RLock()
+	defer h.Mu.RUnlock()
 
-    for client := range h.Clients {
-        if client.UserID == userID {
-            jsonBytes, _ := utils.EncodeMessage(message)
-			client.Send <- jsonBytes
-
-        }
-    }
+	jsonBytes, _ := utils.EncodeMessage(message)
+	for client := range h.Clients {
+		if client.UserID == userID {
+			select {
+			case client.Send <- jsonBytes:
+			default:
+			}
+		}
+	}
 }
 
 func (h *Hub) RouteMessage(c *Client, raw []byte) {
-    if h.OnMessage != nil {
-        h.OnMessage(c, raw)
-        return
-    }
+	if h.OnMessage != nil {
+		h.OnMessage(c, raw)
+		return
+	}
 
-    fmt.Println("Message reçu :", string(raw))
+	fmt.Println("Message reçu :", string(raw))
 }
-

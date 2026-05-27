@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-
-export type WsStatus = 'connecting' | 'open' | 'closed' | 'error'
+import { useWebSocket, WsStatus } from '@/lib/useWebSocket'
 
 export interface Message {
   id: string
@@ -23,34 +22,6 @@ export interface ChatConversation {
 interface MessagesProps {
   conversation: ChatConversation
   initialMessages: Message[]
-}
-
-function useWebSocket(url: string, onMessage: (data: unknown) => void) {
-  const wsRef = useRef<WebSocket | null>(null)
-  const [status, setStatus] = useState<WsStatus>('connecting')
-
-  const send = useCallback((payload: unknown) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(payload))
-    }
-  }, [])
-
-  useEffect(() => {
-    const ws = new WebSocket(url)
-    wsRef.current = ws
-    setStatus('connecting')
-
-    ws.onopen    = () => setStatus('open')
-    ws.onerror   = () => setStatus('error')
-    ws.onclose   = () => setStatus('closed')
-    ws.onmessage = (e) => {
-      try { onMessage(JSON.parse(e.data)) } catch { /* ignore malformed */ }
-    }
-
-    return () => ws.close()
-  }, [url, onMessage])
-
-  return { send, status }
 }
 
 const wsColors: Record<WsStatus, string> = {

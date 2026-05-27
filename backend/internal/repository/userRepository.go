@@ -182,6 +182,50 @@ func (r *UserRepo) UserExists(email, username string) (bool, string, error) {
 	return false, "", nil
 }
 
+// GetAllUsers retourne tous les utilisateurs sauf l'utilisateur courant,
+// avec un flag indiquant si le courant les suit (status = 'accepted').
+func (r *UserRepo) GetAllUsers(currentUserID int) ([]model.UserListItem, error) {
+	rows, err := r.db.Query(`
+		SELECT
+			u.id,
+			u.firstname,
+			u.lastname,
+			CASE WHEN f.followerid IS NOT NULL THEN true ELSE false END AS following
+		FROM users u
+		LEFT JOIN followers f
+			ON f.followerid = $1
+			AND f.followingid = u.id
+			AND f.status = 'accepted'
+		WHERE u.id != $1
+		ORDER BY u.firstname, u.lastname
+	`, currentUserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []model.UserListItem
+	for rows.Next() {
+		var item model.UserListItem
+		var firstname, lastname string
+		if err := rows.Scan(&item.ID, &firstname, &lastname, &item.Following); err != nil {
+			return nil, err
+		}
+		item.Name = firstname
+		if len(lastname) > 0 {
+			item.Name += " " + strings.ToUpper(string([]rune(lastname)[0]))
+		}
+		if len(firstname) > 0 {
+			item.Initials += strings.ToUpper(string([]rune(firstname)[0]))
+		}
+		if len(lastname) > 0 {
+			item.Initials += strings.ToUpper(string([]rune(lastname)[0]))
+		}
+		users = append(users, item)
+	}
+	return users, rows.Err()
+}
+
 // *** INSERT ***
 
 // SaveUser insère un nouvel utilisateur en base de données après validation du formulaire d'inscription.

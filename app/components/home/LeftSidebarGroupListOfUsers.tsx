@@ -8,7 +8,6 @@ export interface SidebarUser {
   name: string
   initials: string
   online: boolean
-  following?: boolean
 }
 
 interface LeftSidebarGroupListOfUsersProps {
@@ -169,18 +168,6 @@ function LeaveGroupButton() {
 }
 
 export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe' }: LeftSidebarGroupListOfUsersProps) {
-  const [following, setFollowing] = useState<Set<string>>(
-    () => new Set(users.filter((u) => u.following).map((u) => u.id))
-  )
-
-  function toggleFollow(id: string, e: React.MouseEvent) {
-    e.preventDefault()
-    setFollowing((prev) => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
-  }
 
   return (
     <aside className="h-full bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col overflow-hidden">
@@ -203,15 +190,6 @@ export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe
                 </div>
                 <p className="text-white text-lg">{user.name}</p>
               </Link>
-              <button
-                onClick={(e) => toggleFollow(user.id, e)}
-                title={following.has(user.id) ? 'Abonné' : 'S\'abonner'}
-                className="shrink-0 w-6 h-6 flex items-center justify-center hover:scale-110 transition-transform duration-150"
-              >
-                <span className={`text-base leading-none font-bold ${following.has(user.id) ? 'text-gray-500' : 'text-green-400'}`}>
-                  ✓
-                </span>
-              </button>
             </div>
           ))}
         </div>

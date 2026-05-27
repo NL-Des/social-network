@@ -17,18 +17,17 @@ export default async function loginAction(formData: FormData) {
     return { error: 'Email ou mot de passe incorrect' }
   }
 
-  const setCookieHeader = response.headers.get('set-cookie')
-  if (setCookieHeader) {
-    const match = setCookieHeader.match(/session_token=([^;]+)/)
-    if (match) {
-      const cookieStore = await cookies()
-      cookieStore.set('session_token', match[1], {
-        httpOnly: true,
-        path: '/',
-        maxAge: 60 * 60 * 24,
-      })
-    }
+  const data = await response.json()
+  if (!data.token) {
+    return { error: 'Erreur serveur : token manquant' }
   }
+
+  const cookieStore = await cookies()
+  cookieStore.set('session_token', data.token, {
+    httpOnly: true,
+    path: '/',
+    maxAge: 60 * 60 * 24,
+  })
 
   redirect('/')
 }

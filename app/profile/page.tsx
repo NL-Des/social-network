@@ -1,30 +1,21 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import Header, { CurrentUser } from '@/app/components/home/Header';
-import RightSidebar, { Group, SidebarUser } from '@/app/components/home/RightSidebar';
-import PersonnalInformations from '@/app/components/home/PersonnalInformations';
-import VisibilityAccount from '@/app/components/home/VisibilityAccount';
-import Followers from '@/app/components/home/Followers';
-import Subscribers from '@/app/components/home/Subscribers';
-import PostCard, { Post } from '@/app/components/home/PostCard';
-import profileAction from './actions';
-import type { ProfilePageProps } from './actions';
+import { useState, useEffect } from 'react'
+import Header, { CurrentUser } from '@/app/components/home/Header'
+import RightSidebar, { Group } from '@/app/components/home/RightSidebar'
+import PersonnalInformations from '@/app/components/home/PersonnalInformations'
+import VisibilityAccount from '@/app/components/home/VisibilityAccount'
+import Followers from '@/app/components/home/Followers'
+import Subscribers from '@/app/components/home/Subscribers'
+import PostCard, { Post } from '@/app/components/home/PostCard'
+import profileAction from './actions'
+import type { ProfilePageProps } from './actions'
 
 const mockGroups: Group[] = [
   { id: '1', name: 'Photo Urbaine', membersCount: '890' },
-  { id: '2', name: 'Dev Frontend', membersCount: '3,4k' },
-  { id: '3', name: 'Design & UX', membersCount: '1,2k' },
-];
-
-const mockSidebarUsers: SidebarUser[] = [
-  { id: '1', name: 'Audrey D',    initials: 'AD', online: true,  following: true  },
-  { id: '2', name: 'Jade C',      initials: 'JC', online: true,  following: true  },
-  { id: '3', name: 'Mathis P',    initials: 'MP', online: false, following: false },
-  { id: '4', name: 'Nathan L',    initials: 'NL', online: false, following: true  },
-  { id: '5', name: 'Nathan P',    initials: 'NP', online: false, following: false },
-  { id: '6', name: 'Valentine L', initials: 'VL', online: false, following: false },
-];
+  { id: '2', name: 'Dev Frontend',  membersCount: '3,4k' },
+  { id: '3', name: 'Design & UX',   membersCount: '1,2k' },
+]
 
 const mockUserPosts: Post[] = [
   {
@@ -52,7 +43,7 @@ const mockUserPosts: Post[] = [
     author: { name: 'Miaou', initials: 'NL' },
     content: `PostgreSQL + Go, un duo redoutable ⚙️\nLes requêtes sont rapides et le typage fort côté Go évite beaucoup d'erreurs.\nVivement la phase d'intégration complète.`,
   },
-];
+]
 
 const mockData: ProfilePageProps = {
   user: {
@@ -66,35 +57,27 @@ const mockData: ProfilePageProps = {
   },
   visibility: 'public',
   following: [
-    { id: '1', name: 'Audrey D', initials: 'AD' },
-    { id: '2', name: 'Jade C', initials: 'JC' },
-    { id: '3', name: 'Nathan L', initials: 'NL' },
-    { id: '4', name: 'Nathan P', initials: 'NP' },
+    { id: '1', name: 'Audrey D',    initials: 'AD' },
+    { id: '2', name: 'Jade C',      initials: 'JC' },
+    { id: '3', name: 'Nathan L',    initials: 'NL' },
+    { id: '4', name: 'Nathan P',    initials: 'NP' },
     { id: '5', name: 'Valentine L', initials: 'VL' },
   ],
   followers: [
-    { id: '1', name: 'Audrey D', initials: 'AD' },
-    { id: '2', name: 'Jade C', initials: 'JC' },
-    { id: '3', name: 'Nathan L', initials: 'NL' },
-    { id: '4', name: 'Nathan P', initials: 'NP' },
+    { id: '1', name: 'Audrey D',    initials: 'AD' },
+    { id: '2', name: 'Jade C',      initials: 'JC' },
+    { id: '3', name: 'Nathan L',    initials: 'NL' },
+    { id: '4', name: 'Nathan P',    initials: 'NP' },
     { id: '5', name: 'Valentine L', initials: 'VL' },
   ],
   events: [],
   groups: [],
   allUsers: [],
   navItems: [],
-};
+}
 
-function ProfileContent({
-  data,
-  headerUser,
-}: {
-  data: ProfilePageProps;
-  headerUser: CurrentUser;
-}) {
-  const [visibility, setVisibility] = useState<'private' | 'public'>(
-    data.visibility ?? 'public'
-  );
+function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUser: CurrentUser }) {
+  const [visibility, setVisibility] = useState<'private' | 'public'>(data.visibility ?? 'public')
 
   return (
     <div className="bg-background h-screen flex flex-col overflow-hidden">
@@ -102,11 +85,9 @@ function ProfileContent({
 
       <div className="pt-26 flex-1 overflow-hidden px-4 pb-4">
         <div className="grid grid-cols-[1fr_264px] gap-15 pt-4 h-full">
-          {/* Contenu principal */}
+
           <div className="flex flex-col gap-15 h-full">
-            {/* Ligne haute : avatar + informations + visibilité */}
             <div className="flex-1 grid grid-cols-[auto_1fr_1fr] gap-15 items-stretch">
-              {/* Grand avatar */}
               <div className="flex items-center justify-center px-4">
                 <div className="w-100 h-100 rounded-full bg-gray-600 flex items-center justify-center shadow-neon ring-4 ring-brand-border/30">
                   <span className="text-5xl font-extrabold text-white tracking-tight">
@@ -119,7 +100,6 @@ function ProfileContent({
               <VisibilityAccount visibility={visibility} onChange={setVisibility} />
             </div>
 
-            {/* Ligne basse : suivi(e)s + abonnés + posts */}
             <div className="flex-1 grid grid-cols-3 gap-15 overflow-hidden">
               <Followers following={data.following} />
               <Subscribers followers={data.followers} />
@@ -131,31 +111,31 @@ function ProfileContent({
             </div>
           </div>
 
-          {/* Sidebar droite */}
           <div className="h-full">
-            <RightSidebar groups={mockGroups} users={mockSidebarUsers} />
+            <RightSidebar groups={mockGroups} />
           </div>
+
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 export default function Page() {
-  const [data, setData] = useState<ProfilePageProps>(mockData);
+  const [data, setData] = useState<ProfilePageProps>(mockData)
 
   useEffect(() => {
     profileAction()
       .then((result) => setData(result))
-      .catch(() => {});
-  }, []);
+      .catch(() => {})
+  }, [])
 
   const headerUser: CurrentUser = {
     name: `${data.user.firstName} ${data.user.lastName[0]}.`,
     username: data.user.username,
     followers: data.user.followersCount,
     initials: data.user.initials,
-  };
+  }
 
-  return <ProfileContent data={data} headerUser={headerUser} />;
+  return <ProfileContent data={data} headerUser={headerUser} />
 }
