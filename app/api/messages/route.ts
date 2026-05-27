@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const cookieStore = await cookies()
   const sessionToken = cookieStore.get('session_token')
 
@@ -9,13 +9,18 @@ export async function GET() {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
+  const withId = request.nextUrl.searchParams.get('with')
+  if (!withId) {
+    return NextResponse.json({ error: "paramètre 'with' manquant" }, { status: 400 })
+  }
+
   try {
-    const response = await fetch('http://localhost:5090/users', {
+    const response = await fetch(`http://localhost:5090/messages?with=${withId}`, {
       headers: { Cookie: `session_token=${sessionToken.value}` },
     })
 
     if (!response.ok) {
-      return NextResponse.json({ error: 'Failed to fetch users' }, { status: response.status })
+      return NextResponse.json({ error: 'Failed to fetch messages' }, { status: response.status })
     }
 
     const data = await response.json()

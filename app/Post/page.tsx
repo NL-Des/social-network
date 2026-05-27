@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import HeaderPost from '@/app/components/home/HeaderPost'
 import { CurrentUser } from '@/app/components/home/Header'
+import { fetchMe } from '@/lib/fetchMe'
 import LeftSidebarPostListOfUsers from '@/app/components/home/LeftSidebarPostListOfUsers'
 import RightSidebar, { Group } from '@/app/components/home/RightSidebar'
 import Comments, { Post, Comment } from '@/app/components/home/Comments'
@@ -35,12 +36,12 @@ export default function PostPage() {
   const sidebarUsers          = useSidebarUsers()
 
   useEffect(() => {
-    fetch('/api/me')
-      .then((res) => {
-        if (!res.ok) { router.replace('/auth/login'); return null }
-        return res.json()
+    fetchMe()
+      .then((data) => {
+        if (!data) { router.replace('/auth/login'); return }
+        setUser(data)
       })
-      .then((data) => { if (data) setUser(data) })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [router])
 

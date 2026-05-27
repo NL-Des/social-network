@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Header, { CurrentUser } from '@/app/components/home/Header'
+import { fetchMe } from '@/lib/fetchMe'
 import RightSidebar, { Group } from '@/app/components/home/RightSidebar'
 import LeftSidebarGroups, { GroupItem } from '@/app/components/home/LeftSidebarGroups'
 import CenterGroup from '@/app/components/home/CenterGroup'
@@ -25,12 +26,12 @@ export default function GroupesPage() {
   const activeGroup             = mockGroupList.find((g) => g.id === activeId) ?? null
 
   useEffect(() => {
-    fetch('/api/me')
-      .then((res) => {
-        if (!res.ok) { router.replace('/auth/login'); return null }
-        return res.json()
+    fetchMe()
+      .then((data) => {
+        if (!data) { router.replace('/auth/login'); return }
+        setUser(data)
       })
-      .then((data) => { if (data) setUser(data) })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [router])
 

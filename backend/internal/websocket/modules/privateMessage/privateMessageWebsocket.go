@@ -2,6 +2,7 @@ package privateMessage
 
 import (
 	"log"
+	"time"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/websocket"
 )
@@ -35,13 +36,15 @@ func (h *PrivateMessageHandler) Handle(sender *websocket.Client, payload model.P
 	// 2. Persistance via le service métier
 	if err := h.Service.CreateNewMessage(payload); err != nil {
 		log.Printf("[privateMessage] erreur persistance: %v", err)
-		// On notifie l'expéditeur de l'échec
 		h.Hub.BroadcastToUser(sender.UserID, websocket.MessageWs{
 			Type: "private_message_error",
 			Data: "Erreur lors de l'envoi du message.",
 		})
 		return
 	}
+
+	// Horodatage du message après persistance, avant diffusion
+	payload.SentAt = time.Now()
 
 	// 3. Diffusion au destinataire (delta : le message complet)
 	h.Hub.BroadcastToUser(payload.ReceiverID, websocket.MessageWs{

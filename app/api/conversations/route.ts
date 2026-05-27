@@ -10,12 +10,12 @@ export async function GET() {
   }
 
   try {
-    const response = await fetch('http://localhost:5090/users', {
+    const response = await fetch('http://localhost:5090/conversations', {
       headers: { Cookie: `session_token=${sessionToken.value}` },
     })
 
     if (!response.ok) {
-      return NextResponse.json({ error: 'Failed to fetch users' }, { status: response.status })
+      return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: response.status })
     }
 
     const data = await response.json()

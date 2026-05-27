@@ -1,15 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"social-network/backend/internal/database"
 	"social-network/backend/internal/handlers"
 	"social-network/backend/internal/middleware"
+	"social-network/backend/internal/model"
 	"social-network/backend/internal/repository"
 	"social-network/backend/internal/service"
 	ws "social-network/backend/internal/websocket"
+	"social-network/backend/internal/websocket/modules/privateMessage"
 )
 
 func main() {
@@ -45,11 +48,34 @@ func main() {
 	meHandler := handlers.NewMeHandler(profileService)
 	usersHandler := handlers.NewUsersHandler(userService)
 	authMiddleware := middleware.NewAuthMiddleware(sessionService)
+	messageRepo := repository.NewMessageRepo(db)
+	messageService := service.NewMessageService(messageRepo)
+	messageHandler := handlers.NewMessageHandler(messageService)
 	// **
 
 	// WebSocket hub
 	hub := ws.NewHub()
 	go hub.Run()
+
+	// Route les messages WS entrants vers les bons handlers
+	pmHandler := privateMessage.NewPrivateMessageHandler(hub, messageService)
+	hub.OnMessage = func(c *ws.Client, raw []byte) {
+		var envelope struct {
+			Type string          `json:"type"`
+			Data json.RawMessage `json:"data"`
+		}
+		if err := json.Unmarshal(raw, &envelope); err != nil {
+			return
+		}
+		switch envelope.Type {
+		case "private_message":
+			var pm model.PrivateMessage
+			if err := json.Unmarshal(envelope.Data, &pm); err != nil {
+				return
+			}
+			pmHandler.Handle(c, pm)
+		}
+	}
 
 	// creation du mux
 	mux := http.NewServeMux()
@@ -63,6 +89,8 @@ func main() {
 	mux.HandleFunc("/user/me", authMiddleware.RequireAuth(meHandler.HandleMe))
 	mux.HandleFunc("/users", authMiddleware.RequireAuth(usersHandler.HandleUsers))
 	mux.HandleFunc("/user/profile", authMiddleware.RequireAuth(meHandler.HandleProfile))
+	mux.HandleFunc("/conversations", authMiddleware.RequireAuth(messageHandler.HandleConversations))
+	mux.HandleFunc("/messages", authMiddleware.RequireAuth(messageHandler.HandleMessages))
 	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")

@@ -1,36 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Header, { CurrentUser } from '@/app/components/home/Header'
+import { fetchMe } from '@/lib/fetchMe'
 import RightSidebar, { Group } from '@/app/components/home/RightSidebar'
 import LeftSidebar, { Conversation } from '@/app/components/home/LeftSidebar'
-import Messages, { Message } from '@/app/components/home/Messages'
-
-const mockConversations: Conversation[] = [
-  { id: '1', name: 'Audrey D',    initials: 'AD', online: true,  unread: 1 },
-  { id: '2', name: 'Jade C',      initials: 'JC', online: true             },
-  { id: '3', name: 'Mathis P',    initials: 'MP', online: false            },
-  { id: '4', name: 'Nathan L',    initials: 'NL', online: false, unread: 1 },
-  { id: '5', name: 'Nathan P',    initials: 'NP', online: false            },
-  { id: '6', name: 'Valentine L', initials: 'VL', online: false            },
-]
-
-const mockMessages: Record<string, Message[]> = {
-  '4': [
-    { id: '1', from: 'me',   senderName: 'Moi',     text: 'Hello, comment tu vas ?',                                     date: '27/03/2026' },
-    { id: '2', from: 'them', senderName: 'Nathan L', text: 'Ça va bien, merci, et toi ?',                                date: '27/03/2026' },
-    { id: '3', from: 'me',   senderName: 'Moi',     text: 'Super, quand est-ce que tu viens travailler sur le projet ?', date: '27/03/2026' },
-  ],
-  '1': [
-    { id: '1', from: 'them', senderName: 'Audrey D', text: 'On se retrouve à 18h ?', date: '26/03/2026' },
-    { id: '2', from: 'me',   senderName: 'Moi',      text: 'Oui, bonne idée !',      date: '26/03/2026' },
-  ],
-  '2': [
-    { id: '1', from: 'them', senderName: 'Jade C', text: 'Check ce repo !', date: '25/03/2026' },
-    { id: '2', from: 'me',   senderName: 'Moi',    text: 'Top, merci !',    date: '25/03/2026' },
-  ],
-}
+import Messages, { Message, ChatConversation } from '@/app/components/home/Messages'
 
 const mockGroups: Group[] = [
   { id: '1', name: 'Photo Urbaine', membersCount: '890'  },
@@ -38,21 +14,102 @@ const mockGroups: Group[] = [
   { id: '3', name: 'Design & UX',   membersCount: '1,2k' },
 ]
 
+interface ApiMessage {
+  id: number
+  sender_id: number
+  receiver_id: number
+  body: string
+  sent_at: string
+}
+
+interface ApiConversation {
+  id: number
+  name: string
+  initials: string
+}
+
 export default function MessagesPage() {
-  const router = useRouter()
-  const [user, setUser]         = useState<CurrentUser | null>(null)
-  const [loading, setLoading]   = useState(true)
-  const [activeId, setActiveId] = useState<string>('4')
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+
+  const [user, setUser]                   = useState<CurrentUser | null>(null)
+  const [loading, setLoading]             = useState(true)
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [allUsers, setAllUsers]           = useState<Conversation[]>([])
+  const [activeId, setActiveId]           = useState<string | null>(searchParams.get('with'))
+  const [messages, setMessages]           = useState<Message[]>([])
 
   useEffect(() => {
-    fetch('/api/me')
-      .then((res) => {
-        if (!res.ok) { router.replace('/auth/login'); return null }
-        return res.json()
+    fetchMe()
+      .then((data) => {
+        if (!data) { router.replace('/auth/login'); return }
+        setUser(data)
       })
-      .then((data) => { if (data) setUser(data) })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [router])
+
+  // Charge la liste de tous les utilisateurs pour afficher n'importe quelle conversation
+  useEffect(() => {
+    fetch('/api/users')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: { id: number; name: string; initials: string }[]) => {
+        setAllUsers(data.map((u) => ({
+          id:       String(u.id),
+          name:     u.name,
+          initials: u.initials,
+          online:   false,
+        })))
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/conversations')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: ApiConversation[]) => {
+        const convs: Conversation[] = data.map((c) => ({
+          id:       String(c.id),
+          name:     c.name,
+          initials: c.initials,
+          online:   false,
+        }))
+        setConversations(convs)
+        // Sélectionne la première conv uniquement si aucun param ?with dans l'URL
+        if (convs.length > 0 && activeId === null) {
+          setActiveId(convs[0].id)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  // Sync l'activeId avec le param URL quand il change (navigation depuis la sidebar)
+  useEffect(() => {
+    const withParam = searchParams.get('with')
+    if (withParam) setActiveId(withParam)
+  }, [searchParams])
+
+  const fetchMessages = useCallback((partnerId: string) => {
+    const partner = conversations.find((c) => c.id === partnerId)
+               ?? allUsers.find((u) => u.id === partnerId)
+    fetch(`/api/messages?with=${partnerId}`)
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: ApiMessage[]) => {
+        const msgs: Message[] = data.map((m) => ({
+          id:         String(m.id),
+          from:       String(m.sender_id) === partnerId ? 'them' : 'me',
+          senderName: String(m.sender_id) === partnerId ? (partner?.name ?? '') : 'Moi',
+          text:       m.body,
+          date:       new Date(m.sent_at).toLocaleDateString('fr-FR'),
+        }))
+        setMessages(msgs)
+      })
+      .catch(() => {})
+  }, [conversations, allUsers])
+
+  useEffect(() => {
+    if (activeId) fetchMessages(activeId)
+  }, [activeId, fetchMessages])
 
   if (loading) {
     return (
@@ -64,7 +121,10 @@ export default function MessagesPage() {
 
   if (!user) return null
 
-  const activeConversation = mockConversations.find((c) => c.id === activeId) ?? mockConversations[0]
+  // Cherche d'abord dans les conversations existantes, sinon dans tous les users
+  const activeConversation: ChatConversation | null = activeId
+    ? (conversations.find((c) => c.id === activeId) ?? allUsers.find((u) => u.id === activeId) ?? null)
+    : null
 
   return (
     <div className="bg-background h-screen flex flex-col overflow-hidden">
@@ -75,18 +135,24 @@ export default function MessagesPage() {
 
           <div className="h-full">
             <LeftSidebar
-              conversations={mockConversations}
+              conversations={conversations}
               activeId={activeId}
               onSelect={setActiveId}
             />
           </div>
 
           <div className="h-full">
-            <Messages
-              key={activeConversation.id}
-              conversation={activeConversation}
-              initialMessages={mockMessages[activeConversation.id] ?? []}
-            />
+            {activeConversation ? (
+              <Messages
+                key={activeConversation.id}
+                conversation={activeConversation}
+                initialMessages={messages}
+              />
+            ) : (
+              <div className="h-full bg-brand-card border border-brand-border rounded-2xl flex items-center justify-center">
+                <p className="text-brand-text/50 text-sm">Sélectionnez une conversation</p>
+              </div>
+            )}
           </div>
 
           <div className="h-full">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import HeaderGroup from '@/app/components/home/HeaderGroup'
+import { fetchMe } from '@/lib/fetchMe'
 import { CurrentUser } from '@/app/components/home/Header'
 import LeftSidebarGroupListOfUsers, { SidebarUser } from '@/app/components/home/LeftSidebarGroupListOfUsers'
 import RightSidebarGroupListOfConversations, { Conversation, GroupEvent } from '@/app/components/home/RightSidebarGroupListOfConversations'
@@ -90,12 +91,12 @@ export default function InsideGroupPage() {
   const [activeId, setActiveId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/me')
-      .then((res) => {
-        if (!res.ok) { router.replace('/auth/login'); return null }
-        return res.json()
+    fetchMe()
+      .then((data) => {
+        if (!data) { router.replace('/auth/login'); return }
+        setUser(data)
       })
-      .then((data) => { if (data) setUser(data) })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [router])
 

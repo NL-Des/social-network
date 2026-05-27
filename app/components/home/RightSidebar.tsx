@@ -1,7 +1,8 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
 import { useSidebarUsers } from '@/lib/useSidebarUsers'
 
@@ -22,8 +23,13 @@ interface RightSidebarProps {
   groups: Group[]
 }
 
-function statusDotColor(userId: string, onlineUsers: Set<string>, unreadFrom: Set<string>) {
-  if (unreadFrom.has(userId)) return 'bg-orange-400'
+function statusDotColor(
+  userId: string,
+  onlineUsers: Set<string>,
+  unreadFrom: Set<string>,
+  activeConvId: string | null,
+) {
+  if (activeConvId !== userId && unreadFrom.has(userId)) return 'bg-orange-400'
   if (onlineUsers.has(userId)) return 'bg-green-500'
   return 'bg-red-500'
 }
@@ -32,6 +38,18 @@ export default function RightSidebar({ groups }: RightSidebarProps) {
   const users = useSidebarUsers()
   const { onlineUsers, unreadFrom, clearUnread } = useOnlineStatus()
   const [localUnread, setLocalUnread] = useState<Set<string>>(new Set())
+  const pathname      = usePathname()
+  const router        = useRouter()
+  const searchParams  = useSearchParams()
+  const onMessagesPage = pathname === '/messages'
+  const activeConvId   = onMessagesPage ? searchParams.get('with') : null
+
+  // Efface le badge unread dès que l'utilisateur est dans la conversation
+  useEffect(() => {
+    if (!activeConvId) return
+    clearUnread(activeConvId)
+    setLocalUnread((prev) => { const n = new Set(prev); n.delete(activeConvId); return n })
+  }, [activeConvId, clearUnread])
 
   const mergedUnread = new Set([...unreadFrom, ...localUnread])
 
@@ -71,23 +89,42 @@ export default function RightSidebar({ groups }: RightSidebarProps) {
       <section>
         <h2 className="font-bold text-[#49C7FF] text-base mb-5">Utilisateurs</h2>
         <div className="flex flex-col gap-3">
-          {sortedUsers.map((user) => (
-            <div key={user.id} className="flex items-center gap-3 rounded-xl px-2 py-1 -mx-2">
-              <Link
-                href={`/users/${user.id}`}
-                onClick={() => handleClearUnread(user.id)}
-                className="flex items-center gap-3 flex-1 hover:bg-white/5 rounded-xl transition-colors"
-              >
+          {sortedUsers.map((user) => {
+            const inner = (
+              <>
                 <div className="relative shrink-0 flex items-center">
-                  <span className={`absolute -left-3 w-2 h-2 rounded-full ${statusDotColor(user.id, onlineUsers, mergedUnread)}`} />
+                  <span className={`absolute -left-3 w-2 h-2 rounded-full ${statusDotColor(user.id, onlineUsers, mergedUnread, activeConvId)}`} />
                   <div className="w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center text-white text-base font-bold">
                     {user.initials}
                   </div>
                 </div>
                 <p className="text-white text-lg">{user.name}</p>
-              </Link>
-            </div>
-          ))}
+              </>
+            )
+            return (
+              <div key={user.id} className="flex items-center gap-3 rounded-xl px-2 py-1 -mx-2">
+                {onMessagesPage ? (
+                  <button
+                    onClick={() => {
+                      handleClearUnread(user.id)
+                      router.push(`/messages?with=${user.id}`)
+                    }}
+                    className="flex items-center gap-3 flex-1 hover:bg-white/5 rounded-xl transition-colors text-left"
+                  >
+                    {inner}
+                  </button>
+                ) : (
+                  <Link
+                    href={`/profile/${user.id}`}
+                    onClick={() => handleClearUnread(user.id)}
+                    className="flex items-center gap-3 flex-1 hover:bg-white/5 rounded-xl transition-colors"
+                  >
+                    {inner}
+                  </Link>
+                )}
+              </div>
+            )
+          })}
         </div>
       </section>
     </aside>

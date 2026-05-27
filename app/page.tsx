@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Header, { CurrentUser } from './components/home/Header'
+import { fetchMe } from '@/lib/fetchMe'
 import SearchFilter, { FilterItem } from './components/home/SearchFilter'
 import PostCard, { Post, CreatePostButton } from './components/home/PostCard'
 import RightSidebar, { Group } from './components/home/RightSidebar'
@@ -48,12 +49,12 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/me')
-      .then((res) => {
-        if (!res.ok) { router.replace('/auth/login'); return null }
-        return res.json()
+    fetchMe()
+      .then((data) => {
+        if (!data) { router.replace('/auth/login'); return }
+        setUser(data)
       })
-      .then((data) => { if (data) setUser(data) })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [router])
 
