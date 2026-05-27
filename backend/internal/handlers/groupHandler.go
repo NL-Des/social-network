@@ -69,6 +69,29 @@ func (h *GroupHandler) HandleGroups(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// HandleLeaveGroup gère DELETE /group-chat/{id}/leave
+func (h *GroupHandler) HandleLeaveGroup(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if r.Method != http.MethodDelete {
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
+		return
+	}
+	if err := h.GroupService.LeaveGroup(groupID, int64(userID)); err != nil {
+		http.Error(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // HandleGroupMessages gère GET /group-chat/{id}/messages
 func (h *GroupHandler) HandleGroupMessages(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)

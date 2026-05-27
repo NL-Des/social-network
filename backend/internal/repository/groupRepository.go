@@ -122,6 +122,14 @@ func (r *GroupRepo) GetGroupMemberIDs(groupID int64) ([]int64, error) {
 	return ids, rows.Err()
 }
 
+func (r *GroupRepo) LeaveGroup(groupID, userID int64) error {
+	_, err := r.db.Exec(`
+		DELETE FROM group_members
+		WHERE groupid = $1 AND userid = $2
+	`, groupID, userID)
+	return err
+}
+
 func (r *GroupRepo) IsGroupMember(groupID, userID int64) (bool, error) {
 	var count int
 	err := r.db.QueryRow(`

@@ -38,3 +38,7 @@ func (s *GroupService) GetGroupMessages(groupID int64) ([]model.GroupMessage, er
 func (s *GroupService) IsGroupMember(groupID, userID int64) (bool, error) {
 	return s.repo.IsGroupMember(groupID, userID)
 }
+
+func (s *GroupService) LeaveGroup(groupID, userID int64) error {
+	return s.repo.LeaveGroup(groupID, userID)
+}

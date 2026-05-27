@@ -139,6 +139,7 @@ interface LeftSidebarProps {
   activeGroupId: string | null
   onSelectGroup: (id: string) => void
   onGroupCreated: () => void
+  onGroupLeft?: () => void
   groupStatuses: Record<string, GroupStatus>
   allUsers?: MemberInfo[]
 }
@@ -151,12 +152,25 @@ export default function LeftSidebar({
   activeGroupId,
   onSelectGroup,
   onGroupCreated,
+  onGroupLeft,
   groupStatuses,
   allUsers = [],
 }: LeftSidebarProps) {
   const [search, setSearch]               = useState('')
   const [showModal, setShowModal]         = useState(false)
   const [openMembersId, setOpenMembersId] = useState<string | null>(null)
+  const [leavingId, setLeavingId]         = useState<string | null>(null)
+
+  async function handleLeave(groupId: string) {
+    setLeavingId(groupId)
+    try {
+      await fetch(`/api/group-chat/${groupId}/leave`, { method: 'DELETE' })
+      setOpenMembersId(null)
+      onGroupLeft?.()
+    } finally {
+      setLeavingId(null)
+    }
+  }
 
   const filteredConvs = conversations.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
@@ -261,8 +275,8 @@ export default function LeftSidebar({
                   </button>
                   <button
                     onClick={() => setOpenMembersId(membersOpen ? null : g.id)}
-                    title="Membres"
-                    className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-brand-text/50 hover:text-[#49C7FF] hover:bg-white/10 transition-colors text-xs"
+                    title="Membres du groupe"
+                    className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-white/70 hover:text-[#49C7FF] hover:bg-white/10 transition-colors text-sm font-bold"
                   >
                     {membersOpen ? '▲' : '▼'}
                   </button>
@@ -282,6 +296,13 @@ export default function LeftSidebar({
                         </div>
                       ))
                     )}
+                    <button
+                      onClick={() => handleLeave(g.id)}
+                      disabled={leavingId === g.id}
+                      className="mt-2 w-full py-1 rounded-lg border border-red-500/40 text-red-400 text-xs hover:bg-red-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {leavingId === g.id ? 'Départ...' : 'Quitter le groupe'}
+                    </button>
                   </div>
                 )}
               </div>

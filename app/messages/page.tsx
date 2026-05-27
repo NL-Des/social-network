@@ -226,6 +226,7 @@ export default function MessagesPage() {
               activeGroupId={activeGroupId}
               onSelectGroup={handleSelectGroup}
               onGroupCreated={loadGroups}
+              onGroupLeft={loadGroups}
               groupStatuses={groupStatuses}
               allUsers={allUsers}
             />
