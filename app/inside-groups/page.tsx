@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import HeaderGroup from '@/app/components/home/HeaderGroup'
+import { fetchMe } from '@/lib/fetchMe'
 import { CurrentUser } from '@/app/components/home/Header'
 import LeftSidebarGroupListOfUsers, { SidebarUser } from '@/app/components/home/LeftSidebarGroupListOfUsers'
 import RightSidebarGroupListOfConversations, { Conversation, GroupEvent } from '@/app/components/home/RightSidebarGroupListOfConversations'
@@ -73,12 +74,12 @@ const mockEvents: GroupEvent[] = [
 ]
 
 const mockSidebarUsers: SidebarUser[] = [
-  { id: '1', name: 'Audrey D',    initials: 'AD', online: true,  following: true  },
-  { id: '2', name: 'Jade C',      initials: 'JC', online: true,  following: true  },
-  { id: '3', name: 'Mathis P',    initials: 'MP', online: false, following: false },
-  { id: '4', name: 'Nathan L',    initials: 'NL', online: false, following: true  },
-  { id: '5', name: 'Nathan P',    initials: 'NP', online: false, following: false },
-  { id: '6', name: 'Valentine L', initials: 'VL', online: false, following: false },
+  { id: '1', name: 'Audrey D',    initials: 'AD', online: true  },
+  { id: '2', name: 'Jade C',      initials: 'JC', online: true  },
+  { id: '3', name: 'Mathis P',    initials: 'MP', online: false },
+  { id: '4', name: 'Nathan L',    initials: 'NL', online: false },
+  { id: '5', name: 'Nathan P',    initials: 'NP', online: false },
+  { id: '6', name: 'Valentine L', initials: 'VL', online: false },
 ]
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -90,12 +91,12 @@ export default function InsideGroupPage() {
   const [activeId, setActiveId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/me')
-      .then((res) => {
-        if (!res.ok) { router.replace('/auth/login'); return null }
-        return res.json()
+    fetchMe()
+      .then((data) => {
+        if (!data) { router.replace('/auth/login'); return }
+        setUser(data)
       })
-      .then((data) => { if (data) setUser(data) })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [router])
 

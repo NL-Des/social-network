@@ -117,6 +117,12 @@ func (s *UserService) GetFullProfile(id int) (model.FullProfile, error) {
 	return s.userRepo.GetFullProfileByID(id)
 }
 
+// USERS LIST
+
+func (s *UserService) GetAllUsers(currentUserID int) ([]model.UserListItem, error) {
+	return s.userRepo.GetAllUsers(currentUserID)
+}
+
 // LOGIN
 
 func (s *UserService) Login(email, password string) (model.LoginUser, error) {

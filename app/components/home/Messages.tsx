@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-
-export type WsStatus = 'connecting' | 'open' | 'closed' | 'error'
+import { useWebSocket, WsStatus } from '@/lib/useWebSocket'
 
 export interface Message {
   id: string
@@ -25,33 +24,7 @@ interface MessagesProps {
   initialMessages: Message[]
 }
 
-function useWebSocket(url: string, onMessage: (data: unknown) => void) {
-  const wsRef = useRef<WebSocket | null>(null)
-  const [status, setStatus] = useState<WsStatus>('connecting')
-
-  const send = useCallback((payload: unknown) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(payload))
-    }
-  }, [])
-
-  useEffect(() => {
-    const ws = new WebSocket(url)
-    wsRef.current = ws
-    setStatus('connecting')
-
-    ws.onopen    = () => setStatus('open')
-    ws.onerror   = () => setStatus('error')
-    ws.onclose   = () => setStatus('closed')
-    ws.onmessage = (e) => {
-      try { onMessage(JSON.parse(e.data)) } catch { /* ignore malformed */ }
-    }
-
-    return () => ws.close()
-  }, [url, onMessage])
-
-  return { send, status }
-}
+const WS_BASE = 'ws://localhost:5090/ws'
 
 const wsColors: Record<WsStatus, string> = {
   open:       'bg-green-500',
@@ -62,25 +35,37 @@ const wsColors: Record<WsStatus, string> = {
 
 export default function Messages({ conversation, initialMessages }: MessagesProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
-  const bottomRef = useRef<HTMLDivElement>(null)
-  const [draft, setDraft] = useState('')
+  const [wsUrl, setWsUrl]       = useState<string | null>(null)
+  const bottomRef               = useRef<HTMLDivElement>(null)
+  const [draft, setDraft]       = useState('')
 
-  const handleWsMessage = useCallback((data: unknown) => {
-    const msg = data as { type: string; data: { senderName: string; text: string } }
-    if (msg.type !== 'chat_message') return
-    setMessages((prev) => [
-      ...prev,
-      {
-        id:         Date.now().toString(),
-        from:       'them',
-        senderName: msg.data.senderName,
-        text:       msg.data.text,
-        date:       new Date().toLocaleDateString('fr-FR'),
-      },
-    ])
+  useEffect(() => {
+    fetch('/api/ws-token')
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => { if (data?.token) setWsUrl(`${WS_BASE}?token=${data.token}`) })
   }, [])
 
-  const { send, status } = useWebSocket('ws://localhost:5090/ws', handleWsMessage)
+  useEffect(() => {
+    setMessages(initialMessages)
+  }, [initialMessages])
+
+  const handleWsMessage = useCallback((data: unknown) => {
+    const msg = data as { type: string; data: { sender_id: number; body: string; sent_at: string } }
+    if (msg.type === 'private_message' && String(msg.data.sender_id) === conversation.id) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id:         Date.now().toString(),
+          from:       'them',
+          senderName: conversation.name,
+          text:       msg.data.body,
+          date:       new Date(msg.data.sent_at).toLocaleDateString('fr-FR'),
+        },
+      ])
+    }
+  }, [conversation.id, conversation.name])
+
+  const { send, status } = useWebSocket(wsUrl, handleWsMessage)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -99,7 +84,7 @@ export default function Messages({ conversation, initialMessages }: MessagesProp
         date:       new Date().toLocaleDateString('fr-FR'),
       },
     ])
-    send({ type: 'chat_message', data: { to: conversation.id, text } })
+    send({ type: 'private_message', data: { receiver_id: Number(conversation.id), body: text } })
     setDraft('')
   }
 

@@ -16,7 +16,8 @@ type LoginHandler struct {
 }
 
 type LoginResponse struct {
-	Success bool `json:"sucess"`
+	Success bool   `json:"success"`
+	Token   string `json:"token"`
 }
 
 func NewLoginHandler(us *service.UserService, ss *service.SessionService) *LoginHandler {
@@ -59,6 +60,7 @@ func (lh *LoginHandler) LoginHandler(w http.ResponseWriter, r *http.Request) err
 
 	response := LoginResponse{
 		Success: true,
+		Token:   token,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

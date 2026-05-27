@@ -9,12 +9,12 @@ export async function GET() {
     return NextResponse.json({ error: 'Accès refusé : session expirée ou introuvable' }, { status: 401 })
   }
 
-  const response = await fetch('http://localhost:5090/user/me', {
-    headers: {
-      Cookie: `session_token=${sessionToken.value}`,
-    },
-  })
+  try {
+    const response = await fetch('http://localhost:5090/user/me', {
+      headers: { Cookie: `session_token=${sessionToken.value}` },
+    })
 
+<<<<<<< HEAD
   if (response.status === 401) {
       return NextResponse.json({ error: 'Session expirée, veuillez vous reconnecter' }, { status: 401 })
     }
@@ -25,8 +25,15 @@ export async function GET() {
 
   if (!response.ok) {
     return NextResponse.json({ error: 'Impossible de charger le profil' }, { status: response.status })
-  }
+=======
+    if (!response.ok) {
+      return NextResponse.json({ error: 'Failed to fetch profile' }, { status: response.status })
+    }
 
-  const data = await response.json()
-  return NextResponse.json(data)
+    const data = await response.json()
+    return NextResponse.json(data)
+  } catch {
+    return NextResponse.json({ error: 'Service unavailable' }, { status: 503 })
+>>>>>>> 814e2d98005ee4a92714a7ba0f6e2ea4f43adab0
+  }
 }

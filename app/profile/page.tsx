@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import { useState, useEffect } from 'react';
 import Header, { CurrentUser } from '@/app/components/home/Header';
@@ -19,13 +19,6 @@ const mockGroups: Group[] = [
   { id: '3', name: 'Design & UX', membersCount: '1,2k' },
 ];
 
-const mockSidebarUsers: SidebarUser[] = [
-  { id: '1', name: 'Audrey D',    initials: 'AD', online: true,  following: true  },
-  { id: '2', name: 'Jade C',      initials: 'JC', online: true,  following: true  },
-  { id: '3', name: 'Mathis P',    initials: 'MP', online: false, following: false },
-  { id: '4', name: 'Nathan L',    initials: 'NL', online: false, following: true  },
-];
-
 const mockUserPosts: Post[] = [
   {
     id: '1',
@@ -37,7 +30,7 @@ const mockUserPosts: Post[] = [
     author: { name: 'Moi', initials: 'ME' },
     content: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
   },
-];
+]
 
 const mockData: ProfilePageProps = {
   user: {
@@ -49,33 +42,42 @@ const mockData: ProfilePageProps = {
     followersCount: 142,
     initials: 'NL',
   },
-  navItems: [],
-  following: [],
-  followers: [],
+  visibility: 'public',
+  following: [
+    { id: '1', name: 'Audrey D',    initials: 'AD' },
+    { id: '2', name: 'Jade C',      initials: 'JC' },
+    { id: '3', name: 'Nathan L',    initials: 'NL' },
+    { id: '4', name: 'Nathan P',    initials: 'NP' },
+    { id: '5', name: 'Valentine L', initials: 'VL' },
+  ],
+  followers: [
+    { id: '1', name: 'Audrey D',    initials: 'AD' },
+    { id: '2', name: 'Jade C',      initials: 'JC' },
+    { id: '3', name: 'Nathan L',    initials: 'NL' },
+    { id: '4', name: 'Nathan P',    initials: 'NP' },
+    { id: '5', name: 'Valentine L', initials: 'VL' },
+  ],
   events: [],
   groups: [],
   allUsers: [],
-};
-
-interface ProfileContentProps {
-  data: ProfilePageProps;
-  headerUser: CurrentUser;
+  navItems: [],
 }
 
-function ProfileContent({ data, headerUser }: ProfileContentProps) {
-  const [visibility, setVisibility] = useState<'private' | 'public'>(data.visibility ?? 'public');
+function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUser: CurrentUser }) {
+  const [visibility, setVisibility] = useState<'private' | 'public'>(data.visibility ?? 'public')
 
   return (
     <div className="w-full min-h-screen bg-background p-4 flex flex-col gap-6 font-sans">
       <Header user={headerUser} />
 
-      <div className="flex-1 pt-24 overflow-hidden">
-        <div className="h-[calc(100vh-120px)] grid grid-cols-[1fr_320px] gap-6">
-          <div className="flex flex-col gap-6 overflow-hidden">
-            <div className="bg-brand-card border border-brand-border rounded-2xl p-6 flex gap-6 items-center justify-between shrink-0">
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-full bg-gray-600 flex items-center justify-center border-2 border-brand-border shadow-neon">
-                  <span className="text-white text-2xl font-bold">
+      <div className="pt-26 flex-1 overflow-hidden px-4 pb-4">
+        <div className="grid grid-cols-[1fr_264px] gap-15 pt-4 h-full">
+
+          <div className="flex flex-col gap-15 h-full">
+            <div className="flex-1 grid grid-cols-[auto_1fr_1fr] gap-15 items-stretch">
+              <div className="flex items-center justify-center px-4">
+                <div className="w-100 h-100 rounded-full bg-gray-600 flex items-center justify-center shadow-neon ring-4 ring-brand-border/30">
+                  <span className="text-5xl font-extrabold text-white tracking-tight">
                     {data.user.initials}
                   </span>
                 </div>
@@ -97,12 +99,13 @@ function ProfileContent({ data, headerUser }: ProfileContentProps) {
           </div>
 
           <div className="h-full">
-            <RightSidebar groups={mockGroups} users={mockSidebarUsers} />
+            <RightSidebar groups={mockGroups} />
           </div>
+
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 export default function Page() {
@@ -131,7 +134,7 @@ export default function Page() {
     username: data.user.username,
     followers: data.user.followersCount,
     initials: data.user.initials,
-  };
+  }
 
   return (
     <>

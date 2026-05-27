@@ -18,6 +18,13 @@ type MeResponse struct {
 	Initials  string `json:"initials"`
 }
 
+type UserListItem struct {
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	Initials  string `json:"initials"`
+	Following bool   `json:"following"`
+}
+
 type User struct {
 	ID             int    `json:"id"`
 	Name           string `json:"name"`
