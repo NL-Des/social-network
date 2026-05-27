@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	appErrors "social-network/backend/internal/errors"
 	"social-network/backend/internal/service"
 )
 
@@ -18,19 +19,17 @@ func NewGroupHandler(gs *service.GroupService) *GroupHandler {
 }
 
 // HandleGroups gère GET /group-chat (liste) et POST /group-chat (création)
-func (h *GroupHandler) HandleGroups(w http.ResponseWriter, r *http.Request) {
+func (h *GroupHandler) HandleGroups(w http.ResponseWriter, r *http.Request) error {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
+		return appErrors.New(appErrors.CodeUnauthorized, "Accès refusé : utilisateur non authentifié", nil)
 	}
 
 	switch r.Method {
 	case http.MethodGet:
 		groups, err := h.GroupService.GetUserGroups(int64(userID))
 		if err != nil {
-			http.Error(w, "erreur serveur", http.StatusInternalServerError)
-			return
+			return err
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(groups)
@@ -42,13 +41,12 @@ func (h *GroupHandler) HandleGroups(w http.ResponseWriter, r *http.Request) {
 			MemberIDs   []int64 `json:"member_ids"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			http.Error(w, "payload invalide", http.StatusBadRequest)
-			return
+			return appErrors.New(appErrors.CodeInvalidInput, "Structure ou corps JSON invalide", err)
 		}
 		title := strings.TrimSpace(body.Title)
 		if title == "" {
-			http.Error(w, "titre requis", http.StatusBadRequest)
-			return
+			return appErrors.New(appErrors.CodeInvalidInput, "Titre requis", nil)
+
 		}
 		desc := strings.TrimSpace(body.Description)
 		if desc == "" {
@@ -57,8 +55,7 @@ func (h *GroupHandler) HandleGroups(w http.ResponseWriter, r *http.Request) {
 
 		groupID, err := h.GroupService.CreateGroup(title, desc, int64(userID), body.MemberIDs)
 		if err != nil {
-			http.Error(w, "erreur serveur", http.StatusInternalServerError)
-			return
+			return err
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -67,57 +64,53 @@ func (h *GroupHandler) HandleGroups(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
 	}
+	return nil
 }
 
 // HandleLeaveGroup gère DELETE /group-chat/{id}/leave
-func (h *GroupHandler) HandleLeaveGroup(w http.ResponseWriter, r *http.Request) {
+func (h *GroupHandler) HandleLeaveGroup(w http.ResponseWriter, r *http.Request) error {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
+		return appErrors.New(appErrors.CodeUnauthorized, "Accès refusé : utilisateur non authentifié", nil)
 	}
 	if r.Method != http.MethodDelete {
-		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
-		return
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return nil
 	}
 	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
-		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
-		return
+		return appErrors.New(appErrors.CodeInvalidInput, "Identifiant de groupe malformé", err)
 	}
 	if err := h.GroupService.LeaveGroup(groupID, int64(userID)); err != nil {
-		http.Error(w, "erreur serveur", http.StatusInternalServerError)
-		return
+		return err
 	}
 	w.WriteHeader(http.StatusNoContent)
+	return nil
 }
 
 // HandleGroupMessages gère GET /group-chat/{id}/messages
-func (h *GroupHandler) HandleGroupMessages(w http.ResponseWriter, r *http.Request) {
+func (h *GroupHandler) HandleGroupMessages(w http.ResponseWriter, r *http.Request) error {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
+		return appErrors.New(appErrors.CodeUnauthorized, "Accès refusé : utilisateur non authentifié", nil)
 	}
 
 	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
-		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
-		return
+		return appErrors.New(appErrors.CodeInvalidInput, "Identifiant de groupe malformé", err)
 	}
 
 	isMember, err := h.GroupService.IsGroupMember(groupID, int64(userID))
 	if err != nil || !isMember {
-		http.Error(w, "accès non autorisé", http.StatusForbidden)
-		return
+		return err
 	}
 
 	messages, err := h.GroupService.GetGroupMessages(groupID)
 	if err != nil {
-		http.Error(w, "erreur serveur", http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(messages)
+	return nil
 }
