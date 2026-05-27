@@ -5,8 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Header, { CurrentUser } from '@/app/components/home/Header'
 import { fetchMe } from '@/lib/fetchMe'
 import RightSidebar, { Group } from '@/app/components/home/RightSidebar'
-import LeftSidebar, { Conversation } from '@/app/components/home/LeftSidebar'
+import LeftSidebar, { Conversation, GroupConversation } from '@/app/components/home/LeftSidebar'
 import Messages, { Message, ChatConversation } from '@/app/components/home/Messages'
+import GroupMessages, { GroupMessage, GroupChat } from '@/app/components/home/GroupMessages'
+import { useGroupStatuses } from '@/lib/useGroupStatuses'
+import { useOnlineStatus } from '@/lib/useOnlineStatus'
 
 const mockGroups: Group[] = [
   { id: '1', name: 'Photo Urbaine', membersCount: '890'  },
@@ -22,22 +25,41 @@ interface ApiMessage {
   sent_at: string
 }
 
+interface ApiGroupMessage {
+  id: number
+  group_id: number
+  sender_id: number
+  body: string
+  sent_at: string
+}
+
 interface ApiConversation {
   id: number
   name: string
   initials: string
 }
 
+interface ApiGroupInfo {
+  id: number
+  title: string
+  initials: string
+  member_ids: number[]
+}
+
 export default function MessagesPage() {
   const router       = useRouter()
   const searchParams = useSearchParams()
 
-  const [user, setUser]                   = useState<CurrentUser | null>(null)
-  const [loading, setLoading]             = useState(true)
-  const [conversations, setConversations] = useState<Conversation[]>([])
-  const [allUsers, setAllUsers]           = useState<Conversation[]>([])
-  const [activeId, setActiveId]           = useState<string | null>(searchParams.get('with'))
-  const [messages, setMessages]           = useState<Message[]>([])
+  const [user, setUser]                       = useState<CurrentUser | null>(null)
+  const [userId, setUserId]                   = useState<string | null>(null)
+  const [loading, setLoading]                 = useState(true)
+  const [conversations, setConversations]     = useState<Conversation[]>([])
+  const [allUsers, setAllUsers]               = useState<Conversation[]>([])
+  const [groups, setGroups]                   = useState<GroupConversation[]>([])
+  const [activeId, setActiveId]               = useState<string | null>(searchParams.get('with'))
+  const [activeGroupId, setActiveGroupId]     = useState<string | null>(null)
+  const [messages, setMessages]               = useState<Message[]>([])
+  const [groupMessages, setGroupMessages]     = useState<GroupMessage[]>([])
 
   useEffect(() => {
     fetchMe()
@@ -49,7 +71,7 @@ export default function MessagesPage() {
       .finally(() => setLoading(false))
   }, [router])
 
-  // Charge la liste de tous les utilisateurs pour afficher n'importe quelle conversation
+  // Tous les utilisateurs (pour afficher n'importe quelle conv)
   useEffect(() => {
     fetch('/api/users')
       .then((res) => res.ok ? res.json() : [])
@@ -59,6 +81,20 @@ export default function MessagesPage() {
           name:     u.name,
           initials: u.initials,
           online:   false,
+        })))
+      })
+      .catch(() => {})
+  }, [])
+
+  const loadGroups = useCallback(() => {
+    fetch('/api/group-chat')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: ApiGroupInfo[]) => {
+        setGroups(data.map((g) => ({
+          id:        String(g.id),
+          title:     g.title,
+          initials:  g.initials,
+          memberIds: (g.member_ids ?? []).map(String),
         })))
       })
       .catch(() => {})
@@ -75,7 +111,6 @@ export default function MessagesPage() {
           online:   false,
         }))
         setConversations(convs)
-        // Sélectionne la première conv uniquement si aucun param ?with dans l'URL
         if (convs.length > 0 && activeId === null) {
           setActiveId(convs[0].id)
         }
@@ -83,10 +118,15 @@ export default function MessagesPage() {
       .catch(() => {})
   }, [])
 
-  // Sync l'activeId avec le param URL quand il change (navigation depuis la sidebar)
+  useEffect(() => { loadGroups() }, [loadGroups])
+
+  // Sync activeId depuis le param URL (navigation depuis la RightSidebar)
   useEffect(() => {
     const withParam = searchParams.get('with')
-    if (withParam) setActiveId(withParam)
+    if (withParam) {
+      setActiveId(withParam)
+      setActiveGroupId(null)
+    }
   }, [searchParams])
 
   const fetchMessages = useCallback((partnerId: string) => {
@@ -95,21 +135,52 @@ export default function MessagesPage() {
     fetch(`/api/messages?with=${partnerId}`)
       .then((res) => res.ok ? res.json() : [])
       .then((data: ApiMessage[]) => {
-        const msgs: Message[] = data.map((m) => ({
+        setMessages(data.map((m) => ({
           id:         String(m.id),
           from:       String(m.sender_id) === partnerId ? 'them' : 'me',
           senderName: String(m.sender_id) === partnerId ? (partner?.name ?? '') : 'Moi',
           text:       m.body,
           date:       new Date(m.sent_at).toLocaleDateString('fr-FR'),
-        }))
-        setMessages(msgs)
+        })))
       })
       .catch(() => {})
   }, [conversations, allUsers])
 
+  const fetchGroupMessages = useCallback((groupId: string) => {
+    fetch(`/api/group-chat/${groupId}/messages`)
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: ApiGroupMessage[]) => {
+        setGroupMessages(data.map((m) => ({
+          id:         String(m.id),
+          senderName: String(m.sender_id) === userId
+            ? 'Moi'
+            : (allUsers.find((u) => u.id === String(m.sender_id))?.name ?? String(m.sender_id)),
+          senderId:   String(m.sender_id),
+          text:       m.body,
+          date:       new Date(m.sent_at).toLocaleDateString('fr-FR'),
+        })))
+      })
+      .catch(() => {})
+  }, [userId, allUsers])
+
   useEffect(() => {
     if (activeId) fetchMessages(activeId)
   }, [activeId, fetchMessages])
+
+  useEffect(() => {
+    if (activeGroupId) fetchGroupMessages(activeGroupId)
+  }, [activeGroupId, fetchGroupMessages])
+
+  // Récupère l'id numérique de l'utilisateur courant depuis /api/users et /api/me combinés
+  // On utilise allUsers + user.name pour trouver l'id approximatif — fallback sur '' si introuvable
+  useEffect(() => {
+    if (!user || allUsers.length === 0) return
+    const found = allUsers.find((u) => u.name === user.name)
+    if (found) setUserId(found.id)
+  }, [user, allUsers])
+
+  const { onlineUsers } = useOnlineStatus()
+  const groupStatuses   = useGroupStatuses(groups, activeGroupId, onlineUsers)
 
   if (loading) {
     return (
@@ -121,10 +192,23 @@ export default function MessagesPage() {
 
   if (!user) return null
 
-  // Cherche d'abord dans les conversations existantes, sinon dans tous les users
   const activeConversation: ChatConversation | null = activeId
     ? (conversations.find((c) => c.id === activeId) ?? allUsers.find((u) => u.id === activeId) ?? null)
     : null
+
+  const activeGroup: GroupChat | null = activeGroupId
+    ? (groups.find((g) => g.id === activeGroupId) ?? null)
+    : null
+
+  function handleSelectDm(id: string) {
+    setActiveId(id)
+    setActiveGroupId(null)
+  }
+
+  function handleSelectGroup(id: string) {
+    setActiveGroupId(id)
+    setActiveId(null)
+  }
 
   return (
     <div className="bg-background h-screen flex flex-col overflow-hidden">
@@ -137,12 +221,25 @@ export default function MessagesPage() {
             <LeftSidebar
               conversations={conversations}
               activeId={activeId}
-              onSelect={setActiveId}
+              onSelect={handleSelectDm}
+              groups={groups}
+              activeGroupId={activeGroupId}
+              onSelectGroup={handleSelectGroup}
+              onGroupCreated={loadGroups}
+              groupStatuses={groupStatuses}
+              allUsers={allUsers}
             />
           </div>
 
           <div className="h-full">
-            {activeConversation ? (
+            {activeGroup ? (
+              <GroupMessages
+                key={activeGroup.id}
+                group={activeGroup}
+                currentUserId={userId ?? ''}
+                initialMessages={groupMessages}
+              />
+            ) : activeConversation ? (
               <Messages
                 key={activeConversation.id}
                 conversation={activeConversation}

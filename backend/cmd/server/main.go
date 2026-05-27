@@ -12,6 +12,7 @@ import (
 	"social-network/backend/internal/repository"
 	"social-network/backend/internal/service"
 	ws "social-network/backend/internal/websocket"
+	groupChat "social-network/backend/internal/websocket/modules/groupChat"
 	"social-network/backend/internal/websocket/modules/privateMessage"
 )
 
@@ -51,6 +52,9 @@ func main() {
 	messageRepo := repository.NewMessageRepo(db)
 	messageService := service.NewMessageService(messageRepo)
 	messageHandler := handlers.NewMessageHandler(messageService)
+	groupRepo := repository.NewGroupRepo(db)
+	groupService := service.NewGroupService(groupRepo)
+	groupHandler := handlers.NewGroupHandler(groupService)
 	// **
 
 	// WebSocket hub
@@ -59,6 +63,7 @@ func main() {
 
 	// Route les messages WS entrants vers les bons handlers
 	pmHandler := privateMessage.NewPrivateMessageHandler(hub, messageService)
+	gcHandler := groupChat.NewGroupChatHandler(hub, groupService)
 	hub.OnMessage = func(c *ws.Client, raw []byte) {
 		var envelope struct {
 			Type string          `json:"type"`
@@ -74,6 +79,12 @@ func main() {
 				return
 			}
 			pmHandler.Handle(c, pm)
+		case "group_message":
+			var gm model.GroupMessage
+			if err := json.Unmarshal(envelope.Data, &gm); err != nil {
+				return
+			}
+			gcHandler.Handle(c, gm)
 		}
 	}
 
@@ -91,6 +102,8 @@ func main() {
 	mux.HandleFunc("/user/profile", authMiddleware.RequireAuth(meHandler.HandleProfile))
 	mux.HandleFunc("/conversations", authMiddleware.RequireAuth(messageHandler.HandleConversations))
 	mux.HandleFunc("/messages", authMiddleware.RequireAuth(messageHandler.HandleMessages))
+	mux.HandleFunc("/group-chat", authMiddleware.RequireAuth(groupHandler.HandleGroups))
+	mux.HandleFunc("/group-chat/{id}/messages", authMiddleware.RequireAuth(groupHandler.HandleGroupMessages))
 	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
