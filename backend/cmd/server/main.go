@@ -45,6 +45,9 @@ func main() {
 	registerHandler := handlers.NewRegisterHandler(userService)
 	loginHandler := handlers.NewLoginHandler(userService, sessionService)
 	authMiddleware := middleware.NewAuthMiddleware(sessionService)
+	followRepo := repository.NewFollowRepository(db)
+	followService := service.NewFollowService(followRepo)
+	followHandler := handlers.NewFollowHandler(followService)
 	// **
 
 	// creation du mux
@@ -58,7 +61,7 @@ func main() {
 	// Routes protégées
 	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
 
-	r := router.NewRouter(mux, profileHandler, authMiddleware)
+	r := router.NewRouter(mux, profileHandler, followHandler, authMiddleware)
 
 	// Démarrer le serveur
 	fmt.Println("Démarrage sur http://localhost:3000")

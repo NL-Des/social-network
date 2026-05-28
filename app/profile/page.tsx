@@ -96,17 +96,40 @@ function ProfileContent({
     data.visibility ?? 'public'
   );
 
+  useEffect(() => {
+    setVisibility(data.visibility ?? 'public');
+  }, [data.visibility]);
+
+  async function handleVisibilityChange(value: 'private' | 'public') {
+    console.log('handleVisibilityChange appelé', value) // ← ajoute ça
+    setVisibility(value);
+
+    try {
+      const response = await fetch('/api/profile/visibility', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPrivate: value === 'private' }),
+      });
+      console.log('réponse du back', response.status) // ← et ça
+
+      if (!response.ok) {
+        setVisibility(visibility);
+        console.error('Erreur lors de la mise à jour de la visibilité');
+      }
+    } catch (err) {
+      setVisibility(visibility);
+      console.error(err);
+    }
+  }
+
   return (
     <div className="bg-background h-screen flex flex-col overflow-hidden">
       <Header user={headerUser} />
 
       <div className="pt-26 flex-1 overflow-hidden px-4 pb-4">
         <div className="grid grid-cols-[1fr_264px] gap-15 pt-4 h-full">
-          {/* Contenu principal */}
           <div className="flex flex-col gap-15 h-full">
-            {/* Ligne haute : avatar + informations + visibilité */}
             <div className="flex-1 grid grid-cols-[auto_1fr_1fr] gap-15 items-stretch">
-              {/* Grand avatar */}
               <div className="flex items-center justify-center px-4">
                 <div className="w-100 h-100 rounded-full bg-gray-600 flex items-center justify-center shadow-neon ring-4 ring-brand-border/30">
                   <span className="text-5xl font-extrabold text-white tracking-tight">
@@ -116,10 +139,9 @@ function ProfileContent({
               </div>
 
               <PersonnalInformations user={data.user} />
-              <VisibilityAccount visibility={visibility} onChange={setVisibility} />
+              <VisibilityAccount visibility={visibility} onChange={handleVisibilityChange} />
             </div>
 
-            {/* Ligne basse : suivi(e)s + abonnés + posts */}
             <div className="flex-1 grid grid-cols-3 gap-15 overflow-hidden">
               <Followers following={data.following} />
               <Subscribers followers={data.followers} />
@@ -131,7 +153,6 @@ function ProfileContent({
             </div>
           </div>
 
-          {/* Sidebar droite */}
           <div className="h-full">
             <RightSidebar groups={mockGroups} users={mockSidebarUsers} />
           </div>
@@ -145,10 +166,13 @@ export default function Page() {
   const [data, setData] = useState<ProfilePageProps>(mockData);
 
   useEffect(() => {
-    profileAction()
-      .then((result) => setData(result))
-      .catch(() => {});
-  }, []);
+  profileAction()
+    .then((result) => {
+      console.log('données du back', result.visibility) // ← ajoute ça
+      setData(result)
+    })
+    .catch(() => {});
+}, []);
 
   const headerUser: CurrentUser = {
     name: `${data.user.firstName} ${data.user.lastName[0]}.`,

@@ -49,6 +49,8 @@ export interface ProfilePageProps {
   allUsers: Contact[];
   navItems: NavItem[];
   visibility?: "private" | "public";
+  isOwner: boolean;
+  isFollowing: boolean;
 }
 
 function getInitials(firstName: string, lastName: string): string {
@@ -100,5 +102,7 @@ export default async function profileAction(): Promise<ProfilePageProps> {
       { label: "Notifications", href: "/notifications" },
     ],
     visibility: data.isPrivate ? "private" : "public",
+    isOwner: true,        
+    isFollowing: false, 
   };
 }

@@ -139,3 +139,12 @@ func (r *ProfilRepository) IsFollower(viewerID, profileID int) (bool, error) {
 	}
 	return exists, nil
 }
+
+func (r *ProfilRepository) UpdateVisibility(userID int, isPrivate bool) error {
+	_, err := r.db.Exec(`
+        UPDATE users
+        SET isprivate = $1
+        WHERE id = $2
+    `, isPrivate, userID)
+	return err
+}

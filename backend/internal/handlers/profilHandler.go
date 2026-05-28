@@ -94,3 +94,27 @@ func (h *ProfilHandler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
 		log.Printf("encode profile: %v", err)
 	}
 }
+
+func (h *ProfilHandler) UpdateVisibility(w http.ResponseWriter, r *http.Request) {
+	viewerID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Lecture du body JSON
+	var body struct {
+		IsPrivate bool `json:"isPrivate"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid body", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.ProfilService.UpdateVisibility(viewerID, body.IsPrivate); err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

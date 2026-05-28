@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, auth *middleware.AuthMiddleware) http.Handler {
+func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, followHandler *handlers.FollowHandler, auth *middleware.AuthMiddleware) http.Handler {
 
 	router := mux.NewRouter()
 
@@ -21,6 +21,18 @@ func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, 
 	router.Handle("/me/profile",
 		auth.RequireAuth(http.HandlerFunc(profilHandler.GetMyProfile)),
 	).Methods("GET")
+
+	router.Handle("/me/profile/visibility",
+		auth.RequireAuth(http.HandlerFunc(profilHandler.UpdateVisibility)),
+	).Methods("PATCH")
+
+	router.Handle("/users/{id}/follow",
+		auth.RequireAuth(http.HandlerFunc(followHandler.Follow)),
+	).Methods("POST")
+
+	router.Handle("/users/{id}/follow",
+		auth.RequireAuth(http.HandlerFunc(followHandler.Unfollow)),
+	).Methods("DELETE")
 
 	// Toutes les autres routes : ServeMux
 	router.PathPrefix("/").Handler(serverMux)

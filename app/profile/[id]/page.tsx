@@ -50,6 +50,8 @@ async function fetchPublicProfile(id: string): Promise<ProfilePageProps> {
       { label: "Notifications", href: "/notifications" },
     ],
     visibility: data.isPrivate ? "private" : "public",
+    isOwner: data.canEdit,
+    isFollowing: data.isFollowing,
   };
 }
 
@@ -86,6 +88,23 @@ function PublicProfileContent({
   data: ProfilePageProps;
   headerUser: CurrentUser;
 }) {
+  const { id } = useParams<{ id: string }>();
+  const [isFollowing, setIsFollowing] = useState(data.isFollowing);
+
+  async function handleFollow() {
+    const response = await fetch(`/api/users/${id}/follow`, {
+      method: "POST",
+    });
+    if (response.ok) setIsFollowing(true);
+  }
+
+  async function handleUnfollow() {
+    const response = await fetch(`/api/users/${id}/follow`, {
+      method: "DELETE",
+    });
+    if (response.ok) setIsFollowing(false);
+  }
+
   return (
     <div className="bg-background h-screen flex flex-col overflow-hidden">
       <Header user={headerUser} />
@@ -120,6 +139,27 @@ function PublicProfileContent({
                     ))}
                   </dl>
                 </div>
+
+                {/* Boutons uniquement si ce n'est pas son propre profil */}
+                {!data.isOwner && (
+                  <div className="mt-5">
+                    {isFollowing ? (
+                      <button
+                        onClick={handleUnfollow}
+                        className="w-full py-2 px-4 rounded-lg border border-brand-border text-brand-text text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95"
+                      >
+                        Se désabonner
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleFollow}
+                        className="w-full py-2 px-4 rounded-lg border border-brand-border text-brand-text text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95"
+                      >
+                        S&apos;abonner
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 

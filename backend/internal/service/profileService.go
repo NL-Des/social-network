@@ -83,5 +83,17 @@ func (s *ProfilService) GetProfile(viewerID, profileID int) (*model.PublicProfil
 	}
 	profile.Posts = posts
 
+	if !isOwner {
+		isFollower, err := s.ProfilRepo.IsFollower(viewerID, profileID)
+		if err != nil {
+			log.Printf("IsFollower(%d, %d): %v", viewerID, profileID, err)
+		}
+		profile.IsFollowing = isFollower
+	}
+
 	return profile, nil
+}
+
+func (s *ProfilService) UpdateVisibility(userID int, isPrivate bool) error {
+	return s.ProfilRepo.UpdateVisibility(userID, isPrivate)
 }
