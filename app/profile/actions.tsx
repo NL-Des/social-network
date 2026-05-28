@@ -2,11 +2,12 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { BackendError } from "@/app/types/api";
 
-// Ajout d'une structure de retour capable de véhiculer une erreur de session
+// Type de retour mis à jour pour véhiculer l'objet BackendError globalisé
 export type ProfileActionResult = 
   | { success: true; data: ProfilePageProps }
-  | { success: false; error: "unauthorized" | "server_error" | string };
+  | { success: false; error: BackendError };
 
 export interface UserProfile {
   firstName: string;
@@ -46,6 +47,7 @@ export interface NavItem {
   href: string;
 }
 
+// L'interface complète d'origine incluant visibility (typé strictement) et navItems
 export interface ProfilePageProps {
   user: UserProfile;
   following: Contact[];
@@ -53,95 +55,125 @@ export interface ProfilePageProps {
   events: Event[];
   groups: Group[];
   allUsers: Contact[];
-  navItems: NavItem[];
-  visibility?: "private" | "public";
+  visibility: "private" | "public"; // Correction Typage strict
+  navItems: NavItem[];              // Réintégration du champ manquant
 }
 
 function getInitials(firstName: string, lastName: string): string {
-  return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
+  let initials = "";
+  if (firstName && firstName.length > 0) {
+    initials += firstName[0].toUpperCase();
+  }
+  if (lastName && lastName.length > 0) {
+    initials += lastName[0].toUpperCase();
+  }
+  return initials || "??";
 }
 
 export default async function profileAction(): Promise<ProfileActionResult> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("session_token");
 
-  // Si pas de cookie, l'utilisateur n'est pas connecté
   if (!sessionToken) {
-    return { success: false, error: "unauthorized" };
+    return {
+      success: false,
+      error: {
+        code: "UNAUTHORIZED",
+        message: "Accès refusé : session expirée ou introuvable",
+      },
+    };
   }
 
   try {
-    const response = await fetch("http://localhost:5090/user/profile", {
+    const response = await fetch("http://localhost:5090/user/me", {
       headers: { Cookie: `session_token=${sessionToken.value}` },
     });
 
-    // Interception de l'expiration de session (401 de Go) ou crash (500)
-    if (response.status === 401) return { success: false, error: "unauthorized" };
-    if (response.status === 500) return { success: false, error: "server_error" };
-
     if (!response.ok) {
-      return { success: false, error: "Impossible de charger le profil." };
+      try {
+        const backendError: BackendError = await response.json();
+        return { success: false, error: backendError };
+      } catch {
+        return {
+          success: false,
+          error: {
+            code: "INTERNAL",
+            message: "Une erreur imprévue est survenue lors du chargement du profil.",
+          },
+        };
+      }
     }
 
     const data = await response.json();
-    const u = data.user;
 
-    return {
-      success: true,
-      data: {
-        user: {
-          firstName: u.firstName,
-          lastName: u.lastName,
-          username: u.username,
-          email: u.email,
-          birthDate: u.birthDate,
-          followersCount: u.followersCount ?? 0,
-          initials: u.initials ?? getInitials(u.firstName, u.lastName),
-        },
-        navItems: [
-          { label: "Accueil", href: "/" },
-          { label: "Groupes", href: "/groupes" },
-          { label: "Messages", href: "/messages" },
-          { label: "Notifications", href: "/notifications" },
-        ],
-        following: (data.following ?? []).map((c: any) => ({
-          id: String(c.id),
-          name: `${c.firstName} ${c.lastName[0]}.`,
-          initials: getInitials(c.firstName, c.lastName),
-        })),
-        followers: (data.followers ?? []).map((c: any) => ({
-          id: String(c.id),
-          name: `${c.firstName} ${c.lastName[0]}.`,
-          initials: getInitials(c.firstName, c.lastName),
-          isOnline: c.isOnline ?? false,
-        })),
-        events: (data.events ?? []).map((e: any) => ({
-          id: String(e.id),
-          title: e.title,
-          subtitle: e.subtitle ?? e.description,
-          initials: e.title.slice(0, 2).toUpperCase(),
-          color: e.color ?? "text-brand-text",
-        })),
-        groups: (data.groups ?? []).map((g: any) => ({
-          id: String(g.id),
-          name: g.name,
-          memberCount:
-            g.memberCount >= 1000
-              ? `${(g.memberCount / 1000).toFixed(1)}k`
-              : String(g.memberCount),
-          initials: g.name.slice(0, 2).toUpperCase(),
-          iconBg: g.iconBg ?? "bg-slate-700",
-        })),
-        allUsers: (data.allUsers ?? []).map((u: any) => ({
-          id: String(u.id),
-          name: `${u.firstName} ${u.lastName[0]}.`,
-          initials: getInitials(u.firstName, u.lastName),
-          isOnline: u.isOnline ?? false,
-        })),
-        visibility: u.visibility ?? "public",
-      }
+    const mappedData: ProfilePageProps = {
+      user: {
+        firstName: data.user?.firstName ?? "",
+        lastName: data.user?.lastName ?? "",
+        username: data.user?.username ?? "",
+        email: data.user?.email ?? "",
+        birthDate: data.user?.birthDate
+          ? new Date(data.user.birthDate).toLocaleDateString("fr-FR", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+            })
+          : "",
+        followersCount: data.user?.followersCount ?? 0,
+        initials: getInitials(data.user?.firstName, data.user?.lastName),
+      },
+      // Récupération de la visibilité depuis le booléen isPrivate de ton back Go
+      visibility: data.user?.isPrivate ? "private" : "public",
+      
+      // Récupération ou initialisation par défaut des navItems requis par ton front
+      navItems: data.navItems ?? [
+        { label: "Accueil", href: "/home" },
+        { label: "Profil", href: "/profile" }
+      ],
+
+      following: (data.following ?? []).map((c: any) => ({
+        id: String(c.id),
+        name: `${c.firstName} ${c.lastName[0]}.`,
+        initials: getInitials(c.firstName, c.lastName),
+      })),
+      followers: (data.followers ?? []).map((c: any) => ({
+        id: String(c.id),
+        name: `${c.firstName} ${c.lastName[0]}.`,
+        initials: getInitials(c.firstName, c.lastName),
+        isOnline: c.isOnline ?? false,
+      })),
+      events: (data.events ?? []).map((e: any) => ({
+        id: String(e.id),
+        title: e.title,
+        subtitle: e.subtitle ?? e.description,
+        initials: e.title.slice(0, 2).toUpperCase(),
+        color: e.color ?? "text-brand-text",
+      })),
+      groups: (data.groups ?? []).map((g: any) => ({
+        id: String(g.id),
+        name: g.name,
+        memberCount:
+          g.memberCount >= 1000
+            ? `${(g.memberCount / 1000).toFixed(1)}k`
+            : String(g.memberCount),
+        initials: g.name.slice(0, 2).toUpperCase(),
+        iconBg: g.iconBg ?? "bg-slate-700",
+      })),
+      allUsers: (data.allUsers ?? []).map((u: any) => ({
+        id: String(u.id),
+        name: `${u.firstName} ${u.lastName[0]}.`,
+        initials: getInitials(u.firstName, u.lastName),
+      })),
     };
-  } catch (err) {
-    return { success: false, error: "server_error" };
+
+    return { success: true, data: mappedData };
+  } catch {
+    return {
+      success: false,
+      error: {
+        code: "INTERNAL",
+        message: "Le service de profil est temporairement indisponible.",
+      },
+    };
   }
 }

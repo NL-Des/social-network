@@ -7,6 +7,8 @@ import { fetchMe } from '@/lib/fetchMe'
 import RightSidebar, { Group } from '@/app/components/home/RightSidebar'
 import LeftSidebarGroups, { GroupItem } from '@/app/components/home/LeftSidebarGroups'
 import CenterGroup from '@/app/components/home/CenterGroup'
+import { BackendError } from '@/app/types/api'
+import ErrorBanner from '@/app/components/ui/errorBanner'
 
 const mockGroupList: GroupItem[] = [
   { id: '1', name: 'Photo Urbaine', initials: 'PU', membersCount: '890',  description: "Passionnés de photographie urbaine. Partagez vos clichés de rues, d'architecture et de vie citadine." },
@@ -25,13 +27,25 @@ export default function GroupesPage() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const activeGroup             = mockGroupList.find((g) => g.id === activeId) ?? null
 
+  // État ajouté pour la gestion centralisée de la bannière d'erreur
+  const [globalError, setGlobalError] = useState<BackendError | null>(null)
+
   useEffect(() => {
     fetchMe()
       .then((data) => {
         if (!data) { router.replace('/auth/login'); return }
         setUser(data)
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (err?.code === 'UNAUTHORIZED') {
+          router.replace('/auth/login')
+        } else {
+          setGlobalError({
+            code: err?.code ?? 'INTERNAL',
+            message: err?.message ?? 'Impossible de charger la liste des groupes.'
+          })
+        }
+      })
       .finally(() => setLoading(false))
   }, [router])
 
@@ -47,6 +61,15 @@ export default function GroupesPage() {
 
   return (
     <div className="bg-background h-screen flex flex-col overflow-hidden">
+      {/* Affichage de la bannière si une erreur structurée survient */}
+      {globalError && (
+        <ErrorBanner 
+          message={globalError.message}
+          type={globalError.code === 'INVALID_INPUT' ? 'warning' : 'critical'}
+          onClose={() => setGlobalError(null)}
+        />
+      )}
+
       <Header user={user} />
 
       <div className="pt-[104px] flex-1 overflow-hidden px-4 pb-4">

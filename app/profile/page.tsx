@@ -12,6 +12,7 @@ import profileAction from './actions';
 import { useRouter } from 'next/navigation';
 import type { ProfilePageProps } from './actions';
 import ErrorBanner from '@/app/components/ui/errorBanner';
+import { BackendError } from '@/app/types/api'
 
 const mockGroups: Group[] = [
   { id: '1', name: 'Photo Urbaine', membersCount: '890' },
@@ -110,24 +111,26 @@ function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUs
 
 export default function Page() {
   const [data, setData] = useState<ProfilePageProps>(mockData);
-  const [globalError, setGlobalError] = useState<string | null>(null);
+const [globalError, setGlobalError] = useState<BackendError | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    profileAction().then((result) => {
-      if (result.success) {
-        setData(result.data);
+  profileAction().then((result) => {
+    if (result.success) {
+      setData(result.data);
+    } else {
+      const backendError = result.error as BackendError;
+
+      // Redirection automatique si le code d'erreur est UNAUTHORIZED
+      if (backendError.code === 'UNAUTHORIZED') {
+        router.push('/auth/login');
       } else {
-        if (result.error === 'unauthorized') { // redirection vers login si non autorisé
-          router.push('/auth/login');
-        } else if (result.error === 'server_error') {
-          setGlobalError("Le serveur ne fonctionne pas correctement. Réessayez plus tard.");
-        } else {
-          setGlobalError(result.error);
-        }
+        // Pour toutes les autres erreurs (INTERNAL, INVALID_INPUT...), on enregistre l'objet complet
+        setGlobalError(backendError);
       }
-    });
-  }, [router]);
+    }
+  });
+}, [router]);
 
   const headerUser: CurrentUser = {
     name: `${data.user.firstName} ${data.user.lastName[0]}.`,
@@ -140,10 +143,11 @@ export default function Page() {
     <>
       {globalError && (
         <ErrorBanner 
-          message={globalError} 
-          type="critical"
-          position="fixed"
-          onClose={() => setGlobalError(null)} 
+          message={globalError.message} 
+          // Si c'est une simple erreur de saisie (INVALID_INPUT), on met un avertissement, sinon critique (500, etc.)
+          type={globalError.code === 'INVALID_INPUT' ? 'warning' : 'critical'}
+          onClose={() => setGlobalError(null)}
+          autoCloseDuration={5000} // Optionnel : se ferme tout seul après 5 secondes
         />
       )}
       <ProfileContent data={data} headerUser={headerUser} />

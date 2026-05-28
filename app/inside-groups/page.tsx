@@ -8,6 +8,8 @@ import { CurrentUser } from '@/app/components/home/Header'
 import LeftSidebarGroupListOfUsers, { SidebarUser } from '@/app/components/home/LeftSidebarGroupListOfUsers'
 import RightSidebarGroupListOfConversations, { Conversation, GroupEvent } from '@/app/components/home/RightSidebarGroupListOfConversations'
 import PostCard, { Post, CreatePostButton } from '@/app/components/home/PostCard'
+import { BackendError } from '@/app/types/api'
+import ErrorBanner from '@/app/components/ui/errorBanner'
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
@@ -89,6 +91,9 @@ export default function InsideGroupPage() {
   const [user, setUser]       = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeId, setActiveId] = useState<string | null>(null)
+  
+  // État local ajouté pour capturer les erreurs de l'API
+  const [globalError, setGlobalError] = useState<BackendError | null>(null)
 
   useEffect(() => {
     fetchMe()
@@ -96,7 +101,16 @@ export default function InsideGroupPage() {
         if (!data) { router.replace('/auth/login'); return }
         setUser(data)
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (err?.code === 'UNAUTHORIZED') {
+          router.replace('/auth/login')
+        } else {
+          setGlobalError({
+            code: err?.code ?? 'INTERNAL',
+            message: err?.message ?? 'Impossible de valider votre accès au groupe.'
+          })
+        }
+      })
       .finally(() => setLoading(false))
   }, [router])
 
@@ -112,6 +126,15 @@ export default function InsideGroupPage() {
 
   return (
     <div className="bg-background h-screen flex flex-col overflow-hidden">
+      {/* Affichage de l'alerte d'erreur si l'état est alimenté */}
+      {globalError && (
+        <ErrorBanner 
+          message={globalError.message}
+          type={globalError.code === 'INVALID_INPUT' ? 'warning' : 'critical'}
+          onClose={() => setGlobalError(null)}
+        />
+      )}
+
       <HeaderGroup user={user} groupName="Route de test" />
 
       <div className="pt-26 flex-1 overflow-hidden px-4 pb-4">

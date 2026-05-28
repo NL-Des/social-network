@@ -10,6 +10,8 @@ import Messages, { Message, ChatConversation } from '@/app/components/home/Messa
 import GroupMessages, { GroupMessage, GroupChat } from '@/app/components/home/GroupMessages'
 import { useGroupStatuses } from '@/lib/useGroupStatuses'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
+import { BackendError } from '@/app/types/api'
+import ErrorBanner from '@/app/components/ui/errorBanner'
 
 const mockGroups: Group[] = [
   { id: '1', name: 'Photo Urbaine', membersCount: '890'  },
@@ -60,6 +62,9 @@ export default function MessagesPage() {
   const [activeGroupId, setActiveGroupId]     = useState<string | null>(null)
   const [messages, setMessages]               = useState<Message[]>([])
   const [groupMessages, setGroupMessages]     = useState<GroupMessage[]>([])
+  
+  // État ajouté pour la gestion centralisée des bannières d'erreur
+  const [globalError, setGlobalError]         = useState<BackendError | null>(null)
 
   useEffect(() => {
     fetchMe()
@@ -67,14 +72,34 @@ export default function MessagesPage() {
         if (!data) { router.replace('/auth/login'); return }
         setUser(data)
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (err?.code === 'UNAUTHORIZED') {
+          router.replace('/auth/login')
+        } else {
+          setGlobalError({
+            code: err?.code ?? 'INTERNAL',
+            message: err?.message ?? 'Session expirée ou introuvable.'
+          })
+        }
+      })
       .finally(() => setLoading(false))
   }, [router])
 
   // Tous les utilisateurs (pour afficher n'importe quelle conv)
   useEffect(() => {
     fetch('/api/users')
-      .then((res) => res.ok ? res.json() : [])
+      .then(async (res) => {
+        if (!res.ok) {
+          try {
+            const err: BackendError = await res.json()
+            setGlobalError(err)
+          } catch {
+            setGlobalError({ code: 'INTERNAL', message: 'Impossible de récupérer les utilisateurs.' })
+          }
+          return []
+        }
+        return res.json()
+      })
       .then((data: { id: number; name: string; initials: string }[]) => {
         setAllUsers(data.map((u) => ({
           id:       String(u.id),
@@ -83,12 +108,25 @@ export default function MessagesPage() {
           online:   false,
         })))
       })
-      .catch(() => {})
+      .catch(() => {
+        setGlobalError({ code: 'INTERNAL', message: 'Le service de gestion des utilisateurs est indisponible.' })
+      })
   }, [])
 
   const loadGroups = useCallback(() => {
     fetch('/api/group-chat')
-      .then((res) => res.ok ? res.json() : [])
+      .then(async (res) => {
+        if (!res.ok) {
+          try {
+            const err: BackendError = await res.json()
+            setGlobalError(err)
+          } catch {
+            setGlobalError({ code: 'INTERNAL', message: 'Impossible de charger les salons de discussion.' })
+          }
+          return []
+        }
+        return res.json()
+      })
       .then((data: ApiGroupInfo[]) => {
         setGroups(data.map((g) => ({
           id:        String(g.id),
@@ -97,12 +135,25 @@ export default function MessagesPage() {
           memberIds: (g.member_ids ?? []).map(String),
         })))
       })
-      .catch(() => {})
+      .catch(() => {
+        setGlobalError({ code: 'INTERNAL', message: 'Le service de salons de discussion est indisponible.' })
+      })
   }, [])
 
   useEffect(() => {
     fetch('/api/conversations')
-      .then((res) => res.ok ? res.json() : [])
+      .then(async (res) => {
+        if (!res.ok) {
+          try {
+            const err: BackendError = await res.json()
+            setGlobalError(err)
+          } catch {
+            setGlobalError({ code: 'INTERNAL', message: 'Impossible de charger la liste des conversations.' })
+          }
+          return []
+        }
+        return res.json()
+      })
       .then((data: ApiConversation[]) => {
         const convs: Conversation[] = data.map((c) => ({
           id:       String(c.id),
@@ -115,8 +166,10 @@ export default function MessagesPage() {
           setActiveId(convs[0].id)
         }
       })
-      .catch(() => {})
-  }, [])
+      .catch(() => {
+        setGlobalError({ code: 'INTERNAL', message: 'Impossible de joindre le service de messagerie.' })
+      })
+  }, [activeId])
 
   useEffect(() => { loadGroups() }, [loadGroups])
 
@@ -131,9 +184,20 @@ export default function MessagesPage() {
 
   const fetchMessages = useCallback((partnerId: string) => {
     const partner = conversations.find((c) => c.id === partnerId)
-               ?? allUsers.find((u) => u.id === partnerId)
+                 ?? allUsers.find((u) => u.id === partnerId)
     fetch(`/api/messages?with=${partnerId}`)
-      .then((res) => res.ok ? res.json() : [])
+      .then(async (res) => {
+        if (!res.ok) {
+          try {
+            const err: BackendError = await res.json()
+            setGlobalError(err)
+          } catch {
+            setGlobalError({ code: 'INTERNAL', message: 'Erreur lors du chargement des messages privés.' })
+          }
+          return []
+        }
+        return res.json()
+      })
       .then((data: ApiMessage[]) => {
         setMessages(data.map((m) => ({
           id:         String(m.id),
@@ -143,12 +207,25 @@ export default function MessagesPage() {
           date:       new Date(m.sent_at).toLocaleDateString('fr-FR'),
         })))
       })
-      .catch(() => {})
+      .catch(() => {
+        setGlobalError({ code: 'INTERNAL', message: 'La récupération de vos messages a échoué en raison d’un problème réseau.' })
+      })
   }, [conversations, allUsers])
 
   const fetchGroupMessages = useCallback((groupId: string) => {
     fetch(`/api/group-chat/${groupId}/messages`)
-      .then((res) => res.ok ? res.json() : [])
+      .then(async (res) => {
+        if (!res.ok) {
+          try {
+            const err: BackendError = await res.json()
+            setGlobalError(err)
+          } catch {
+            setGlobalError({ code: 'INTERNAL', message: 'Erreur lors du chargement des messages du groupe.' })
+          }
+          return []
+        }
+        return res.json()
+      })
       .then((data: ApiGroupMessage[]) => {
         setGroupMessages(data.map((m) => ({
           id:         String(m.id),
@@ -160,7 +237,9 @@ export default function MessagesPage() {
           date:       new Date(m.sent_at).toLocaleDateString('fr-FR'),
         })))
       })
-      .catch(() => {})
+      .catch(() => {
+        setGlobalError({ code: 'INTERNAL', message: 'La récupération des messages de groupe a échoué.' })
+      })
   }, [userId, allUsers])
 
   useEffect(() => {
@@ -172,7 +251,6 @@ export default function MessagesPage() {
   }, [activeGroupId, fetchGroupMessages])
 
   // Récupère l'id numérique de l'utilisateur courant depuis /api/users et /api/me combinés
-  // On utilise allUsers + user.name pour trouver l'id approximatif — fallback sur '' si introuvable
   useEffect(() => {
     if (!user || allUsers.length === 0) return
     const found = allUsers.find((u) => u.name === user.name)
@@ -212,6 +290,15 @@ export default function MessagesPage() {
 
   return (
     <div className="bg-background h-screen flex flex-col overflow-hidden">
+      {/* Insertion de la bannière d'erreur adaptative */}
+      {globalError && (
+        <ErrorBanner 
+          message={globalError.message}
+          type={globalError.code === 'INVALID_INPUT' ? 'warning' : 'critical'}
+          onClose={() => setGlobalError(null)}
+        />
+      )}
+
       <Header user={user} />
 
       <div className="pt-26 flex-1 overflow-hidden px-4 pb-4">

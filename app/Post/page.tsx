@@ -9,6 +9,8 @@ import LeftSidebarPostListOfUsers from '@/app/components/home/LeftSidebarPostLis
 import RightSidebar, { Group } from '@/app/components/home/RightSidebar'
 import Comments, { Post, Comment } from '@/app/components/home/Comments'
 import { useSidebarUsers } from '@/lib/useSidebarUsers'
+import { BackendError } from '@/app/types/api'
+import ErrorBanner from '@/app/components/ui/errorBanner'
 
 const mockGroups: Group[] = [
   { id: '1', name: 'Photo Urbaine', membersCount: '890'  },
@@ -34,6 +36,9 @@ export default function PostPage() {
   const [user, setUser]       = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
   const sidebarUsers          = useSidebarUsers()
+  
+  // État ajouté pour stocker l'erreur au format BackendError
+  const [globalError, setGlobalError] = useState<BackendError | null>(null)
 
   useEffect(() => {
     fetchMe()
@@ -41,7 +46,17 @@ export default function PostPage() {
         if (!data) { router.replace('/auth/login'); return }
         setUser(data)
       })
-      .catch(() => {})
+      .catch((err) => {
+        // En cas d'erreur de fetch, on extrait ou on crée une BackendError pertinente
+        if (err?.code === 'UNAUTHORIZED') {
+          router.replace('/auth/login')
+        } else {
+          setGlobalError({
+            code: err?.code ?? 'INTERNAL',
+            message: err?.message ?? 'Impossible de charger les données utilisateur.'
+          })
+        }
+      })
       .finally(() => setLoading(false))
   }, [router])
 
@@ -57,6 +72,15 @@ export default function PostPage() {
 
   return (
     <div className="bg-background h-screen flex flex-col overflow-hidden">
+      {/* Affichage de la bannière si une erreur de l'API ou du réseau survient */}
+      {globalError && (
+        <ErrorBanner 
+          message={globalError.message}
+          type={globalError.code === 'INVALID_INPUT' ? 'warning' : 'critical'}
+          onClose={() => setGlobalError(null)}
+        />
+      )}
+
       <HeaderPost user={user} postTitle="Titre à lier aux données à importer pour le post" />
 
       <div className="pt-26 flex-1 overflow-hidden px-4 pb-4">
