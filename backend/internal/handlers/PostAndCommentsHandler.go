@@ -77,7 +77,7 @@ func (h *PostAndCommentsHandler) CommentHandler(w http.ResponseWriter, r *http.R
 		
 		}
 		return 
-	} else if mode == "edicomment" {
+	} else if mode == "editcomment" {
 		commentID, err := strconv.Atoi(r.FormValue("commentID"))
 		if err !=nil {
 			http.Error(w, "Erreur de récupération de l'ID de commentaire", http.StatusInternalServerError)

@@ -55,6 +55,13 @@ func main() {
 	groupRepo := repository.NewGroupRepo(db)
 	groupService := service.NewGroupService(groupRepo)
 	groupHandler := handlers.NewGroupHandler(groupService)
+
+	postRepo := repository.NewPostRepo(db)  
+	tagRepo := repository.NewTagRepo(db) 
+	commentRepo := repository.NewCommentRepo(db) 
+
+	postService := service.NewPostAndCommentsService(postRepo, tagRepo, commentRepo)
+	postHandler := handlers.NewPostAndCommentsHandler(userService, sessionService, postService)
 	// **
 
 	// WebSocket hub
@@ -106,6 +113,7 @@ func main() {
 	mux.HandleFunc("/group-chat/{id}/messages", authMiddleware.RequireAuth(groupHandler.HandleGroupMessages))
 	mux.HandleFunc("/group-chat/{id}/leave", authMiddleware.RequireAuth(groupHandler.HandleLeaveGroup))
 	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
+	mux.HandleFunc("/posts", authMiddleware.RequireAuth(postHandler.PostAndCommentsHandler))
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
