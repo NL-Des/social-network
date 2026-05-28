@@ -3,7 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/service"
 )
@@ -38,11 +40,43 @@ func (rh *RegisterHandler) RegisterHandler(w http.ResponseWriter, r *http.Reques
 
 	var user model.RegisterUser
 	// On autorise par exemple 10 Mo de données
-	const maxMemory = 10 << 20 // 10 * 1024 * 1024
+	const maxMemory = 50 << 20 // 20 * 1024 * 1024
 	err := r.ParseMultipartForm(maxMemory)
 	if err != nil {
 		http.Error(w, "Impossible d'analyser le formulaire", http.StatusBadRequest)
 		return
+	}
+
+	// Récupération du fichier image
+	file, header, err := r.FormFile("profilePicture")
+	if err != nil && err != http.ErrMissingFile {
+		http.Error(w, "Erreur lecture image", http.StatusBadRequest)
+		fmt.Println("Erreur de lecture de l'image avatar")
+		return
+	}
+	if file != nil {
+		// r.FormFile() ouvre un flux de lecture vers le fichier uploadé temporaire. Si pas fermé le flux reste ouvert jusqu'a la fin du programme
+		defer file.Close()
+
+		// Lire le contenu du fichier
+		fileBytes, err := io.ReadAll(file)
+		if err != nil {
+			http.Error(w, "Erreur lecture fichier", http.StatusInternalServerError)
+			fmt.Println("Erreur de lecture du fichier avatar")
+			return
+		}
+
+		// Sauvegarder sur disque
+		const UploadDir = "../public/images/profil/"
+		savePath := UploadDir + header.Filename
+		// os.WriteFile ecrit dans le dossier uploads qui est a la racine du dossier ou est lancer le run
+		err = os.WriteFile(savePath, fileBytes, 0644)
+		if err != nil {
+			http.Error(w, "Erreur sauvegarde fichier", http.StatusInternalServerError)
+			fmt.Println("Erreur de sauvegarde de l'avatar")
+			return
+		}
+		user.ProfilePicture = savePath
 	}
 
 	user.Name = r.FormValue("name")
@@ -51,9 +85,9 @@ func (rh *RegisterHandler) RegisterHandler(w http.ResponseWriter, r *http.Reques
 	user.Email = r.FormValue("email")
 	user.Password = r.FormValue("password")
 	user.ConfirmPassword = r.FormValue("confirmPassword")
-	user.Username = r.FormValue("username")
+	user.Username = r.FormValue("userName")
 	user.Description = r.FormValue("description")
-	user.ProfilePicture = r.FormValue("profilePicture")
+	/* 	user.ProfilePicture = r.FormValue("profilePicture") */
 	user.IsPrivate = true
 
 	err = rh.UserService.Register(user)

@@ -51,7 +51,7 @@ func (r *SessionRepo) SessionExists(userID int) (string, bool, error) {
 	err := r.db.QueryRow(`
 	SELECT token
 	FROM session
-	WHERE userID = $1
+	WHERE userID = $1 AND expiresat > NOW()
 	`, userID).Scan(&token)
 
 	if err == sql.ErrNoRows {
