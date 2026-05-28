@@ -7,22 +7,21 @@ import (
 )
 
 type MeHandler struct {
-	profileService *service.ProfileService
+	userService *service.UserService
 }
 
-func NewMeHandler(ps *service.ProfileService) *MeHandler {
-	return &MeHandler{profileService: ps}
+func NewMeHandler(us *service.UserService) *MeHandler {
+	return &MeHandler{userService: us}
 }
 
 func (h *MeHandler) HandleMe(w http.ResponseWriter, r *http.Request) {
-
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	profile, err := h.profileService.GetProfile(userID)
+	profile, err := h.userService.GetProfile(userID)
 	if err != nil {
 		http.Error(w, "user not found", http.StatusNotFound)
 		return
@@ -39,7 +38,7 @@ func (h *MeHandler) HandleProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	profile, err := h.profileService.GetFullProfile(userID)
+	profile, err := h.userService.GetProfile(userID)
 	if err != nil {
 		http.Error(w, "user not found", http.StatusNotFound)
 		return

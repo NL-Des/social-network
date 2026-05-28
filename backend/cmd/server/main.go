@@ -10,6 +10,7 @@ import (
 	"social-network/backend/internal/middleware"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/repository"
+	"social-network/backend/internal/router"
 	"social-network/backend/internal/service"
 	ws "social-network/backend/internal/websocket"
 	groupChat "social-network/backend/internal/websocket/modules/groupChat"
@@ -19,13 +20,11 @@ import (
 
 func main() {
 
-	// Gestion serveur.
 	// db, err := database.DbOrchestrationDev()
 	db, err := database.DbOrchestration()
 	if err != nil {
 		log.Println("Error with DB", err)
 	}
-	// Test de confirmation de la connection avec la BDD, en comptant le nombre de tables.
 	if db != nil {
 		log.Println("Test")
 		var tableCount int
@@ -37,39 +36,44 @@ func main() {
 		}
 	}
 
-	// **
-	// Déclarations temporaires dans le main pour test - Creéation de login et register Handlers
 	userRepo := repository.NewUserRepo(db)
 	sessionRepo := repository.NewSessionRepo(db)
 	userService := service.NewUserService(userRepo)
 	sessionService := service.NewSessionService(sessionRepo)
-	profileService := service.NewProfileService(userService)
+
+	profileRepo := repository.NewProfilRepository(db)
+	profileService := service.NewProfilService(profileRepo)
+	profileHandler := handlers.NewProfilHandler(profileService)
+
+	followRepo := repository.NewFollowRepository(db)
+	followService := service.NewFollowService(followRepo)
+	followHandler := handlers.NewFollowHandler(followService)
+
 	logoutHandler := handlers.NewLogoutHandler(sessionService)
 	registerHandler := handlers.NewRegisterHandler(userService)
 	loginHandler := handlers.NewLoginHandler(userService, sessionService)
-	meHandler := handlers.NewMeHandler(profileService)
+	meHandler := handlers.NewMeHandler(userService)
 	usersHandler := handlers.NewUsersHandler(userService)
 	authMiddleware := middleware.NewAuthMiddleware(sessionService)
+
 	messageRepo := repository.NewMessageRepo(db)
 	messageService := service.NewMessageService(messageRepo)
 	messageHandler := handlers.NewMessageHandler(messageService)
+
 	groupRepo := repository.NewGroupRepo(db)
 	groupService := service.NewGroupService(groupRepo)
 	groupHandler := handlers.NewGroupHandler(groupService, userService)
 
-	postRepo := repository.NewPostRepo(db)  
-	tagRepo := repository.NewTagRepo(db) 
-	commentRepo := repository.NewCommentRepo(db) 
-
+	postRepo := repository.NewPostRepo(db)
+	tagRepo := repository.NewTagRepo(db)
+	commentRepo := repository.NewCommentRepo(db)
 	postService := service.NewPostAndCommentsService(postRepo, tagRepo, commentRepo)
 	postHandler := handlers.NewPostAndCommentsHandler(userService, sessionService, postService)
-	// **
 
 	// WebSocket hub
 	hub := ws.NewHub()
 	go hub.Run()
 
-	// Route les messages WS entrants vers les bons handlers
 	pmHandler := privateMessage.NewPrivateMessageHandler(hub, messageService)
 	gcHandler := groupChat.NewGroupChatHandler(hub, groupService)
 	hub.OnMessage = func(c *ws.Client, raw []byte) {
@@ -96,15 +100,12 @@ func main() {
 		}
 	}
 
-	// creation du mux
 	mux := http.NewServeMux()
-	// Route principale
 	mux.HandleFunc("/", handlers.HomeHandler)
 	mux.HandleFunc("/auth/login", loginHandler.LoginHandler)
 	mux.HandleFunc("/auth/register", registerHandler.RegisterHandler)
 	mux.HandleFunc("/auth/logout", logoutHandler.HandleLogout)
 
-	// Routes protégées
 	mux.HandleFunc("/user/me", authMiddleware.RequireAuth(meHandler.HandleMe))
 	mux.HandleFunc("/users", authMiddleware.RequireAuth(usersHandler.HandleUsers))
 	mux.HandleFunc("/user/profile", authMiddleware.RequireAuth(meHandler.HandleProfile))
@@ -149,8 +150,8 @@ func main() {
 		ws.ServeWs(hub, w, r, userIDInt)
 	})
 
-	// Démarrer le serveur
+	r := router.NewRouter(mux, profileHandler, followHandler, authMiddleware)
+
 	fmt.Println("Démarrage sur http://localhost:5090")
-	// log fatal permet d'envoyer le message d'erreur avant de fermer le programme avec un fmt.print classique pas d'arret du programme
-	log.Fatal(http.ListenAndServe(":5090", mux))
+	log.Fatal(http.ListenAndServe(":5090", r))
 }

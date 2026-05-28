@@ -1,19 +1,99 @@
 package service
 
-import "social-network/backend/internal/model"
+import (
+	"database/sql"
+	"errors"
+	"log"
+	"social-network/backend/internal/model"
+	"social-network/backend/internal/repository"
+)
 
-type ProfileService struct {
-	userService *UserService
+var (
+	ErrUserNotFound   = errors.New("user not found")
+	ErrProfilePrivate = errors.New("profile is private")
+)
+
+type ProfilService struct {
+	ProfilRepo *repository.ProfilRepository
 }
 
-func NewProfileService(us *UserService) *ProfileService {
-	return &ProfileService{userService: us}
+func NewProfilService(repo *repository.ProfilRepository) *ProfilService {
+	return &ProfilService{ProfilRepo: repo}
 }
 
-func (s *ProfileService) GetProfile(id int) (model.MeResponse, error) {
-	return s.userService.GetProfile(id)
+// Retourne un profil public en tenant compte de l'utilisateur qui le consulte :
+// Si l'utilisateur consulte son propre profil : accès complet
+// Si le profil est privé et que l'utilisateur n’est pas le propriétaire : accès restreint
+func (s *ProfilService) GetProfile(viewerID, profileID int) (*model.PublicProfile, error) {
+
+	// Récupération de l'utilisateur cible
+	user, err := s.ProfilRepo.GetUserByID(profileID)
+	if err == sql.ErrNoRows {
+		return nil, ErrUserNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	isOwner := viewerID == profileID
+
+	// Si ce n'est pas son profil et que le compte est privé : interdit
+	if !isOwner && user.IsPrivate {
+		isFollower, err := s.ProfilRepo.IsFollower(viewerID, profileID)
+		if err != nil {
+			return nil, err
+		}
+		if !isFollower {
+			return nil, ErrProfilePrivate
+		}
+	}
+
+	// Construction du profil
+	profile := &model.PublicProfile{
+		ID:          user.ID,
+		Pseudo:      user.Username,
+		LastName:    user.Name,
+		FirstName:   user.FirstName,
+		DateOfBirth: user.Birthday,
+		AboutMe:     user.Description,
+		Avatar:      user.ProfilePicture,
+		IsPrivate:   user.IsPrivate,
+		CanEdit:     isOwner,
+	}
+
+	// Followers / Following / Posts
+	followers, err := s.ProfilRepo.GetFollowers(profileID)
+	if err != nil {
+		log.Printf("GetFollowers(%d): %v", profileID, err)
+		followers = []model.Follower{}
+	}
+	profile.Followers = followers
+
+	following, err := s.ProfilRepo.GetFollowing(profileID)
+	if err != nil {
+		log.Printf("GetFollowing(%d): %v", profileID, err)
+		following = []model.Following{}
+	}
+	profile.Following = following
+
+	posts, err := s.ProfilRepo.GetPosts(profileID)
+	if err != nil {
+		log.Printf("GetPosts(%d): %v", profileID, err)
+		posts = []model.AllPosts{}
+	}
+	profile.Posts = posts
+
+	if !isOwner {
+		isFollower, err := s.ProfilRepo.IsFollower(viewerID, profileID)
+		if err != nil {
+			log.Printf("IsFollower(%d, %d): %v", viewerID, profileID, err)
+		}
+		profile.IsFollowing = isFollower
+	}
+
+	return profile, nil
 }
 
-func (s *ProfileService) GetFullProfile(id int) (model.FullProfile, error) {
-	return s.userService.GetFullProfile(id)
+func (s *ProfilService) UpdateVisibility(userID int, isPrivate bool) error {
+	return s.ProfilRepo.UpdateVisibility(userID, isPrivate)
 }

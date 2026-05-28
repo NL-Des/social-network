@@ -49,6 +49,8 @@ export interface ProfilePageProps {
   allUsers: Contact[];
   navItems: NavItem[];
   visibility?: "private" | "public";
+  isOwner: boolean;
+  isFollowing: boolean;
 }
 
 function getInitials(firstName: string, lastName: string): string {
@@ -61,65 +63,46 @@ export default async function profileAction(): Promise<ProfilePageProps> {
 
   if (!sessionToken) throw new Error("Non authentifié");
 
-  const response = await fetch("http://localhost:5090/user/profile", {
+  const response = await fetch("http://localhost:5090/me/profile", {
     headers: { Cookie: `session_token=${sessionToken.value}` },
   });
 
   if (!response.ok) throw new Error("Impossible de charger le profil");
 
   const data = await response.json();
-  const u = data.user;
 
   return {
     user: {
-      firstName: u.firstName,
-      lastName: u.lastName,
-      username: u.username,
-      email: u.email,
-      birthDate: u.birthDate,
-      followersCount: u.followersCount ?? 0,
-      initials: u.initials ?? getInitials(u.firstName, u.lastName),
+      firstName: data.firstName,
+      lastName: data.lastName,
+      username: data.pseudo,         
+      email: data.email ?? "",
+      birthDate: data.dateOfBirth ?? "",
+      followersCount: data.followers?.length ?? 0,
+      initials: getInitials(data.firstName, data.lastName),
     },
+    following: (data.following ?? []).map((c: any) => ({
+      id: String(c.id),
+      name: c.username,
+      initials: c.username?.slice(0, 2).toUpperCase() ?? "??",
+    })),
+    followers: (data.followers ?? []).map((c: any) => ({
+      id: String(c.id),
+      name: c.username,
+      initials: c.username?.slice(0, 2).toUpperCase() ?? "??",
+      isOnline: false,               
+    })),
+    events: [],                      
+    groups: [],                      
+    allUsers: [],                    
     navItems: [
       { label: "Accueil", href: "/" },
       { label: "Groupes", href: "/groupes" },
       { label: "Messages", href: "/messages" },
       { label: "Notifications", href: "/notifications" },
     ],
-    following: (data.following ?? []).map((c: any) => ({
-      id: String(c.id),
-      name: `${c.firstName} ${c.lastName[0]}.`,
-      initials: getInitials(c.firstName, c.lastName),
-    })),
-    followers: (data.followers ?? []).map((c: any) => ({
-      id: String(c.id),
-      name: `${c.firstName} ${c.lastName[0]}.`,
-      initials: getInitials(c.firstName, c.lastName),
-      isOnline: c.isOnline ?? false,
-    })),
-    events: (data.events ?? []).map((e: any) => ({
-      id: String(e.id),
-      title: e.title,
-      subtitle: e.subtitle ?? e.description,
-      initials: e.title.slice(0, 2).toUpperCase(),
-      color: e.color ?? "text-brand-text",
-    })),
-    groups: (data.groups ?? []).map((g: any) => ({
-      id: String(g.id),
-      name: g.name,
-      memberCount:
-        g.memberCount >= 1000
-          ? `${(g.memberCount / 1000).toFixed(1)}k`
-          : String(g.memberCount),
-      initials: g.name.slice(0, 2).toUpperCase(),
-      iconBg: g.iconBg ?? "bg-slate-700",
-    })),
-    allUsers: (data.allUsers ?? []).map((u: any) => ({
-      id: String(u.id),
-      name: `${u.firstName} ${u.lastName[0]}.`,
-      initials: getInitials(u.firstName, u.lastName),
-      isOnline: u.isOnline ?? false,
-    })),
-    visibility: u.visibility ?? "public",
+    visibility: data.isPrivate ? "private" : "public",
+    isOwner: true,        
+    isFollowing: false, 
   };
 }
