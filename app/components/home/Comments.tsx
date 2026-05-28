@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { addComment } from '@/app/Post/actions'
 
 export interface Post {
   id: string
@@ -18,25 +19,38 @@ export interface Comment {
 interface CommentsProps {
   post: Post
   comments: Comment[]
+  currentUser?: { name: string; initials: string }
 }
 
-export default function Comments({ post, comments }: CommentsProps) {
+export default function Comments({ post, comments, currentUser }: CommentsProps) {
   const [draft, setDraft] = useState('')
   const [localComments, setLocalComments] = useState<Comment[]>(comments)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  function handleSend() {
+  async function handleSend() {
     const text = draft.trim()
-    if (!text) return
-    setLocalComments((prev) => [
-      ...prev,
-      {
-        id:     Date.now().toString(),
-        author: { name: 'Moi', initials: 'ME' },
-        text,
-        date:   new Date().toLocaleDateString('fr-FR'),
-      },
-    ])
+    if (!text || sending) return
+
+    const optimistic: Comment = {
+      id:     `tmp-${Date.now()}`,
+      author: currentUser ?? { name: 'Moi', initials: 'ME' },
+      text,
+      date:   new Date().toLocaleDateString('fr-FR'),
+    }
+
+    setLocalComments((prev) => [...prev, optimistic])
     setDraft('')
+    setSending(true)
+    setError(null)
+
+    const result = await addComment({ postID: Number(post.id), content: text })
+
+    setSending(false)
+    if (result.error) {
+      setLocalComments((prev) => prev.filter((c) => c.id !== optimistic.id))
+      setError(result.error)
+    }
   }
 
   return (
@@ -76,6 +90,9 @@ export default function Comments({ post, comments }: CommentsProps) {
 
         {/* Zone de saisie */}
         <div className="px-6 py-4 border-t border-brand-border flex flex-col gap-3 shrink-0">
+          {error && (
+            <p className="text-red-400 text-sm text-center">{error}</p>
+          )}
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -89,10 +106,10 @@ export default function Comments({ post, comments }: CommentsProps) {
           <div className="flex justify-center">
             <button
               onClick={handleSend}
-              disabled={!draft.trim()}
+              disabled={!draft.trim() || sending}
               className="px-10 py-2 rounded-xl border border-brand-border text-white text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              Commenter
+              {sending ? 'Envoi...' : 'Commenter'}
             </button>
           </div>
         </div>

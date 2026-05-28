@@ -85,7 +85,7 @@ func (r *TagRepo) CreateNewTag(tagName string) error {
 */
 func (r *TagRepo) DeletePostTags(postID int) error {
 	_, err := r.db.Exec(`
-	DELETE FROM tag
+	DELETE FROM post_tag
 	WHERE postID = $1
 	`, postID)
 

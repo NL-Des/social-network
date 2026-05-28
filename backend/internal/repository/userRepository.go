@@ -127,6 +127,12 @@ func (r *UserRepo) GetUserbyID(id int) (model.User, error) {
 	return user, nil
 }
 
+func (r *UserRepo) GetPasswordHashByID(id int) (string, error) {
+	var hash string
+	err := r.db.QueryRow(`SELECT password FROM users WHERE id = $1`, id).Scan(&hash)
+	return hash, err
+}
+
 // GetUserCredsbyEmail récupère l'ID, l'email et le hash du mot de passe pour la vérification au login.
 func (r *UserRepo) GetUserCredsbyEmail(email string) (model.LoginUser, error) {
 	var user model.LoginUser

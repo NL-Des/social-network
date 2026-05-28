@@ -4,10 +4,17 @@ import { useEffect, useRef, useState } from 'react'
 import { GroupItem } from '@/app/components/home/LeftSidebarGroups'
 import Button from '@/app/components/ui/button'
 
-function CreateGroupButton() {
-  const [formOpen, setFormOpen] = useState(false)
-  const [groupName, setGroupName] = useState('')
+interface CreateGroupButtonProps {
+  onCreated?: () => void
+  onEnter?: (id: string) => void
+}
+
+function CreateGroupButton({ onCreated, onEnter }: CreateGroupButtonProps) {
+  const [formOpen, setFormOpen]       = useState(false)
+  const [groupName, setGroupName]     = useState('')
   const [description, setDescription] = useState('')
+  const [loading, setLoading]         = useState(false)
+  const [error, setError]             = useState<string | null>(null)
   const formRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -19,6 +26,36 @@ function CreateGroupButton() {
     if (formOpen) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [formOpen])
+
+  async function handleSubmit() {
+    if (!groupName.trim() || loading) return
+    setLoading(true)
+    setError(null)
+
+    try {
+      const res = await fetch('/api/group-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: groupName.trim(), description: description.trim(), member_ids: [] }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error ?? `Erreur ${res.status}`)
+        return
+      }
+
+      const data = await res.json()
+      setGroupName('')
+      setDescription('')
+      setFormOpen(false)
+      onEnter?.(String(data.id))
+    } catch {
+      setError('Service indisponible')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div ref={formRef} className="relative pt-3 shrink-0">
@@ -57,8 +94,16 @@ function CreateGroupButton() {
             />
           </div>
 
-          <button className="w-full py-2 px-4 rounded-lg border border-brand-border text-brand-text text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95">
-            Créer le nouveau Groupe
+          {error && (
+            <p className="text-red-400 text-sm text-center">{error}</p>
+          )}
+
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !groupName.trim()}
+            className="w-full py-2 px-4 rounded-lg border border-brand-border text-brand-text text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            {loading ? 'Création...' : 'Créer le nouveau Groupe'}
           </button>
         </div>
       )}
@@ -68,16 +113,19 @@ function CreateGroupButton() {
 
 interface CenterGroupProps {
   group: GroupItem | null
+  isMember?: boolean
+  onCreated?: () => void
+  onEnter?: (id: string) => void
 }
 
-export default function CenterGroup({ group }: CenterGroupProps) {
+export default function CenterGroup({ group, isMember = false, onCreated, onEnter }: CenterGroupProps) {
   if (!group) {
     return (
       <div className="h-full bg-brand-card border border-brand-border rounded-2xl p-6 flex flex-col overflow-hidden">
         <div className="flex-1 flex items-center justify-center">
           <p className="text-brand-text font-retro text-sm">Aucun groupe sélectionné.</p>
         </div>
-        <CreateGroupButton />
+        <CreateGroupButton onCreated={onCreated} onEnter={onEnter} />
       </div>
     )
   }
@@ -94,15 +142,20 @@ export default function CenterGroup({ group }: CenterGroupProps) {
             <p className="text-brand-text text-xs">{group.membersCount} membres</p>
           </div>
         </div>
-        <p className="text-brand-text text-lg leading-7 whitespace-pre-line mb-8">
-          {group.description}
-        </p>
+        {group.description && (
+          <p className="text-brand-text text-lg leading-7 whitespace-pre-line mb-8">
+            {group.description}
+          </p>
+        )}
         <div className="flex flex-col items-center gap-3">
-          <Button className="">Entrer dans le Groupe</Button>
-          <Button className="">Demander l'Accès au Groupe</Button>
+          {isMember ? (
+            <Button onClick={() => onEnter?.(group.id)}>Entrer dans le Groupe</Button>
+          ) : (
+            <Button>Demander l'Accès au Groupe</Button>
+          )}
         </div>
       </div>
-      <CreateGroupButton />
+      <CreateGroupButton onCreated={onCreated} onEnter={onEnter} />
     </div>
   )
 }

@@ -23,12 +23,11 @@ func NewCommentRepo(db *sql.DB) *CommentRepo{
 */
 func (r *CommentRepo) CreateNewComment(postID int, authorID, content string) error {
 	_, err := r.db.Exec(
-		`INSERT INTO comments (authorID, content)
-		VALUES ($1, $2)
-		WHERE postID = $3
-		`, authorID, content, postID)
+		`INSERT INTO comments (postID, authorID, content)
+		VALUES ($1, $2, $3)
+		`, postID, authorID, content)
 
-		return err
+	return err
 }
 
 /*
@@ -89,7 +88,7 @@ func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error)
 		`SELECT c.ID, c.content, c.createdat, c.updatedat, u.username, u.avatar
 		FROM comments c
 		JOIN users u ON c.authorID = u.ID
-		WHERE postID = $1
+		WHERE c.postID = $1
 		`,postID)
 		if err != nil {
 		return nil, err
@@ -99,7 +98,7 @@ func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error)
 	var comments = []model.Comment{}
 	for rows.Next() {
 		comment := model.Comment{}
-		if err := rows.Scan(&comment.ID, &comment.Content, &comment.CreatedAt, &comment.Author.Username, &comment.Author.ProfilePicture); err != nil {
+		if err := rows.Scan(&comment.ID, &comment.Content, &comment.CreatedAt, &comment.UpdatedAt, &comment.Author.Username, &comment.Author.ProfilePicture); err != nil {
 			return nil, err
 		}
 		

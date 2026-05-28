@@ -110,3 +110,14 @@ func (s *UserService) Login(email, password string) (model.LoginUser, error) {
 
 	return user, nil
 }
+
+func (s *UserService) CheckPassword(userID int, password string) error {
+	hash, err := s.userRepo.GetPasswordHashByID(userID)
+	if err != nil {
+		return errors.New("utilisateur introuvable")
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); err != nil {
+		return errors.New("mot de passe incorrect")
+	}
+	return nil
+}

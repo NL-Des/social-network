@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Header, { CurrentUser } from '@/app/components/home/Header'
 import { fetchMe } from '@/lib/fetchMe'
@@ -8,22 +8,18 @@ import RightSidebar, { Group } from '@/app/components/home/RightSidebar'
 import LeftSidebarGroups, { GroupItem } from '@/app/components/home/LeftSidebarGroups'
 import CenterGroup from '@/app/components/home/CenterGroup'
 
-const mockGroupList: GroupItem[] = [
-  { id: '1', name: 'Photo Urbaine', initials: 'PU', membersCount: '890',  description: "Passionnés de photographie urbaine. Partagez vos clichés de rues, d'architecture et de vie citadine." },
-  { id: '2', name: 'Dev Frontend',  initials: 'DF', membersCount: '3,4k', description: 'Communauté dédiée au développement frontend : React, Next.js, CSS, performance et accessibilité.' },
-  { id: '3', name: 'Design & UX',   initials: 'DU', membersCount: '1,2k', description: "Échanges autour du design d'interface, de l'expérience utilisateur et des outils créatifs." },
-  { id: '4', name: 'Backend Go',    initials: 'BG', membersCount: '214',  description: 'Groupe dédié au langage Go : patterns, performances, APIs et bonnes pratiques.' },
-  { id: '5', name: 'Route de test', initials: 'OS', membersCount: '5,1k', description: "Contributeurs et défenseurs de l'open source. Projets, discussions et entraide." },
-]
-
-const mockGroups: Group[] = mockGroupList.map(({ id, name, membersCount }) => ({ id, name, membersCount }))
+interface ApiGroup {
+  id: number
+  title: string
+  initials: string
+  member_ids: number[]
+}
 
 export default function GroupesPage() {
   const router = useRouter()
   const [user, setUser]         = useState<CurrentUser | null>(null)
-  const [loading, setLoading]   = useState(true)
-  const [activeId, setActiveId] = useState<string | null>(null)
-  const activeGroup             = mockGroupList.find((g) => g.id === activeId) ?? null
+  const [groups, setGroups]   = useState<GroupItem[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchMe()
@@ -34,6 +30,28 @@ export default function GroupesPage() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [router])
+
+  const fetchGroups = useCallback(() => {
+    fetch('/api/group-chat')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: ApiGroup[]) => {
+        setGroups(
+          (data ?? []).map((g) => ({
+            id:           String(g.id),
+            name:         g.title,
+            initials:     g.initials,
+            membersCount: String(g.member_ids.length),
+          }))
+        )
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (user) fetchGroups()
+  }, [user, fetchGroups])
+
+  const sidebarGroups: Group[] = groups.map(({ id, name, membersCount }) => ({ id, name, membersCount }))
 
   if (loading) {
     return (
@@ -54,19 +72,19 @@ export default function GroupesPage() {
 
           <div className="h-full">
             <LeftSidebarGroups
-              groups={mockGroupList}
-              activeId={activeId}
-              onSelect={(id) => {
-                if (id === '5') { router.push('/inside-groups'); return }
-                setActiveId(id)
-              }}
+              groups={groups}
+              onSelect={(id) => router.push(`/inside-groups?id=${id}`)}
             />
           </div>
 
-          <CenterGroup group={activeGroup} />
+          <CenterGroup
+            group={null}
+            onCreated={fetchGroups}
+            onEnter={(id) => router.push(`/inside-groups?id=${id}`)}
+          />
 
           <div className="h-full">
-            <RightSidebar groups={mockGroups} />
+            <RightSidebar groups={sidebarGroups} />
           </div>
 
         </div>

@@ -14,6 +14,7 @@ import (
 	ws "social-network/backend/internal/websocket"
 	groupChat "social-network/backend/internal/websocket/modules/groupChat"
 	"social-network/backend/internal/websocket/modules/privateMessage"
+	"strconv"
 )
 
 func main() {
@@ -54,7 +55,7 @@ func main() {
 	messageHandler := handlers.NewMessageHandler(messageService)
 	groupRepo := repository.NewGroupRepo(db)
 	groupService := service.NewGroupService(groupRepo)
-	groupHandler := handlers.NewGroupHandler(groupService)
+	groupHandler := handlers.NewGroupHandler(groupService, userService)
 
 	postRepo := repository.NewPostRepo(db)  
 	tagRepo := repository.NewTagRepo(db) 
@@ -112,6 +113,10 @@ func main() {
 	mux.HandleFunc("/group-chat", authMiddleware.RequireAuth(groupHandler.HandleGroups))
 	mux.HandleFunc("/group-chat/{id}/messages", authMiddleware.RequireAuth(groupHandler.HandleGroupMessages))
 	mux.HandleFunc("/group-chat/{id}/leave", authMiddleware.RequireAuth(groupHandler.HandleLeaveGroup))
+	mux.HandleFunc("/group-chat/{id}/posts", authMiddleware.RequireAuth(groupHandler.HandleGroupPosts))
+	mux.HandleFunc("/group-chat/{id}/posts/{postId}", authMiddleware.RequireAuth(groupHandler.HandleGroupPostDetail))
+	mux.HandleFunc("/group-chat/{id}/posts/{postId}/comments", authMiddleware.RequireAuth(groupHandler.HandleGroupPostComments))
+	mux.HandleFunc("/group-chat/{id}/posts/{postId}/comments/{commentId}", authMiddleware.RequireAuth(groupHandler.HandleGroupCommentDelete))
 	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
 	mux.HandleFunc("/posts", authMiddleware.RequireAuth(postHandler.PostAndCommentsHandler))
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
@@ -129,13 +134,19 @@ func main() {
 			return
 		}
 
-		userID, err := sessionService.GetUserID(token)
+		userIDStr, err := sessionService.GetUserID(token)
 		if err != nil {
 			http.Error(w, "Session invalide", http.StatusUnauthorized)
 			return
 		}
 
-		ws.ServeWs(hub, w, r, int64(userID))
+		userIDInt, err := strconv.ParseInt(userIDStr, 10, 64)
+		if err != nil {
+			http.Error(w, "Session invalide", http.StatusUnauthorized)
+			return
+		}
+
+		ws.ServeWs(hub, w, r, userIDInt)
 	})
 
 	// Démarrer le serveur

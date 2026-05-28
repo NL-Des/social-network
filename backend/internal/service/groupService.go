@@ -42,3 +42,31 @@ func (s *GroupService) IsGroupMember(groupID, userID int64) (bool, error) {
 func (s *GroupService) LeaveGroup(groupID, userID int64) error {
 	return s.repo.LeaveGroup(groupID, userID)
 }
+
+func (s *GroupService) GetGroupPosts(groupID int64) ([]model.GroupPost, error) {
+	return s.repo.GetGroupPosts(groupID)
+}
+
+func (s *GroupService) CreateGroupPost(groupID, authorID int64, title, content string) error {
+	return s.repo.CreateGroupPost(groupID, authorID, title, content)
+}
+
+func (s *GroupService) GetGroupPostByID(groupID, postID int64) (model.GroupPost, error) {
+	return s.repo.GetGroupPostByID(groupID, postID)
+}
+
+func (s *GroupService) DeleteGroupPost(postID, authorID int64) error {
+	return s.repo.DeleteGroupPost(postID, authorID)
+}
+
+func (s *GroupService) GetGroupComments(postID int64) ([]model.GroupComment, error) {
+	return s.repo.GetGroupComments(postID)
+}
+
+func (s *GroupService) AddGroupComment(postID, authorID int64, content string) error {
+	return s.repo.AddGroupComment(postID, authorID, content)
+}
+
+func (s *GroupService) DeleteGroupComment(commentID, authorID int64) error {
+	return s.repo.DeleteGroupComment(commentID, authorID)
+}

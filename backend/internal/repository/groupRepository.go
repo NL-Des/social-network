@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 	"time"
 
@@ -137,6 +138,121 @@ func (r *GroupRepo) IsGroupMember(groupID, userID int64) (bool, error) {
 		WHERE groupid = $1 AND userid = $2 AND status = 'member'
 	`, groupID, userID).Scan(&count)
 	return count > 0, err
+}
+
+func (r *GroupRepo) GetGroupPosts(groupID int64) ([]model.GroupPost, error) {
+	rows, err := r.db.Query(`
+		SELECT gp.id, gp.title, gp.content, gp.createdat,
+		       u.pseudo, COALESCE(u.avatar, '')
+		FROM group_posts gp
+		JOIN users u ON gp.authorid = u.id
+		WHERE gp.groupid = $1
+		ORDER BY gp.createdat DESC
+	`, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	posts := make([]model.GroupPost, 0)
+	for rows.Next() {
+		var p model.GroupPost
+		var createdAt time.Time
+		if err := rows.Scan(&p.ID, &p.Title, &p.Content, &createdAt, &p.Author.Username, &p.Author.ProfilePicture); err != nil {
+			return nil, err
+		}
+		p.CreatedAt = createdAt.Format(time.RFC3339)
+		posts = append(posts, p)
+	}
+	return posts, rows.Err()
+}
+
+func (r *GroupRepo) CreateGroupPost(groupID, authorID int64, title, content string) error {
+	_, err := r.db.Exec(`
+		INSERT INTO group_posts (groupid, authorid, title, content)
+		VALUES ($1, $2, $3, $4)
+	`, groupID, authorID, title, content)
+	return err
+}
+
+func (r *GroupRepo) GetGroupPostByID(groupID, postID int64) (model.GroupPost, error) {
+	var p model.GroupPost
+	var createdAt time.Time
+	err := r.db.QueryRow(`
+		SELECT gp.id, gp.title, gp.content, gp.createdat,
+		       u.pseudo, COALESCE(u.avatar, '')
+		FROM group_posts gp
+		JOIN users u ON gp.authorid = u.id
+		WHERE gp.id = $1 AND gp.groupid = $2
+	`, postID, groupID).Scan(&p.ID, &p.Title, &p.Content, &createdAt, &p.Author.Username, &p.Author.ProfilePicture)
+	if err != nil {
+		return model.GroupPost{}, err
+	}
+	p.CreatedAt = createdAt.Format(time.RFC3339)
+	return p, nil
+}
+
+func (r *GroupRepo) DeleteGroupPost(postID, authorID int64) error {
+	result, err := r.db.Exec(`
+		DELETE FROM group_posts WHERE id = $1 AND authorid = $2
+	`, postID, authorID)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("non autorisé ou post introuvable")
+	}
+	return nil
+}
+
+func (r *GroupRepo) GetGroupComments(postID int64) ([]model.GroupComment, error) {
+	rows, err := r.db.Query(`
+		SELECT gc.id, gc.content, gc.createdat,
+		       u.pseudo, COALESCE(u.avatar, '')
+		FROM group_comments gc
+		JOIN users u ON gc.authorid = u.id
+		WHERE gc.postid = $1
+		ORDER BY gc.createdat ASC
+	`, postID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	comments := make([]model.GroupComment, 0)
+	for rows.Next() {
+		var c model.GroupComment
+		var createdAt time.Time
+		if err := rows.Scan(&c.ID, &c.Content, &createdAt, &c.Author.Username, &c.Author.ProfilePicture); err != nil {
+			return nil, err
+		}
+		c.CreatedAt = createdAt.Format(time.RFC3339)
+		comments = append(comments, c)
+	}
+	return comments, rows.Err()
+}
+
+func (r *GroupRepo) AddGroupComment(postID, authorID int64, content string) error {
+	_, err := r.db.Exec(`
+		INSERT INTO group_comments (postid, authorid, content)
+		VALUES ($1, $2, $3)
+	`, postID, authorID, content)
+	return err
+}
+
+func (r *GroupRepo) DeleteGroupComment(commentID, authorID int64) error {
+	result, err := r.db.Exec(`
+		DELETE FROM group_comments WHERE id = $1 AND authorid = $2
+	`, commentID, authorID)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("non autorisé ou commentaire introuvable")
+	}
+	return nil
 }
 
 func (r *GroupRepo) CreateGroupMessage(groupID, senderID int64, content string) error {

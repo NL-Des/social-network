@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/service"
@@ -19,6 +20,11 @@ func NewPostAndCommentsHandler(us *service.UserService, ss *service.SessionServi
 }
 
 func (h *PostAndCommentsHandler) PostAndCommentsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		h.handleGetPosts(w, r)
+		return
+	}
+
 	mode := r.FormValue("mode")
 	title := r.FormValue("title")
 	content := r.FormValue("content")
@@ -28,7 +34,7 @@ func (h *PostAndCommentsHandler) PostAndCommentsHandler(w http.ResponseWriter, r
 	tags := r.FormValue("tags")
 	var tagList []string
 	if len(tags) != 0 {
-		tagList = strings.Split(tags, " ")
+		tagList = strings.Fields(tags)
 	}
 
 	// Récupération des données de l'utilisateur connecté
@@ -61,6 +67,47 @@ func (h *PostAndCommentsHandler) PostAndCommentsHandler(w http.ResponseWriter, r
 	
 	h.PostHandler(w, r, postData, mode, userID)
 	}
+}
+
+func (h *PostAndCommentsHandler) handleGetPosts(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session_token")
+	if err != nil {
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
+		return
+	}
+	userID, err := h.SessionService.GetUserID(cookie.Value)
+	if err != nil || userID == "" {
+		http.Error(w, "Session invalide", http.StatusUnauthorized)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	idStr := r.URL.Query().Get("id")
+	if idStr != "" {
+		postID, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "ID invalide", http.StatusBadRequest)
+			return
+		}
+		post, err := h.PostService.DisplayPostAndComments(postID)
+		if err != nil {
+			http.Error(w, "Post introuvable", http.StatusNotFound)
+			return
+		}
+		json.NewEncoder(w).Encode(post)
+		return
+	}
+
+	posts, err := h.PostService.GetAllPosts()
+	if err != nil {
+		http.Error(w, "Erreur de récupération des posts", http.StatusInternalServerError)
+		return
+	}
+	if posts == nil {
+		posts = []model.Post{}
+	}
+	json.NewEncoder(w).Encode(posts)
 }
 
 func (h *PostAndCommentsHandler) CommentHandler(w http.ResponseWriter, r *http.Request, content, mode, userID string) {
@@ -101,10 +148,11 @@ func (h *PostAndCommentsHandler) PostHandler(w http.ResponseWriter, r *http.Requ
 		}
 
 		err = h.PostService.EditPost(userID, postData)
-		if err.Error() == "utilisateur non autorisé" {
-			http.Error(w, "Tentative d'édition d'un post par un utilisateur non autorisé", http.StatusUnauthorized)
-			return
-		} else if err != nil {
+		if err != nil {
+			if err.Error() == "utilisateur non autorisé" {
+				http.Error(w, "Tentative d'édition d'un post par un utilisateur non autorisé", http.StatusUnauthorized)
+				return
+			}
 			http.Error(w, "Erreur dans la modification du post", http.StatusInternalServerError)
 			return
 		}

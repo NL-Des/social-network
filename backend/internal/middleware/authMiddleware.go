@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"social-network/backend/internal/service"
+	"strconv"
 )
 
 type AuthMiddleware struct {
@@ -25,13 +26,19 @@ func (m *AuthMiddleware) RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		userID, err := m.SessionService.GetUserID(cookie.Value)
+		userIDStr, err := m.SessionService.GetUserID(cookie.Value)
 		if err != nil {
 			http.Error(w, "Session invalide", http.StatusUnauthorized)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "userID", userID)
+		userIDInt, err := strconv.Atoi(userIDStr)
+		if err != nil {
+			http.Error(w, "Session invalide", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), "userID", userIDInt)
 		next(w, r.WithContext(ctx))
 	}
 }

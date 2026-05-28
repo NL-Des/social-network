@@ -15,6 +15,7 @@ func NewMeHandler(ps *service.ProfileService) *MeHandler {
 }
 
 func (h *MeHandler) HandleMe(w http.ResponseWriter, r *http.Request) {
+
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
@@ -45,12 +46,12 @@ func (h *MeHandler) HandleProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"user":     profile,
+		"user":      profile,
 		"following": []interface{}{},
 		"followers": []interface{}{},
-		"events":   []interface{}{},
-		"groups":   []interface{}{},
-		"allUsers": []interface{}{},
+		"events":    []interface{}{},
+		"groups":    []interface{}{},
+		"allUsers":  []interface{}{},
 	}
 
 	w.Header().Set("Content-Type", "application/json")

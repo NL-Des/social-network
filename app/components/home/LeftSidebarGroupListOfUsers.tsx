@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export interface SidebarUser {
   id: string
@@ -13,6 +14,7 @@ export interface SidebarUser {
 interface LeftSidebarGroupListOfUsersProps {
   users: SidebarUser[]
   groupName?: string
+  groupId: string
 }
 
 function AdminButton({ users, groupName }: { users: SidebarUser[]; groupName: string }) {
@@ -114,9 +116,12 @@ function AdminButton({ users, groupName }: { users: SidebarUser[]; groupName: st
   )
 }
 
-function LeaveGroupButton() {
+function LeaveGroupButton({ groupId }: { groupId: string }) {
+  const router = useRouter()
   const [formOpen, setFormOpen] = useState(false)
   const [password, setPassword] = useState('')
+  const [leaving, setLeaving]   = useState(false)
+  const [error, setError]       = useState<string | null>(null)
   const formRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -129,10 +134,35 @@ function LeaveGroupButton() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [formOpen])
 
+  async function handleLeave() {
+    if (!password.trim()) { setError('Mot de passe requis.'); return }
+    setLeaving(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/group-chat/${groupId}/leave`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+      if (res.ok) {
+        router.push('/groupes')
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error === 'mot de passe incorrect\n' || res.status === 403
+          ? 'Mot de passe incorrect.'
+          : 'Erreur lors du départ.')
+        setLeaving(false)
+      }
+    } catch {
+      setError('Erreur réseau.')
+      setLeaving(false)
+    }
+  }
+
   return (
     <div ref={formRef} className="relative pt-3 shrink-0">
       <button
-        onClick={() => setFormOpen((o) => !o)}
+        onClick={() => { setFormOpen((o) => !o); setError(null); setPassword('') }}
         className={`w-full py-2 px-4 rounded-lg border border-red-500 text-red-400 text-base hover:scale-105 hover:shadow-[0_0_12px_rgba(239,68,68,0.5)] transition-all duration-200 active:scale-95 ${
           formOpen ? 'shadow-[0_0_12px_rgba(239,68,68,0.5)]' : ''
         }`}
@@ -145,21 +175,25 @@ function LeaveGroupButton() {
           <h3 className="font-bold text-[#49C7FF] text-base text-center">
             Quitter le Groupe
           </h3>
-
           <div className="flex flex-col gap-1">
             <label className="text-brand-border text-sm">
-              Entrez votre mot de passe pour confirmer votre départ :
+              Confirmez votre mot de passe :
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleLeave() }}
               className="bg-white/5 border border-brand-border/40 rounded-xl px-4 py-2 text-brand-text text-sm placeholder:text-brand-text/40 focus:outline-none focus:border-brand-border transition-all"
             />
           </div>
-
-          <button className="w-full py-2 px-4 rounded-lg border border-red-500 text-red-400 text-base hover:scale-105 hover:shadow-[0_0_12px_rgba(239,68,68,0.5)] transition-all duration-200 active:scale-95">
-            Confirmer le départ
+          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+          <button
+            onClick={handleLeave}
+            disabled={leaving || !password.trim()}
+            className="w-full py-2 px-4 rounded-lg border border-red-500 text-red-400 text-base hover:scale-105 hover:shadow-[0_0_12px_rgba(239,68,68,0.5)] transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            {leaving ? 'Départ en cours…' : 'Confirmer le départ'}
           </button>
         </div>
       )}
@@ -167,7 +201,7 @@ function LeaveGroupButton() {
   )
 }
 
-export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe' }: LeftSidebarGroupListOfUsersProps) {
+export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe', groupId }: LeftSidebarGroupListOfUsersProps) {
 
   return (
     <aside className="h-full bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col overflow-hidden">
@@ -195,7 +229,7 @@ export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe
         </div>
       </section>
       <AdminButton users={users} groupName={groupName} />
-      <LeaveGroupButton />
+      <LeaveGroupButton groupId={groupId} />
     </aside>
   )
 }

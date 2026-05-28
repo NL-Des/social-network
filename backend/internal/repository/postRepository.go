@@ -6,6 +6,8 @@ import (
 	"social-network/backend/internal/model"
 	"strings"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type PostRepo struct {
@@ -94,9 +96,47 @@ func (r *PostRepo) GetPostAuthorID(postID int) (string, error) {
 * Paramètres : ID du post
 * Renvoie : un post (titre, contenu, confidentialité, date) et les informations de son auteur (pseudo et avatar)
 */
-func (r * PostRepo) GetPostFromID(postID int) (model.Post, error) {
+func (r *PostRepo) GetAllPosts() ([]model.Post, error) {
+	rows, err := r.db.Query(`
+	SELECT p.ID, p.title, p.content, p.privacy, p.createdat, p.updatedat,
+	       u.username, u.avatar,
+	       COALESCE(array_agg(t.name) FILTER (WHERE t.name IS NOT NULL), '{}') AS tags
+	FROM posts p
+	JOIN users u ON p.authorID = u.ID
+	LEFT JOIN post_tag pt ON pt.postID = p.ID
+	LEFT JOIN tag t ON t.ID = pt.tagID
+	GROUP BY p.ID, u.username, u.avatar
+	ORDER BY p.createdat DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []model.Post
+	for rows.Next() {
+		post := model.Post{}
+		if err := rows.Scan(
+			&post.ID, &post.Title, &post.Content, &post.Privacy,
+			&post.CreatedAt, &post.UpdatedAt,
+			&post.Author.Username, &post.Author.ProfilePicture,
+			pq.Array(&post.Tags),
+		); err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return posts, nil
+}
+
+func (r *PostRepo) GetPostFromID(postID int) (model.Post, error) {
 	row := r.db.QueryRow(`
-	SELECT p.title, p.content, u.username, u.avatar, p.privacy, p.createdat, p.updatedat
+	SELECT p.ID, p.title, p.content, u.username, u.avatar, p.privacy, p.createdat, p.updatedat
 	FROM posts p
 	JOIN users u ON p.authorID = u.ID
 	WHERE p.ID = $1
@@ -104,7 +144,7 @@ func (r * PostRepo) GetPostFromID(postID int) (model.Post, error) {
 
 	post := model.Post{}
 
-	err := row.Scan(&post.Title, &post.Content, &post.Author.Username, &post.Author.ProfilePicture, &post.Privacy, &post.CreatedAt, &post.UpdatedAt)
+	err := row.Scan(&post.ID, &post.Title, &post.Content, &post.Author.Username, &post.Author.ProfilePicture, &post.Privacy, &post.CreatedAt, &post.UpdatedAt)
 	if err != nil {
 		return model.Post{}, err
 	}

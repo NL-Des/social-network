@@ -17,8 +17,12 @@ func NewPostAndCommentsService(pr *repository.PostRepo, tr *repository.TagRepo, 
 	return &PostAndCommentsService{postRepo: pr, tagRepo: tr, commentRepo: cr}
 }
 
+func (s *PostAndCommentsService) GetAllPosts() ([]model.Post, error) {
+	return s.postRepo.GetAllPosts()
+}
+
 /*
-* Gère toutes les fonctions pour la création d'un nouveau post 
+* Gère toutes les fonctions pour la création d'un nouveau post
 * 1. Ajout du post dans la base de données puis récupération de son ID
 * 2. Ajout des tags liés au post dans la base de données
 * Paramètres : ID du posteur et postData (titre, contenu, confidentialité, tags)
@@ -99,8 +103,10 @@ func (s *PostAndCommentsService) DeleteComment(commentID int, mode string) error
 */
 func (s *PostAndCommentsService) EditPost(authorID string, postData model.Post) error {
 	posterID, err := s.postRepo.GetPostAuthorID(postData.ID)
-
-	if posterID != authorID  {
+	if err != nil {
+		return err
+	}
+	if posterID != authorID {
 		return errors.New("utilisateur non autorisé")
 	}
 
@@ -131,10 +137,11 @@ func (s *PostAndCommentsService) EditPost(authorID string, postData model.Post) 
 */ 
 func (s *PostAndCommentsService) EditComment(authorID string, commentID int, content string) error {
 	posterID, err := s.commentRepo.GetCommentAuthorID(commentID)
-	if posterID != authorID  {
-		return errors.New("utilisateur non autorisé")
-	} else if err != nil {
+	if err != nil {
 		return err
+	}
+	if posterID != authorID {
+		return errors.New("utilisateur non autorisé")
 	}
 
 	

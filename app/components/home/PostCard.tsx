@@ -6,16 +6,26 @@ export interface Post {
     name: string
     initials: string
   }
+  title?: string
   content: string
 }
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
+import { createPost } from '@/app/Post/actions'
 
-export function CreatePostButton() {
+interface CreatePostButtonProps {
+  onSuccess?: () => void
+  groupId?: string
+}
+
+export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) {
   const [formOpen, setFormOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [text, setText] = useState('')
+  const [privacy, setPrivacy] = useState<'public' | 'private' | 'almost-private'>('public')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const formRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -27,6 +37,43 @@ export function CreatePostButton() {
     if (formOpen) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [formOpen])
+
+  async function handleSubmit() {
+    if (!text.trim()) return
+    setLoading(true)
+    setError(null)
+    try {
+      let result: { error?: string }
+      if (groupId) {
+        const res = await fetch(`/api/group-posts/${groupId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: title.trim(), content: text.trim() }),
+        })
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          result = { error: data.error ?? `Erreur ${res.status}` }
+        } else {
+          result = {}
+        }
+      } else {
+        result = await createPost({ title, content: text, privacy })
+      }
+      if (result.error) {
+        setError(result.error)
+        return
+      }
+      setTitle('')
+      setText('')
+      setPrivacy('public')
+      setFormOpen(false)
+      onSuccess?.()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erreur réseau')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div ref={formRef} className="relative pt-3 shrink-0">
@@ -65,8 +112,29 @@ export function CreatePostButton() {
             />
           </div>
 
-          <button className="w-full py-2 px-4 rounded-lg border border-brand-border text-brand-text text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95">
-            Créer un nouveau sujet
+          <div className="flex flex-col gap-1">
+            <label className="text-brand-border text-sm">Visibilité :</label>
+            <select
+              value={privacy}
+              onChange={(e) => setPrivacy(e.target.value as typeof privacy)}
+              className="bg-white/5 border border-brand-border/40 rounded-xl px-4 py-2 text-brand-text text-sm focus:outline-none focus:border-brand-border transition-all"
+            >
+              <option value="public">Public</option>
+              <option value="almost-private">Amis</option>
+              <option value="private">Privé</option>
+            </select>
+          </div>
+
+          {error && (
+            <p className="text-red-400 text-sm text-center">{error}</p>
+          )}
+
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !text.trim()}
+            className="w-full py-2 px-4 rounded-lg border border-brand-border text-brand-text text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            {loading ? 'Création...' : 'Créer un nouveau sujet'}
           </button>
         </div>
       )}
@@ -74,20 +142,34 @@ export function CreatePostButton() {
   )
 }
 
-export default function PostCard({ post }: { post: Post }) {
-  return (
-    <Link href={`/Post?id=${post.id}`} className="block bg-brand-card border border-brand-border rounded-2xl p-6 hover:border-brand-border/80 hover:shadow-neon transition-all cursor-pointer">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white text-base font-bold flex-shrink-0">
-          {post.author.initials}
-        </div>
-        <h3 className="font-retro text-purple-400 text-base">
-          {post.author.name}
-        </h3>
+const postCardBody = (post: Post) => (
+  <>
+    <div className="flex items-center gap-3 mb-5">
+      <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white text-base font-bold flex-shrink-0">
+        {post.author.initials}
       </div>
-      <p className="text-brand-text text-lg leading-7 whitespace-pre-line">
-        {post.content}
-      </p>
+      <h3 className="font-retro text-purple-400 text-base">{post.author.name}</h3>
+    </div>
+    {post.title && (
+      <p className="font-bold text-brand-text text-base mb-2">{post.title}</p>
+    )}
+    <p className="text-brand-text text-lg leading-7 whitespace-pre-line">{post.content}</p>
+  </>
+)
+
+const cardClass = 'block bg-brand-card border border-brand-border rounded-2xl p-6 hover:border-brand-border/80 hover:shadow-neon transition-all cursor-pointer'
+
+export default function PostCard({ post, href, onClick }: { post: Post; href?: string; onClick?: () => void }) {
+  if (onClick) {
+    return (
+      <div className={cardClass} onClick={onClick}>
+        {postCardBody(post)}
+      </div>
+    )
+  }
+  return (
+    <Link href={href ?? `/Post?id=${post.id}`} className={cardClass}>
+      {postCardBody(post)}
     </Link>
   )
 }

@@ -7,16 +7,15 @@ export interface GroupItem {
   name: string
   initials: string
   membersCount: string
-  description: string
+  description?: string
 }
 
 interface LeftSidebarGroupsProps {
   groups: GroupItem[]
-  activeId: string | null
   onSelect: (id: string) => void
 }
 
-export default function LeftSidebarGroups({ groups, activeId, onSelect }: LeftSidebarGroupsProps) {
+export default function LeftSidebarGroups({ groups, onSelect }: LeftSidebarGroupsProps) {
   const [search, setSearch] = useState('')
 
   const filtered = groups.filter((g) =>
@@ -39,11 +38,7 @@ export default function LeftSidebarGroups({ groups, activeId, onSelect }: LeftSi
           <button
             key={g.id}
             onClick={() => onSelect(g.id)}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left ${
-              activeId === g.id
-                ? 'border border-brand-border shadow-[0_0_10px_rgba(73,199,255,0.35)]'
-                : 'hover:bg-white/5'
-            }`}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left hover:bg-white/5"
           >
             <div className="w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
               {g.initials}

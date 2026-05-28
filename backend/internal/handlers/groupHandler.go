@@ -11,10 +11,11 @@ import (
 
 type GroupHandler struct {
 	GroupService *service.GroupService
+	UserService  *service.UserService
 }
 
-func NewGroupHandler(gs *service.GroupService) *GroupHandler {
-	return &GroupHandler{GroupService: gs}
+func NewGroupHandler(gs *service.GroupService, us *service.UserService) *GroupHandler {
+	return &GroupHandler{GroupService: gs, UserService: us}
 }
 
 // HandleGroups gère GET /group-chat (liste) et POST /group-chat (création)
@@ -80,6 +81,19 @@ func (h *GroupHandler) HandleLeaveGroup(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
 		return
 	}
+
+	var body struct {
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || strings.TrimSpace(body.Password) == "" {
+		http.Error(w, "mot de passe requis", http.StatusBadRequest)
+		return
+	}
+	if err := h.UserService.CheckPassword(userID, body.Password); err != nil {
+		http.Error(w, "mot de passe incorrect", http.StatusForbidden)
+		return
+	}
+
 	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
@@ -120,4 +134,214 @@ func (h *GroupHandler) HandleGroupMessages(w http.ResponseWriter, r *http.Reques
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(messages)
+}
+
+// HandleGroupPosts gère GET /group-chat/{id}/posts et POST /group-chat/{id}/posts
+func (h *GroupHandler) HandleGroupPosts(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
+		return
+	}
+
+	isMember, err := h.GroupService.IsGroupMember(groupID, int64(userID))
+	if err != nil || !isMember {
+		http.Error(w, "accès non autorisé", http.StatusForbidden)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		posts, err := h.GroupService.GetGroupPosts(groupID)
+		if err != nil {
+			http.Error(w, "erreur serveur", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(posts)
+
+	case http.MethodPost:
+		var body struct {
+			Title   string `json:"title"`
+			Content string `json:"content"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, "payload invalide", http.StatusBadRequest)
+			return
+		}
+		content := strings.TrimSpace(body.Content)
+		if content == "" {
+			http.Error(w, "contenu requis", http.StatusBadRequest)
+			return
+		}
+		title := strings.TrimSpace(body.Title)
+		if title == "" {
+			runes := []rune(content)
+			if len(runes) > 60 {
+				title = string(runes[:60]) + "…"
+			} else {
+				title = content
+			}
+		}
+		if err := h.GroupService.CreateGroupPost(groupID, int64(userID), title, content); err != nil {
+			http.Error(w, "erreur serveur", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+
+	default:
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+	}
+}
+
+// HandleGroupPostDetail gère GET /group-chat/{id}/posts/{postId} et DELETE /group-chat/{id}/posts/{postId}
+func (h *GroupHandler) HandleGroupPostDetail(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
+		return
+	}
+
+	postID, err := strconv.ParseInt(r.PathValue("postId"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de post invalide", http.StatusBadRequest)
+		return
+	}
+
+	isMember, err := h.GroupService.IsGroupMember(groupID, int64(userID))
+	if err != nil || !isMember {
+		http.Error(w, "accès non autorisé", http.StatusForbidden)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		post, err := h.GroupService.GetGroupPostByID(groupID, postID)
+		if err != nil {
+			http.Error(w, "post introuvable", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(post)
+
+	case http.MethodDelete:
+		if err := h.GroupService.DeleteGroupPost(postID, int64(userID)); err != nil {
+			http.Error(w, "non autorisé ou post introuvable", http.StatusForbidden)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+
+	default:
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+	}
+}
+
+// HandleGroupPostComments gère GET /group-chat/{id}/posts/{postId}/comments et POST
+func (h *GroupHandler) HandleGroupPostComments(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
+		return
+	}
+
+	postID, err := strconv.ParseInt(r.PathValue("postId"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de post invalide", http.StatusBadRequest)
+		return
+	}
+
+	isMember, err := h.GroupService.IsGroupMember(groupID, int64(userID))
+	if err != nil || !isMember {
+		http.Error(w, "accès non autorisé", http.StatusForbidden)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		comments, err := h.GroupService.GetGroupComments(postID)
+		if err != nil {
+			http.Error(w, "erreur serveur", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(comments)
+
+	case http.MethodPost:
+		var body struct {
+			Content string `json:"content"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, "payload invalide", http.StatusBadRequest)
+			return
+		}
+		content := strings.TrimSpace(body.Content)
+		if content == "" {
+			http.Error(w, "contenu requis", http.StatusBadRequest)
+			return
+		}
+		if err := h.GroupService.AddGroupComment(postID, int64(userID), content); err != nil {
+			http.Error(w, "erreur serveur", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+
+	default:
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+	}
+}
+
+// HandleGroupCommentDelete gère DELETE /group-chat/{id}/posts/{postId}/comments/{commentId}
+func (h *GroupHandler) HandleGroupCommentDelete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
+		return
+	}
+
+	commentID, err := strconv.ParseInt(r.PathValue("commentId"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de commentaire invalide", http.StatusBadRequest)
+		return
+	}
+
+	isMember, err := h.GroupService.IsGroupMember(groupID, int64(userID))
+	if err != nil || !isMember {
+		http.Error(w, "accès non autorisé", http.StatusForbidden)
+		return
+	}
+
+	if err := h.GroupService.DeleteGroupComment(commentID, int64(userID)); err != nil {
+		http.Error(w, "non autorisé ou commentaire introuvable", http.StatusForbidden)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

@@ -9,3 +9,18 @@ type GroupMessage struct {
 	Body     string    `json:"body"`
 	SentAt   time.Time `json:"sent_at"`
 }
+
+type GroupPost struct {
+	ID        int    `json:"id"`
+	Author    User   `json:"author"`
+	Title     string `json:"title"`
+	Content   string `json:"content"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type GroupComment struct {
+	ID        int    `json:"id"`
+	Author    User   `json:"author"`
+	Content   string `json:"content"`
+	CreatedAt string `json:"createdAt"`
+}

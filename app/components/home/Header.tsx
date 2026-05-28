@@ -56,7 +56,7 @@ export default function Header({ user }: { user: CurrentUser }) {
               key={link.href}
               href={link.href}
               className={`text-white hover:text-brand-text transition-colors text-lg px-5 py-2 rounded-lg ${
-                pathname === link.href
+                pathname === link.href || (link.href === '/groupes' && pathname.startsWith('/inside-groups'))
                   ? 'border border-brand-border shadow-[0_0_12px_rgba(73,199,255,0.6)]'
                   : ''
               }`}

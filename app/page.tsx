@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Header, { CurrentUser } from './components/home/Header'
 import { fetchMe } from '@/lib/fetchMe'
@@ -8,28 +8,16 @@ import SearchFilter, { FilterItem } from './components/home/SearchFilter'
 import PostCard, { Post, CreatePostButton } from './components/home/PostCard'
 import RightSidebar, { Group } from './components/home/RightSidebar'
 
-const mockPosts: Post[] = [
-  {
-    id: '1',
-    author: { name: 'John Doe', initials: 'JD' },
-    content: `Le design front, c'est l'art de rendre le web vivant 🍪\nChaque pixel raconte une intention, chaque interaction crée une émotion\nMinimalisme ou audace, l'important reste l'expérience utilisateur\nCréer, tester, ajuster... et recommencer jusqu'à l'équilibre parfait`,
-  },
-  {
-    id: '2',
-    author: { name: 'Bernard Doe', initials: 'BD' },
-    content: `Le back-end, c'est le moteur invisible du web ⚙️\nLà où les données circulent, se transforment et prennent vie\nSécurité, performance et logique guident chaque ligne de code\nSans lui, aucune expérience front ne pourrait vraiment exister`,
-  },
-  {
-    id: '3',
-    author: { name: 'Bulle Doe', initials: 'BD' },
-    content: `Les WebSockets, c'est le temps réel au cœur du web ⚡\nUne connexion continue pour des échanges instantanés\nChats, notifications, jeux... tout devient fluide et vivant\nMoins d'attente, plus d'interaction : le web respire en direct`,
-  },
-  {
-    id: '4',
-    author: { name: 'Bulle Doe', initials: 'BD' },
-    content: `Les WebSockets, c'est le temps réel au cœur du web ⚡\nUne connexion continue pour des échanges instantanés\nChats, notifications, jeux... tout devient fluide et vivant\nMoins d'attente, plus d'interaction : le web respire en direct`,
-  },
-]
+interface ApiPost {
+  id: number
+  author: { username: string; profilePicture: string }
+  title: string
+  content: string
+  tags: string[]
+  privacy: string
+  createdAt: string
+  updatedAt: string
+}
 
 const mockGroups: Group[] = [
   { id: '1', name: 'Photo Urbaine', membersCount: '890' },
@@ -43,9 +31,18 @@ const mockFilters: FilterItem[] = [
   { label: 'Tag', count: 12 },
 ]
 
+function getInitials(username: string): string {
+  const parts = username.split(/[._-]/)
+  if (parts.length >= 2 && parts[0] && parts[1]) {
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+  }
+  return username.slice(0, 2).toUpperCase()
+}
+
 export default function HomePage() {
   const router = useRouter()
   const [user, setUser]       = useState<CurrentUser | null>(null)
+  const [posts, setPosts]     = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -57,6 +54,26 @@ export default function HomePage() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [router])
+
+  const fetchPosts = useCallback(() => {
+    fetch('/api/posts')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: ApiPost[]) => {
+        setPosts(
+          (data ?? []).map((p) => ({
+            id:      String(p.id),
+            author:  { name: p.author.username, initials: getInitials(p.author.username) },
+            title:   p.title,
+            content: p.content,
+          }))
+        )
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (user) fetchPosts()
+  }, [user, fetchPosts])
 
   if (loading) {
     return (
@@ -81,11 +98,11 @@ export default function HomePage() {
 
           <div className="flex flex-col h-full overflow-hidden">
             <div className="overflow-y-auto flex flex-col gap-4 flex-1">
-              {mockPosts.map((post) => (
+              {posts.map((post) => (
                 <PostCard key={post.id} post={post} />
               ))}
             </div>
-            <CreatePostButton />
+            <CreatePostButton onSuccess={fetchPosts} />
           </div>
 
           <div className="h-full">

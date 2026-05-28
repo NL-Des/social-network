@@ -1,6 +1,9 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
+const RETRIES = 4
+const RETRY_DELAY_MS = 400
+
 export async function GET() {
   const cookieStore = await cookies()
   const sessionToken = cookieStore.get('session_token')
@@ -9,18 +12,21 @@ export async function GET() {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  try {
-    const response = await fetch('http://localhost:5090/user/me', {
-      headers: { Cookie: `session_token=${sessionToken.value}` },
-    })
-
-    if (!response.ok) {
-      return NextResponse.json({ error: 'Failed to fetch profile' }, { status: response.status })
+  for (let attempt = 0; attempt < RETRIES; attempt++) {
+    try {
+      const response = await fetch('http://localhost:5090/user/me', {
+        headers: { Cookie: `session_token=${sessionToken.value}` },
+      })
+      if (!response.ok) {
+        return NextResponse.json({ error: 'Failed to fetch profile' }, { status: response.status })
+      }
+      return NextResponse.json(await response.json())
+    } catch {
+      if (attempt < RETRIES - 1) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS))
+      }
     }
-
-    const data = await response.json()
-    return NextResponse.json(data)
-  } catch {
-    return NextResponse.json({ error: 'Service unavailable' }, { status: 503 })
   }
+
+  return NextResponse.json({ error: 'Service unavailable' }, { status: 503 })
 }
