@@ -287,3 +287,49 @@ func (r *GroupRepo) GetGroupMessages(groupID int64) ([]model.GroupMessage, error
 	}
 	return messages, rows.Err()
 }
+
+type GroupMember struct {
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	Initials  string `json:"initials"`
+	IsCreator bool   `json:"isCreator"`
+}
+
+func (r *GroupRepo) GetGroupMembers(groupID int) ([]GroupMember, error) {
+	rows, err := r.db.Query(`
+		SELECT u.id,
+		       u.firstname,
+		       u.lastname,
+		       CASE WHEN g.creatorid = u.id THEN true ELSE false END AS is_creator
+		FROM group_members gm
+		JOIN users u ON u.id = gm.userid
+		JOIN groups g ON g.id = gm.groupid
+		WHERE gm.groupid = $1 AND gm.status = 'member'
+		ORDER BY is_creator DESC, u.firstname, u.lastname
+	`, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	members := make([]GroupMember, 0)
+	for rows.Next() {
+		var m GroupMember
+		var firstname, lastname string
+		if err := rows.Scan(&m.ID, &firstname, &lastname, &m.IsCreator); err != nil {
+			return nil, err
+		}
+		m.Name = firstname
+		if len(lastname) > 0 {
+			m.Name += " " + lastname
+		}
+		if len(firstname) > 0 {
+			m.Initials += strings.ToUpper(string([]rune(firstname)[0]))
+		}
+		if len(lastname) > 0 {
+			m.Initials += strings.ToUpper(string([]rune(lastname)[0]))
+		}
+		members = append(members, m)
+	}
+	return members, rows.Err()
+}

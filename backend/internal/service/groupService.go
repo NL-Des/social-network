@@ -70,3 +70,7 @@ func (s *GroupService) AddGroupComment(postID, authorID int64, content string) e
 func (s *GroupService) DeleteGroupComment(commentID, authorID int64) error {
 	return s.repo.DeleteGroupComment(commentID, authorID)
 }
+
+func (s *GroupService) GetGroupMembers(groupID int) ([]repository.GroupMember, error) {
+	return s.repo.GetGroupMembers(groupID)
+}

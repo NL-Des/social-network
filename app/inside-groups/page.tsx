@@ -10,16 +10,7 @@ import RightSidebarGroupListOfConversations, { Conversation, GroupEvent } from '
 import PostCard, { Post, CreatePostButton } from '@/app/components/home/PostCard'
 import GroupComments from '@/app/components/home/GroupComments'
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const mockMembers: Conversation[] = [
-  { id: '1', name: 'Audrey D',    initials: 'AD', online: true  },
-  { id: '2', name: 'Jade C',      initials: 'JC', online: true  },
-  { id: '3', name: 'Mathis P',    initials: 'MP', online: false },
-  { id: '4', name: 'Nathan L',    initials: 'NL', online: false },
-  { id: '5', name: 'Nathan P',    initials: 'NP', online: false },
-  { id: '6', name: 'Valentine L', initials: 'VL', online: false },
-]
+// ─── Mock events (keep until event API is ready) ──────────────────────────────
 
 const mockEvents: GroupEvent[] = [
   {
@@ -41,13 +32,6 @@ const mockEvents: GroupEvent[] = [
   },
 ]
 
-const mockSidebarUsers: SidebarUser[] = [
-  { id: '1', name: 'Audrey D',    initials: 'AD', online: true  },
-  { id: '2', name: 'Jade C',      initials: 'JC', online: true  },
-  { id: '3', name: 'Mathis P',    initials: 'MP', online: false },
-  { id: '4', name: 'Nathan L',    initials: 'NL', online: false },
-]
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ApiGroupPost {
@@ -56,6 +40,13 @@ interface ApiGroupPost {
   title: string
   content: string
   createdAt: string
+}
+
+interface ApiGroupMember {
+  id: number
+  name: string
+  initials: string
+  isCreator: boolean
 }
 
 function getInitials(name: string): string {
@@ -71,6 +62,8 @@ export default function InsideGroupPage() {
 
   const [user, setUser]             = useState<CurrentUser | null>(null)
   const [posts, setPosts]           = useState<Post[]>([])
+  const [members, setMembers]       = useState<Conversation[]>([])
+  const [sidebarUsers, setSidebarUsers] = useState<SidebarUser[]>([])
   const [loading, setLoading]       = useState(true)
   const [activeId, setActiveId]     = useState<string | null>(null)
   const [selectedPost, setSelectedPost] = useState<ApiGroupPost | null>(null)
@@ -86,6 +79,29 @@ export default function InsideGroupPage() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [router])
+
+  useEffect(() => {
+    if (!groupId) return
+    fetch(`/api/group-chat/${groupId}/members`)
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: ApiGroupMember[]) => {
+        const convs: Conversation[] = (data ?? []).map((m) => ({
+          id: String(m.id),
+          name: m.name,
+          initials: m.initials,
+          online: false,
+        }))
+        const sidebar: SidebarUser[] = (data ?? []).map((m) => ({
+          id: String(m.id),
+          name: m.name,
+          initials: m.initials,
+          online: false,
+        }))
+        setMembers(convs)
+        setSidebarUsers(sidebar)
+      })
+      .catch(() => {})
+  }, [groupId])
 
   const fetchPosts = useCallback(() => {
     if (!groupId) return
@@ -152,7 +168,7 @@ export default function InsideGroupPage() {
         <div className="h-full grid grid-cols-[280px_1fr_264px] gap-4 pt-4">
 
           <div className="h-full">
-            <LeftSidebarGroupListOfUsers users={mockSidebarUsers} groupName="Groupe" groupId={groupId} />
+            <LeftSidebarGroupListOfUsers users={sidebarUsers} groupName="Groupe" groupId={groupId} />
           </div>
 
           {/* Colonne centrale */}
@@ -230,7 +246,7 @@ export default function InsideGroupPage() {
 
           <div className="h-full">
             <RightSidebarGroupListOfConversations
-              conversations={mockMembers}
+              conversations={members}
               activeId={activeId}
               onSelect={setActiveId}
               events={mockEvents}

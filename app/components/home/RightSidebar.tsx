@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
 import { useSidebarUsers } from '@/lib/useSidebarUsers'
+import { useGroups } from '@/lib/useGroups'
 
 export interface Group {
   id: string
@@ -21,7 +22,7 @@ export interface SidebarUser {
 }
 
 interface RightSidebarProps {
-  groups: Group[]
+  groups?: Group[]
 }
 
 function statusDotColor(
@@ -35,7 +36,9 @@ function statusDotColor(
   return 'bg-red-500'
 }
 
-export default function RightSidebar({ groups }: RightSidebarProps) {
+export default function RightSidebar({ groups: groupsProp }: RightSidebarProps) {
+  const fetchedGroups = useGroups()
+  const groups = groupsProp ?? fetchedGroups
   const users = useSidebarUsers()
   const { onlineUsers, unreadFrom, clearUnread } = useOnlineStatus()
   const [localUnread, setLocalUnread] = useState<Set<string>>(new Set())

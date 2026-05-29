@@ -345,3 +345,38 @@ func (h *GroupHandler) HandleGroupCommentDelete(w http.ResponseWriter, r *http.R
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// HandleGroupMembers gère GET /group-chat/{id}/members
+func (h *GroupHandler) HandleGroupMembers(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
+		return
+	}
+
+	isMember, err := h.GroupService.IsGroupMember(groupID, int64(userID))
+	if err != nil || !isMember {
+		http.Error(w, "accès non autorisé", http.StatusForbidden)
+		return
+	}
+
+	members, err := h.GroupService.GetGroupMembers(int(groupID))
+	if err != nil {
+		http.Error(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(members)
+}
