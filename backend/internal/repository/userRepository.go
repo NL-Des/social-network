@@ -196,7 +196,8 @@ func (r *UserRepo) GetAllUsers(currentUserID int) ([]model.UserListItem, error) 
 			u.id,
 			u.firstname,
 			u.lastname,
-			CASE WHEN f.followerid IS NOT NULL THEN true ELSE false END AS following
+			CASE WHEN f.followerid IS NOT NULL THEN true ELSE false END AS following,
+			u.isprivate
 		FROM users u
 		LEFT JOIN followers f
 			ON f.followerid = $1
@@ -214,7 +215,7 @@ func (r *UserRepo) GetAllUsers(currentUserID int) ([]model.UserListItem, error) 
 	for rows.Next() {
 		var item model.UserListItem
 		var firstname, lastname string
-		if err := rows.Scan(&item.ID, &firstname, &lastname, &item.Following); err != nil {
+		if err := rows.Scan(&item.ID, &firstname, &lastname, &item.Following, &item.IsPrivate); err != nil {
 			return nil, err
 		}
 		item.Name = firstname

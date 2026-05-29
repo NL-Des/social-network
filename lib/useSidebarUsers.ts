@@ -9,13 +9,14 @@ export function useSidebarUsers() {
   useEffect(() => {
     fetch('/api/users')
       .then((res) => (res.ok ? res.json() : []))
-      .then((data: { id: number; name: string; initials: string }[]) =>
+      .then((data: { id: number; name: string; initials: string; isPrivate: boolean }[]) =>
         setUsers(
           data.map((u) => ({
             id: String(u.id),
             name: u.name,
             initials: u.initials,
             online: false,
+            isPrivate: u.isPrivate ?? false,
           }))
         )
       )

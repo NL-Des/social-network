@@ -17,6 +17,7 @@ export interface SidebarUser {
   name: string
   initials: string
   online: boolean
+  isPrivate: boolean
 }
 
 interface RightSidebarProps {
@@ -38,6 +39,7 @@ export default function RightSidebar({ groups }: RightSidebarProps) {
   const users = useSidebarUsers()
   const { onlineUsers, unreadFrom, clearUnread } = useOnlineStatus()
   const [localUnread, setLocalUnread] = useState<Set<string>>(new Set())
+  const [privateOpenId, setPrivateOpenId] = useState<string | null>(null)
   const pathname      = usePathname()
   const router        = useRouter()
   const searchParams  = useSearchParams()
@@ -90,14 +92,38 @@ export default function RightSidebar({ groups }: RightSidebarProps) {
         <h2 className="font-bold text-[#49C7FF] text-base mb-5">Utilisateurs</h2>
         <div className="flex flex-col gap-3">
           {sortedUsers.map((user) => {
+            const avatar = (
+              <div className="relative shrink-0 flex items-center">
+                <span className={`absolute -left-3 w-2 h-2 rounded-full ${statusDotColor(user.id, onlineUsers, mergedUnread, activeConvId)}`} />
+                <div className="w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center text-white text-base font-bold">
+                  {user.initials}
+                </div>
+              </div>
+            )
+            const isDropdownOpen = privateOpenId === user.id
+
+            if (user.isPrivate && !onMessagesPage) {
+              return (
+                <div key={user.id} className="flex flex-col -mx-2">
+                  <button
+                    onClick={() => setPrivateOpenId(isDropdownOpen ? null : user.id)}
+                    className="flex items-center gap-3 rounded-xl px-2 py-1 hover:bg-white/5 transition-colors text-left w-full"
+                  >
+                    {avatar}
+                    <p className="text-white text-lg">{user.name}</p>
+                  </button>
+                  {isDropdownOpen && (
+                    <p className="text-red-400 text-sm px-2 pb-1 pl-11">
+                      Ce profil est privé
+                    </p>
+                  )}
+                </div>
+              )
+            }
+
             const inner = (
               <>
-                <div className="relative shrink-0 flex items-center">
-                  <span className={`absolute -left-3 w-2 h-2 rounded-full ${statusDotColor(user.id, onlineUsers, mergedUnread, activeConvId)}`} />
-                  <div className="w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center text-white text-base font-bold">
-                    {user.initials}
-                  </div>
-                </div>
+                {avatar}
                 <p className="text-white text-lg">{user.name}</p>
               </>
             )
