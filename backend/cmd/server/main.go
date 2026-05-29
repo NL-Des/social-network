@@ -45,6 +45,11 @@ func main() {
 	postRepo := repository.NewPostRepo(db)
 	tagRepo := repository.NewTagRepo(db)
 	commentRepo := repository.NewCommentRepo(db)
+	notifRepo := repository.NewNotificationRepository(db)
+
+	// WebSocket hub (créé avant notifService qui en dépend)
+	hub := ws.NewHub()
+	go hub.Run()
 
 	// Services
 	userService := service.NewUserService(userRepo)
@@ -54,6 +59,7 @@ func main() {
 	messageService := service.NewMessageService(messageRepo)
 	groupService := service.NewGroupService(groupRepo)
 	postService := service.NewPostAndCommentsService(postRepo, tagRepo, commentRepo)
+	notifService := service.NewNotificationService(notifRepo, hub)
 
 	// Handlers
 	authMiddleware := middleware.NewAuthMiddleware(sessionService)
@@ -66,10 +72,7 @@ func main() {
 	messageHandler := handlers.NewMessageHandler(messageService)
 	groupHandler := handlers.NewGroupHandler(groupService, userService)
 	postHandler := handlers.NewPostAndCommentsHandler(userService, sessionService, postService)
-
-	// WebSocket hub
-	hub := ws.NewHub()
-	go hub.Run()
+	notifHandler := handlers.NewNotificationHandler(notifService)
 
 	pmHandler := privateMessage.NewPrivateMessageHandler(hub, messageService)
 	gcHandler := groupChat.NewGroupChatHandler(hub, groupService)
@@ -117,6 +120,8 @@ func main() {
 	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
 	mux.HandleFunc("/posts", authMiddleware.RequireAuth(postHandler.PostAndCommentsHandler))
 	mux.HandleFunc("/group-chat/{id}/members", authMiddleware.RequireAuth(groupHandler.HandleGroupMembers))
+	mux.HandleFunc("/notifications", authMiddleware.RequireAuth(notifHandler.HandleNotifications))
+	mux.HandleFunc("/notifications/read", authMiddleware.RequireAuth(notifHandler.HandleMarkAllRead))
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -147,7 +152,7 @@ func main() {
 		ws.ServeWs(hub, w, r, userIDInt)
 	})
 
-	r := router.NewRouter(mux, profilHandler, followHandler, postHandler, authMiddleware)
+	r := router.NewRouter(mux, profilHandler, followHandler, postHandler, notifHandler, authMiddleware)
 
 	fmt.Println("Démarrage sur http://localhost:5090")
 	log.Fatal(http.ListenAndServe(":5090", r))

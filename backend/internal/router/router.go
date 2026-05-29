@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, followHandler *handlers.FollowHandler, postHandler *handlers.PostAndCommentsHandler, auth *middleware.AuthMiddleware) http.Handler {
+func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, followHandler *handlers.FollowHandler, postHandler *handlers.PostAndCommentsHandler, notifHandler *handlers.NotificationHandler, auth *middleware.AuthMiddleware) http.Handler {
 
 	router := mux.NewRouter()
 
@@ -64,6 +64,11 @@ func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, 
 	router.Handle("/posts/{id}/like",
 		auth.RequireAuth(http.HandlerFunc(postHandler.HandleLike)),
 	).Methods("POST", "DELETE")
+
+	// Notification par ID
+	router.Handle("/notifications/{id}/read",
+		auth.RequireAuth(http.HandlerFunc(notifHandler.HandleMarkRead)),
+	).Methods("PATCH")
 
 	// Toutes les autres routes : ServeMux
 	router.PathPrefix("/").Handler(serverMux)
