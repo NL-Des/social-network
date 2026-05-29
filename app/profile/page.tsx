@@ -17,38 +17,6 @@ const mockGroups: Group[] = [
   { id: '3', name: 'Design & UX',   membersCount: '1,2k' },
 ]
 
-<<<<<<< HEAD
-const mockUserPosts: Post[] = [
-  {
-    id: '1',
-    author: { name: 'Miaou', initials: 'NL' },
-    content: `Première semaine sur le projet réseau social 🚀\nLes fondations du front sont en place, Next.js tourne bien.\nHâte d'attaquer l'intégration avec le back Go !`,
-  },
-  {
-    id: '2',
-    author: { name: 'Miaou', initials: 'NL' },
-    content: `Retour sur Tailwind CSS après quelques jours d'utilisation 🎨\nLa logique utilitaire fait vraiment gagner du temps sur la mise en page.\nPas de CSS custom, tout reste cohérent et lisible.`,
-  },
-  {
-    id: '3',
-    author: { name: 'Miaou', initials: 'NL' },
-    content: `PostgreSQL + Go, un duo redoutable ⚙️\nLes requêtes sont rapides et le typage fort côté Go évite beaucoup d'erreurs.\nVivement la phase d'intégration complète.`,
-  },
-  {
-    id: '4',
-    author: { name: 'Miaou', initials: 'NL' },
-    content: `PostgreSQL + Go, un duo redoutable ⚙️\nLes requêtes sont rapides et le typage fort côté Go évite beaucoup d'erreurs.\nVivement la phase d'intégration complète.`,
-  },
-  {
-    id: '5',
-    author: { name: 'Miaou', initials: 'NL' },
-    content: `PostgreSQL + Go, un duo redoutable ⚙️\nLes requêtes sont rapides et le typage fort côté Go évite beaucoup d'erreurs.\nVivement la phase d'intégration complète.`,
-  },
-]
-
-
-=======
->>>>>>> worktree-agent-a79da06e1929c5980
 function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUser: CurrentUser }) {
   const [visibility, setVisibility] = useState<'private' | 'public'>(data.visibility ?? 'public')
   const [posts, setPosts] = useState<Post[]>([])
@@ -72,20 +40,6 @@ function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUs
       })
       .catch(() => {})
   }, [data.user.id, data.user.username, data.user.initials])
-
-  async function handleVisibilityChange(value: 'private' | 'public') {
-    setVisibility(value)
-    try {
-      const response = await fetch('/api/profile/visibility', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isPrivate: value === 'private' }),
-      })
-      if (!response.ok) setVisibility(visibility)
-    } catch {
-      setVisibility(visibility)
-    }
-  }
 
   async function handleVisibilityChange(value: 'private' | 'public') {
     setVisibility(value)
@@ -127,14 +81,6 @@ function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUs
               <Subscribers followers={data.followers} />
               <div className="bg-brand-card border border-brand-border rounded-2xl p-5 overflow-hidden flex flex-col">
                 <h2 className="font-bold text-[#49C7FF] text-base mb-4 text-center shrink-0">
-<<<<<<< HEAD
-                  Évènements
-                </h2>
-                <div className="overflow-y-auto flex flex-col gap-4 flex-1">
-                  {mockUserPosts.map((post) => (
-                    <PostCard key={post.id} post={post} />
-                  ))}
-=======
                   Posts
                 </h2>
                 <div className="overflow-y-auto flex flex-col gap-4 flex-1">
@@ -145,7 +91,6 @@ function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUs
                       <PostCard key={post.id} post={post} />
                     ))
                   )}
->>>>>>> worktree-agent-a79da06e1929c5980
                 </div>
               </div>
             </div>

@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, followHandler *handlers.FollowHandler, postHandler *handlers.PostAndCommentsHandler, notifHandler *handlers.NotificationHandler, auth *middleware.AuthMiddleware) http.Handler {
+func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, followHandler *handlers.FollowHandler, postHandler *handlers.PostAndCommentsHandler, notifHandler *handlers.NotificationHandler, eventHandler *handlers.EventHandler, auth *middleware.AuthMiddleware) http.Handler {
 
 	router := mux.NewRouter()
 
@@ -69,6 +69,19 @@ func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, 
 	router.Handle("/notifications/{id}/read",
 		auth.RequireAuth(http.HandlerFunc(notifHandler.HandleMarkRead)),
 	).Methods("PATCH")
+
+	// Routes événements de groupe
+	router.Handle("/group-chat/{id}/events",
+		auth.RequireAuth(http.HandlerFunc(eventHandler.HandleGroupEvents)),
+	).Methods("GET", "POST")
+
+	router.Handle("/group-chat/{id}/events/{eventId}",
+		auth.RequireAuth(http.HandlerFunc(eventHandler.HandleGroupEventDetail)),
+	).Methods("DELETE")
+
+	router.Handle("/group-chat/{id}/events/{eventId}/respond",
+		auth.RequireAuth(http.HandlerFunc(eventHandler.HandleEventResponse)),
+	).Methods("POST")
 
 	// Toutes les autres routes : ServeMux
 	router.PathPrefix("/").Handler(serverMux)

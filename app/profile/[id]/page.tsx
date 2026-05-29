@@ -3,12 +3,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Header, { CurrentUser } from "@/app/components/home/Header";
-<<<<<<< HEAD
 import { fetchMe } from "@/lib/fetchMe";
-import RightSidebar, { Group, SidebarUser } from "@/app/components/home/RightSidebar";
-=======
 import RightSidebar from "@/app/components/home/RightSidebar";
->>>>>>> worktree-agent-a79da06e1929c5980
 import type { ProfilePageProps, Contact } from "@/app/profile/actions";
 
 function getInitials(firstName: string, lastName: string): string {
@@ -196,11 +192,7 @@ function PublicProfileContent({
           </div>
 
           <div className="h-full">
-<<<<<<< HEAD
-            <RightSidebar groups={mockGroups} />
-=======
             <RightSidebar />
->>>>>>> worktree-agent-a79da06e1929c5980
           </div>
         </div>
       </div>

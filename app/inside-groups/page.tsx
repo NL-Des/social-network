@@ -6,31 +6,9 @@ import HeaderGroup from '@/app/components/home/HeaderGroup'
 import { fetchMe } from '@/lib/fetchMe'
 import { CurrentUser } from '@/app/components/home/Header'
 import LeftSidebarGroupListOfUsers, { SidebarUser } from '@/app/components/home/LeftSidebarGroupListOfUsers'
-import RightSidebarGroupListOfConversations, { Conversation, GroupEvent } from '@/app/components/home/RightSidebarGroupListOfConversations'
+import RightSidebarGroupListOfConversations, { Conversation } from '@/app/components/home/RightSidebarGroupListOfConversations'
 import PostCard, { Post, CreatePostButton } from '@/app/components/home/PostCard'
 import GroupComments from '@/app/components/home/GroupComments'
-
-// ─── Mock events (keep until event API is ready) ──────────────────────────────
-
-const mockEvents: GroupEvent[] = [
-  {
-    id: '1', title: 'Conférence Zone01', description: 'Présentation des projets étudiants',
-    date: '2026-06-10', time: '14:00', registered: true,
-    attendees: [
-      { id: '1', name: 'Audrey D',    initials: 'AD' },
-      { id: '2', name: 'Nathan L',    initials: 'NL' },
-      { id: '3', name: 'Jade C',      initials: 'JC' },
-    ],
-  },
-  {
-    id: '2', title: 'Gaming Night', description: 'Test Deadline Invaders en équipe',
-    date: '2026-06-14', time: '20:00', registered: false,
-    attendees: [
-      { id: '1', name: 'Mathis P',    initials: 'MP' },
-      { id: '2', name: 'Valentine L', initials: 'VL' },
-    ],
-  },
-]
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -249,7 +227,7 @@ export default function InsideGroupPage() {
               conversations={members}
               activeId={activeId}
               onSelect={setActiveId}
-              events={mockEvents}
+              groupId={groupId}
             />
           </div>
 

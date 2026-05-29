@@ -46,6 +46,7 @@ func main() {
 	tagRepo := repository.NewTagRepo(db)
 	commentRepo := repository.NewCommentRepo(db)
 	notifRepo := repository.NewNotificationRepository(db)
+	eventRepo := repository.NewEventRepository(db)
 
 	// WebSocket hub (créé avant notifService qui en dépend)
 	hub := ws.NewHub()
@@ -60,6 +61,7 @@ func main() {
 	groupService := service.NewGroupService(groupRepo)
 	postService := service.NewPostAndCommentsService(postRepo, tagRepo, commentRepo)
 	notifService := service.NewNotificationService(notifRepo, hub)
+	eventService := service.NewEventService(eventRepo, groupRepo)
 
 	// Handlers
 	authMiddleware := middleware.NewAuthMiddleware(sessionService)
@@ -73,6 +75,7 @@ func main() {
 	groupHandler := handlers.NewGroupHandler(groupService, userService)
 	postHandler := handlers.NewPostAndCommentsHandler(userService, sessionService, postService)
 	notifHandler := handlers.NewNotificationHandler(notifService)
+	eventHandler := handlers.NewEventHandler(eventService)
 
 	pmHandler := privateMessage.NewPrivateMessageHandler(hub, messageService)
 	gcHandler := groupChat.NewGroupChatHandler(hub, groupService)
@@ -152,7 +155,7 @@ func main() {
 		ws.ServeWs(hub, w, r, userIDInt)
 	})
 
-	r := router.NewRouter(mux, profilHandler, followHandler, postHandler, notifHandler, authMiddleware)
+	r := router.NewRouter(mux, profilHandler, followHandler, postHandler, notifHandler, eventHandler, authMiddleware)
 
 	fmt.Println("Démarrage sur http://localhost:5090")
 	log.Fatal(http.ListenAndServe(":5090", r))

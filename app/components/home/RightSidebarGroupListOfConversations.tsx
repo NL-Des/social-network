@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Events from '@/app/components/home/Events'
 
 export interface Conversation {
   id: string
@@ -218,14 +219,16 @@ interface RightSidebarGroupListOfConversationsProps {
   conversations: Conversation[]
   activeId: string | null
   onSelect: (id: string) => void
-  events: GroupEvent[]
+  events?: GroupEvent[]
+  groupId?: string
 }
 
 export default function RightSidebarGroupListOfConversations({
   conversations,
   activeId,
   onSelect,
-  events,
+  events = [],
+  groupId,
 }: RightSidebarGroupListOfConversationsProps) {
   const [search, setSearch] = useState('')
 
@@ -275,7 +278,11 @@ export default function RightSidebarGroupListOfConversations({
         ))}
       </div>
 
-      <EventButton initialEvents={events} />
+      {groupId ? (
+        <Events groupId={groupId} />
+      ) : (
+        <EventButton initialEvents={events} />
+      )}
     </aside>
   )
 }
