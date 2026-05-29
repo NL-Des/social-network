@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
@@ -36,7 +36,7 @@ function statusDotColor(
   return 'bg-red-500'
 }
 
-export default function RightSidebar({ groups: groupsProp }: RightSidebarProps) {
+function RightSidebarInner({ groups: groupsProp }: RightSidebarProps) {
   const fetchedGroups = useGroups()
   const groups = groupsProp ?? fetchedGroups
   const users = useSidebarUsers()
@@ -158,4 +158,7 @@ export default function RightSidebar({ groups: groupsProp }: RightSidebarProps) 
       </section>
     </aside>
   )
+}
+export default function RightSidebar(props: RightSidebarProps) {
+  return <Suspense><RightSidebarInner {...props} /></Suspense>
 }

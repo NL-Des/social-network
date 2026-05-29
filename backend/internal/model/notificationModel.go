@@ -10,6 +10,8 @@ const (
 	NotifGroupJoinRequest     NotifKind = "notif_group_join_request"
 	NotifGroupRequestAccepted NotifKind = "notif_group_request_accepted"
 	NotifBannedFromGroup      NotifKind = "notif_banned_from_group"
+	NotifPostLike             NotifKind = "post_like"
+	NotifUnfollow             NotifKind = "unfollow"
 )
 
 type NotificationPayload struct {

@@ -262,25 +262,25 @@ export default function Events({ groupId }: EventsProps) {
                   />
                 </div>
 
-                <div className="flex gap-2">
-                  <div className="flex flex-col gap-1 flex-1">
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-1">
                     <label className="text-brand-border text-sm">Date :</label>
                     <input
                       type="date"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                       required
-                      className="bg-white/5 border border-brand-border/40 rounded-xl px-3 py-2 text-brand-text text-sm focus:outline-none focus:border-brand-border transition-all"
+                      className="bg-white/5 border border-brand-border/40 rounded-xl px-3 py-2 text-brand-text text-sm focus:outline-none focus:border-brand-border transition-all w-full"
                     />
                   </div>
-                  <div className="flex flex-col gap-1 flex-1">
+                  <div className="flex flex-col gap-1">
                     <label className="text-brand-border text-sm">Heure :</label>
                     <input
                       type="time"
                       value={time}
                       onChange={(e) => setTime(e.target.value)}
                       required
-                      className="bg-white/5 border border-brand-border/40 rounded-xl px-3 py-2 text-brand-text text-sm focus:outline-none focus:border-brand-border transition-all"
+                      className="bg-white/5 border border-brand-border/40 rounded-xl px-3 py-2 text-brand-text text-sm focus:outline-none focus:border-brand-border transition-all w-full"
                     />
                   </div>
                 </div>

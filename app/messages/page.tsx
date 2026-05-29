@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { Suspense, useEffect, useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Header, { CurrentUser } from '@/app/components/home/Header'
 import { fetchMe } from '@/lib/fetchMe'
@@ -46,7 +46,7 @@ interface ApiGroupInfo {
   member_ids: number[]
 }
 
-export default function MessagesPage() {
+function MessagesContent() {
   const router       = useRouter()
   const searchParams = useSearchParams()
 
@@ -261,4 +261,8 @@ export default function MessagesPage() {
       </div>
     </div>
   )
+}
+
+export default function MessagesPage() {
+  return <Suspense><MessagesContent /></Suspense>
 }

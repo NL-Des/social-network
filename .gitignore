@@ -6,4 +6,5 @@ dist/
 CLAUDE.md
 claude.md
 public/images/profil
-.next
+.next.claude/worktrees/
+

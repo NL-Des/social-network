@@ -28,10 +28,12 @@ func (r *UserRepo) GetFullProfileByID(id int) (model.FullProfile, error) {
 	var birthDate time.Time
 	var isprivate bool
 
+	var pseudoNull sql.NullString
 	err := r.db.QueryRow(`
 		SELECT firstname, lastname, pseudo, email, dateofbirth, isprivate
 		FROM users WHERE id = $1
-	`, id).Scan(&profile.FirstName, &profile.LastName, &profile.Username, &profile.Email, &birthDate, &isprivate)
+	`, id).Scan(&profile.FirstName, &profile.LastName, &pseudoNull, &profile.Email, &birthDate, &isprivate)
+	profile.Username = pseudoNull.String
 	if err != nil {
 		return model.FullProfile{}, err
 	}
@@ -57,17 +59,19 @@ func (r *UserRepo) GetFullProfileByID(id int) (model.FullProfile, error) {
 }
 
 func (r *UserRepo) GetProfileByID(id int) (model.MeResponse, error) {
-	var firstname, lastname, pseudo string
+	var firstname, lastname string
+	var pseudoNull sql.NullString
 
 	// Récupération des infos de base
 	err := r.db.QueryRow(`
     SELECT firstname, lastname, pseudo
     FROM users
     WHERE id = $1
-  `, id).Scan(&firstname, &lastname, &pseudo)
+  `, id).Scan(&firstname, &lastname, &pseudoNull)
 	if err != nil {
 		return model.MeResponse{}, err
 	}
+	pseudo := pseudoNull.String
 
 	// Récupération du nombre total de followers pour cet utilisateur
 	var followersCount int

@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/service"
+	ws "social-network/backend/internal/websocket"
 	"strconv"
 	"strings"
 
@@ -15,10 +17,12 @@ type PostAndCommentsHandler struct {
 	UserService    *service.UserService
 	SessionService *service.SessionService
 	PostService    *service.PostAndCommentsService
+	NotifService   *service.NotificationService
+	Hub            *ws.Hub
 }
 
-func NewPostAndCommentsHandler(us *service.UserService, ss *service.SessionService, ps *service.PostAndCommentsService) *PostAndCommentsHandler {
-	return &PostAndCommentsHandler{UserService: us, SessionService: ss, PostService: ps}
+func NewPostAndCommentsHandler(us *service.UserService, ss *service.SessionService, ps *service.PostAndCommentsService, ns *service.NotificationService, hub *ws.Hub) *PostAndCommentsHandler {
+	return &PostAndCommentsHandler{UserService: us, SessionService: ss, PostService: ps, NotifService: ns, Hub: hub}
 }
 
 func (h *PostAndCommentsHandler) PostAndCommentsHandler(w http.ResponseWriter, r *http.Request) {
@@ -175,6 +179,7 @@ func (h *PostAndCommentsHandler) HandleLike(w http.ResponseWriter, r *http.Reque
 			http.Error(w, "Erreur lors de la suppression du like", http.StatusInternalServerError)
 			return
 		}
+		go h.broadcastLikeUpdate(postID, userIDInt)
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
@@ -193,9 +198,57 @@ func (h *PostAndCommentsHandler) HandleLike(w http.ResponseWriter, r *http.Reque
 	}
 
 	if err := h.PostService.LikePost(postID, userIDInt, body.Type); err != nil {
-		http.Error(w, "Erreur lors de l'ajout du like", http.StatusInternalServerError)
+		errStr := err.Error()
+		if strings.Contains(errStr, "foreign key") || strings.Contains(errStr, "violates") {
+			http.Error(w, "Post introuvable", http.StatusNotFound)
+		} else {
+			http.Error(w, "Erreur lors de l'ajout du like", http.StatusInternalServerError)
+		}
 		return
 	}
 
+	go h.broadcastLikeUpdate(postID, userIDInt)
+	go h.sendLikeNotif(postID, userIDInt)
+
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *PostAndCommentsHandler) sendLikeNotif(postID, likerUserID int) {
+	authorIDStr, err := h.PostService.GetPostAuthorID(postID)
+	if err != nil || authorIDStr == "" {
+		return
+	}
+	authorID, err := strconv.ParseInt(authorIDStr, 10, 64)
+	if err != nil || authorID == int64(likerUserID) {
+		return
+	}
+	actor, err := h.UserService.GetProfile(likerUserID)
+	if err != nil {
+		log.Printf("sendLikeNotif: GetProfile(%d) err=%v", likerUserID, err)
+		return
+	}
+	if err := h.NotifService.Notify(authorID, model.NotifPostLike, model.NotificationPayload{
+		ActorName: actor.Username,
+	}); err != nil {
+		log.Printf("sendLikeNotif: Notify err=%v", err)
+	}
+}
+
+func (h *PostAndCommentsHandler) broadcastLikeUpdate(postID, excludeUserID int) {
+	if h.Hub == nil {
+		return
+	}
+	likes, dislikes, err := h.PostService.GetLikeCounts(postID)
+	if err != nil {
+		log.Printf("broadcastLikeUpdate: GetLikeCounts(%d) err=%v", postID, err)
+		return
+	}
+	h.Hub.BroadcastToAll(ws.MessageWs{
+		Type: "post_like_update",
+		Data: map[string]interface{}{
+			"post_id":  postID,
+			"likes":    likes,
+			"dislikes": dislikes,
+		},
+	}, int64(excludeUserID))
 }

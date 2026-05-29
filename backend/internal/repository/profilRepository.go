@@ -46,7 +46,7 @@ func (r *ProfilRepository) GetUserByID(id int) (*model.User, error) {
 // Followers
 func (r *ProfilRepository) GetFollowers(userID int) ([]model.Follower, error) {
 	rows, err := r.db.Query(`
-        SELECT u.ID, u.pseudo
+        SELECT u.ID, COALESCE(u.pseudo, '')
         FROM followers f
         JOIN users u ON u.ID = f.followerID
         WHERE f.followingID = $1 AND f.status = 'accepted'
@@ -74,7 +74,7 @@ func (r *ProfilRepository) GetFollowers(userID int) ([]model.Follower, error) {
 // Following
 func (r *ProfilRepository) GetFollowing(userID int) ([]model.Following, error) {
 	rows, err := r.db.Query(`
-        SELECT u.ID, u.pseudo
+        SELECT u.ID, COALESCE(u.pseudo, '')
         FROM followers f
         JOIN users u ON u.ID = f.followingID
         WHERE f.followerID = $1 AND f.status = 'accepted'

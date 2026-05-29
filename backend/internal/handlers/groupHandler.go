@@ -2,20 +2,25 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"social-network/backend/internal/model"
 	"social-network/backend/internal/service"
+	ws "social-network/backend/internal/websocket"
 )
 
 type GroupHandler struct {
 	GroupService *service.GroupService
 	UserService  *service.UserService
+	NotifService *service.NotificationService
+	Hub          *ws.Hub
 }
 
-func NewGroupHandler(gs *service.GroupService, us *service.UserService) *GroupHandler {
-	return &GroupHandler{GroupService: gs, UserService: us}
+func NewGroupHandler(gs *service.GroupService, us *service.UserService, ns *service.NotificationService, hub *ws.Hub) *GroupHandler {
+	return &GroupHandler{GroupService: gs, UserService: us, NotifService: ns, Hub: hub}
 }
 
 // HandleGroups gère GET /group-chat (liste) et POST /group-chat (création)
@@ -158,7 +163,7 @@ func (h *GroupHandler) HandleGroupPosts(w http.ResponseWriter, r *http.Request) 
 
 	switch r.Method {
 	case http.MethodGet:
-		posts, err := h.GroupService.GetGroupPosts(groupID)
+		posts, err := h.GroupService.GetGroupPosts(groupID, int64(userID))
 		if err != nil {
 			http.Error(w, "erreur serveur", http.StatusInternalServerError)
 			return
@@ -228,7 +233,7 @@ func (h *GroupHandler) HandleGroupPostDetail(w http.ResponseWriter, r *http.Requ
 
 	switch r.Method {
 	case http.MethodGet:
-		post, err := h.GroupService.GetGroupPostByID(groupID, postID)
+		post, err := h.GroupService.GetGroupPostByID(groupID, postID, int64(userID))
 		if err != nil {
 			http.Error(w, "post introuvable", http.StatusNotFound)
 			return
@@ -379,4 +384,93 @@ func (h *GroupHandler) HandleGroupMembers(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(members)
+}
+
+// HandleGroupPostLike gère POST/DELETE /group-chat/{id}/posts/{postId}/like
+func (h *GroupHandler) HandleGroupPostLike(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
+		return
+	}
+
+	postID, err := strconv.ParseInt(r.PathValue("postId"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de post invalide", http.StatusBadRequest)
+		return
+	}
+
+	isMember, err := h.GroupService.IsGroupMember(groupID, int64(userID))
+	if err != nil || !isMember {
+		http.Error(w, "accès non autorisé", http.StatusForbidden)
+		return
+	}
+
+	if r.Method == http.MethodDelete {
+		if err := h.GroupService.RemoveGroupLike(postID, int64(userID)); err != nil {
+			http.Error(w, "erreur serveur", http.StatusInternalServerError)
+			return
+		}
+		go h.broadcastGroupLikeUpdate(postID, userID)
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	var body struct {
+		Type string `json:"type"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || (body.Type != "like" && body.Type != "dislike") {
+		http.Error(w, "type invalide", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.GroupService.AddGroupLike(postID, int64(userID), body.Type); err != nil {
+		http.Error(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	go h.broadcastGroupLikeUpdate(postID, userID)
+	go h.sendGroupLikeNotif(postID, userID)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *GroupHandler) sendGroupLikeNotif(groupPostID int64, likerUserID int) {
+	authorID, err := h.GroupService.GetGroupPostAuthorID(groupPostID)
+	if err != nil || authorID == int64(likerUserID) {
+		return
+	}
+	actor, err := h.UserService.GetProfile(likerUserID)
+	if err != nil {
+		log.Printf("sendGroupLikeNotif: GetProfile(%d) err=%v", likerUserID, err)
+		return
+	}
+	if err := h.NotifService.Notify(authorID, model.NotifPostLike, model.NotificationPayload{
+		ActorName: actor.Username,
+	}); err != nil {
+		log.Printf("sendGroupLikeNotif: Notify err=%v", err)
+	}
+}
+
+func (h *GroupHandler) broadcastGroupLikeUpdate(groupPostID int64, excludeUserID int) {
+	if h.Hub == nil {
+		return
+	}
+	likes, dislikes, err := h.GroupService.GetGroupLikeCounts(groupPostID)
+	if err != nil {
+		log.Printf("broadcastGroupLikeUpdate: GetGroupLikeCounts(%d) err=%v", groupPostID, err)
+		return
+	}
+	h.Hub.BroadcastToAll(ws.MessageWs{
+		Type: "group_post_like_update",
+		Data: map[string]interface{}{
+			"post_id":  groupPostID,
+			"likes":    likes,
+			"dislikes": dislikes,
+		},
+	}, int64(excludeUserID))
 }

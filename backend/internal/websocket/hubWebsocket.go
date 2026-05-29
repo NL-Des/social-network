@@ -91,15 +91,21 @@ func (h *Hub) userIsConnectedLocked(userID int64) bool {
 	return false
 }
 
+// safeWrite envoie data sur ch sans paniquer si le channel est fermé.
+func safeWrite(ch chan []byte, data []byte) {
+	defer func() { recover() }()
+	select {
+	case ch <- data:
+	default:
+	}
+}
+
 func (h *Hub) sendToClient(client *Client, msg MessageWs) {
 	jsonBytes, err := utils.EncodeMessage(msg)
 	if err != nil {
 		return
 	}
-	select {
-	case client.Send <- jsonBytes:
-	default:
-	}
+	safeWrite(client.Send, jsonBytes)
 }
 
 func (h *Hub) BroadcastToAll(message MessageWs, excludeUserID int64) {
@@ -114,10 +120,7 @@ func (h *Hub) BroadcastToAll(message MessageWs, excludeUserID int64) {
 		if client.UserID == excludeUserID {
 			continue
 		}
-		select {
-		case client.Send <- jsonBytes:
-		default:
-		}
+		safeWrite(client.Send, jsonBytes)
 	}
 }
 
@@ -128,10 +131,7 @@ func (h *Hub) BroadcastToUser(userID int64, message MessageWs) {
 	jsonBytes, _ := utils.EncodeMessage(message)
 	for client := range h.Clients {
 		if client.UserID == userID {
-			select {
-			case client.Send <- jsonBytes:
-			default:
-			}
+			safeWrite(client.Send, jsonBytes)
 		}
 	}
 }

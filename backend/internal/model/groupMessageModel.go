@@ -16,6 +16,9 @@ type GroupPost struct {
 	Title     string `json:"title"`
 	Content   string `json:"content"`
 	CreatedAt string `json:"createdAt"`
+	Likes     int    `json:"likes"`
+	Dislikes  int    `json:"dislikes"`
+	UserLike  string `json:"userLike"`
 }
 
 type GroupComment struct {

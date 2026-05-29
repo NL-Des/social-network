@@ -97,11 +97,11 @@ func (r *PostRepo) GetPostAuthorID(postID int) (string, error) {
 func (r *PostRepo) GetAllPosts(viewerID int) ([]model.Post, error) {
 	rows, err := r.db.Query(`
 	SELECT p.id, p.authorid, p.title, p.content, p.privacy, p.createdat, p.updatedat,
-	       u.username, u.avatar,
+	       COALESCE(u.pseudo, ''), COALESCE(u.avatar, ''),
 	       COALESCE(array_agg(t.name) FILTER (WHERE t.name IS NOT NULL), '{}') AS tags,
-	       COALESCE((SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id AND pl.type = 'like'), 0) AS likes,
-	       COALESCE((SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id AND pl.type = 'dislike'), 0) AS dislikes,
-	       COALESCE((SELECT pl.type FROM post_likes pl WHERE pl.post_id = p.id AND pl.user_id = $1), '') AS user_like
+	       COALESCE((SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id AND pl."type" = 'like'), 0) AS likes,
+	       COALESCE((SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id AND pl."type" = 'dislike'), 0) AS dislikes,
+	       COALESCE((SELECT pl."type" FROM post_likes pl WHERE pl.post_id = p.id AND pl.user_id = $1), '') AS user_like
 	FROM posts p
 	JOIN users u ON p.authorid = u.id
 	LEFT JOIN post_tag pt ON pt.postid = p.id
@@ -113,7 +113,8 @@ func (r *PostRepo) GetAllPosts(viewerID int) ([]model.Post, error) {
 	        SELECT 1 FROM followers f
 	        WHERE f.followerid = $1 AND f.followingid = p.authorid AND f.status = 'accepted'
 	    ))
-	GROUP BY p.id, p.authorid, u.username, u.avatar
+	GROUP BY p.id, p.authorid, u.pseudo, u.avatar
+
 	ORDER BY p.createdat DESC
 	`, viewerID)
 	if err != nil {
@@ -145,7 +146,7 @@ func (r *PostRepo) GetAllPosts(viewerID int) ([]model.Post, error) {
 
 func (r *PostRepo) GetPostFromID(postID int) (model.Post, error) {
 	row := r.db.QueryRow(`
-	SELECT p.ID, p.title, p.content, u.username, u.avatar, p.privacy, p.createdat, p.updatedat
+	SELECT p.ID, p.title, p.content, COALESCE(u.pseudo, ''), COALESCE(u.avatar, ''), p.privacy, p.createdat, p.updatedat
 	FROM posts p
 	JOIN users u ON p.authorID = u.ID
 	WHERE p.ID = $1
@@ -166,11 +167,11 @@ func (r *PostRepo) GetPostFromID(postID int) (model.Post, error) {
 * Paramètres : postID, userID, likeType ("like" ou "dislike")
 */
 func (r *PostRepo) AddLike(postID, userID int, likeType string) error {
-	_, err := r.db.Exec(`
-	INSERT INTO post_likes (post_id, user_id, type)
-	VALUES ($1, $2, $3)
-	ON CONFLICT (post_id, user_id) DO UPDATE SET type = $3
-	`, postID, userID, likeType)
+	_, err := r.db.Exec(`DELETE FROM post_likes WHERE post_id = $1 AND user_id = $2`, postID, userID)
+	if err != nil {
+		return err
+	}
+	_, err = r.db.Exec(`INSERT INTO post_likes (post_id, user_id, "type") VALUES ($1, $2, $3)`, postID, userID, likeType)
 	return err
 }
 
@@ -192,9 +193,9 @@ func (r *PostRepo) RemoveLike(postID, userID int) error {
 */
 func (r *PostRepo) GetLikeCounts(postID int) (likes int, dislikes int, err error) {
 	rows, err := r.db.Query(`
-	SELECT type, COUNT(*) FROM post_likes
+	SELECT "type", COUNT(*) FROM post_likes
 	WHERE post_id = $1
-	GROUP BY type
+	GROUP BY "type"
 	`, postID)
 	if err != nil {
 		return 0, 0, err
@@ -223,7 +224,7 @@ func (r *PostRepo) GetLikeCounts(postID int) (likes int, dislikes int, err error
 func (r *PostRepo) GetUserLike(postID, userID int) (string, error) {
 	var likeType string
 	err := r.db.QueryRow(`
-	SELECT type FROM post_likes
+	SELECT "type" FROM post_likes
 	WHERE post_id = $1 AND user_id = $2
 	`, postID, userID).Scan(&likeType)
 	if err == sql.ErrNoRows {

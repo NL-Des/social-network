@@ -29,6 +29,14 @@ func (s *PostAndCommentsService) UnlikePost(postID, userID int) error {
 	return s.postRepo.RemoveLike(postID, userID)
 }
 
+func (s *PostAndCommentsService) GetPostAuthorID(postID int) (string, error) {
+	return s.postRepo.GetPostAuthorID(postID)
+}
+
+func (s *PostAndCommentsService) GetLikeCounts(postID int) (int, int, error) {
+	return s.postRepo.GetLikeCounts(postID)
+}
+
 /*
 * Gère toutes les fonctions pour la création d'un nouveau post
 * 1. Ajout du post dans la base de données puis récupération de son ID

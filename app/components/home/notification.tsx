@@ -13,6 +13,8 @@ export type NotifKind =
   | 'notif_group_join_request'
   | 'notif_group_request_accepted'
   | 'notif_banned_from_group'
+  | 'post_like'
+  | 'unfollow'
 
 export interface BackendNotification {
   id: number
@@ -50,6 +52,10 @@ function formatNotif(n: BackendNotification): { symbol: string; color: string; m
       return { symbol: '✓', color: 'bg-green-500', message: `Votre demande d'accès à « ${group} » a été acceptée.` }
     case 'notif_banned_from_group':
       return { symbol: '✕', color: 'bg-red-600', message: `Vous avez été retiré(e) du groupe « ${group} ».` }
+    case 'post_like':
+      return { symbol: '👍', color: 'bg-blue-500', message: `${actor} a aimé votre publication.` }
+    case 'unfollow':
+      return { symbol: '−', color: 'bg-orange-500', message: `${actor} s'est désabonné(e) de votre profil.` }
     default:
       return { symbol: '•', color: 'bg-gray-600', message: 'Nouvelle notification.' }
   }
@@ -74,15 +80,26 @@ export default function NotificationList({ wsUrl, onUnreadCountChange }: Notific
   const [notifications, setNotifications] = useState<BackendNotification[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Chargement initial
+  // Chargement initial + mark-all-read à l'unmount (seulement si les notifs ont été chargées)
   useEffect(() => {
+    let cancelled = false
+    let loaded = false
+
     fetch('/api/notifications')
       .then((res) => res.ok ? res.json() : [])
       .then((data: BackendNotification[]) => {
+        if (cancelled) return
+        loaded = true
         setNotifications(Array.isArray(data) ? data : [])
         setLoading(false)
       })
-      .catch(() => setLoading(false))
+      .catch(() => { if (!cancelled) setLoading(false) })
+
+    return () => {
+      cancelled = true
+      // Ne marque comme lu que si on a vraiment affiché les notifs
+      if (loaded) fetch('/api/notifications/read', { method: 'PATCH' }).catch(() => {})
+    }
   }, [])
 
   // Remontée du badge au parent
@@ -93,13 +110,13 @@ export default function NotificationList({ wsUrl, onUnreadCountChange }: Notific
 
   // Push WS : nouvelle notification entrante
   const handleWsMessage = useCallback((data: unknown) => {
-    const msg = data as { type?: string; kind?: string; payload?: BackendNotification['payload'] }
+    const msg = data as { type?: string; data?: { kind?: string; payload?: BackendNotification['payload'] } }
     if (msg.type === 'notification') {
       const fake: BackendNotification = {
         id:          Date.now(),
         receiver_id: 0,
-        kind:        (msg.kind || 'follow_request') as NotifKind,
-        payload:     msg.payload ?? {},
+        kind:        (msg.data?.kind ?? 'follow_request') as NotifKind,
+        payload:     msg.data?.payload ?? {},
         read:        false,
         created_at:  new Date().toISOString(),
       }
@@ -108,18 +125,6 @@ export default function NotificationList({ wsUrl, onUnreadCountChange }: Notific
   }, [])
 
   useWebSocket(wsUrl ?? null, handleWsMessage)
-
-  function markRead(id: number) {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    )
-    fetch(`/api/notifications/${id}/read`, { method: 'PATCH' }).catch(() => {})
-  }
-
-  function markAllRead() {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-    fetch('/api/notifications/read', { method: 'PATCH' }).catch(() => {})
-  }
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
@@ -139,32 +144,19 @@ export default function NotificationList({ wsUrl, onUnreadCountChange }: Notific
             </span>
           )}
         </div>
-        {unreadCount > 0 && (
-          <button
-            onClick={markAllRead}
-            className="text-brand-text text-sm hover:text-white transition-colors"
-          >
-            Tout marquer comme lu
-          </button>
-        )}
       </div>
 
       {/* Liste */}
       <div className="flex flex-col gap-3 max-h-96 overflow-y-auto pr-1">
-        {notifications.length === 0 ? (
+        {notifications.filter((n) => !n.read).length === 0 ? (
           <p className="text-brand-text/60 text-sm text-center py-4">Aucune notification.</p>
         ) : (
-          notifications.slice(0, 10).map((n) => {
+          notifications.filter((n) => !n.read).slice(0, 10).map((n) => {
             const { symbol, color, message } = formatNotif(n)
             return (
-              <button
+              <div
                 key={n.id}
-                onClick={() => markRead(n.id)}
-                className={`flex items-start gap-4 p-4 rounded-2xl border transition-all text-left w-full ${
-                  n.read
-                    ? 'bg-brand-card border-brand-border/30 hover:border-brand-border/60'
-                    : 'bg-brand-card border-brand-border shadow-[0_0_10px_rgba(73,199,255,0.2)]'
-                }`}
+                className="flex items-start gap-4 p-4 rounded-2xl border border-brand-border shadow-[0_0_10px_rgba(73,199,255,0.2)] bg-brand-card w-full"
               >
                 {/* Badge type */}
                 <span
@@ -179,11 +171,8 @@ export default function NotificationList({ wsUrl, onUnreadCountChange }: Notific
                   <p className="text-brand-text/50 text-xs mt-1">{formatDate(n.created_at)}</p>
                 </div>
 
-                {/* Point non-lu */}
-                {!n.read && (
-                  <span className="shrink-0 w-2 h-2 rounded-full bg-brand-border mt-1" />
-                )}
-              </button>
+                <span className="shrink-0 w-2 h-2 rounded-full bg-brand-border mt-1" />
+              </div>
             )
           })
         )}

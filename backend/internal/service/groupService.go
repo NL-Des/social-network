@@ -43,16 +43,32 @@ func (s *GroupService) LeaveGroup(groupID, userID int64) error {
 	return s.repo.LeaveGroup(groupID, userID)
 }
 
-func (s *GroupService) GetGroupPosts(groupID int64) ([]model.GroupPost, error) {
-	return s.repo.GetGroupPosts(groupID)
+func (s *GroupService) GetGroupPosts(groupID, viewerID int64) ([]model.GroupPost, error) {
+	return s.repo.GetGroupPosts(groupID, viewerID)
 }
 
 func (s *GroupService) CreateGroupPost(groupID, authorID int64, title, content string) error {
 	return s.repo.CreateGroupPost(groupID, authorID, title, content)
 }
 
-func (s *GroupService) GetGroupPostByID(groupID, postID int64) (model.GroupPost, error) {
-	return s.repo.GetGroupPostByID(groupID, postID)
+func (s *GroupService) GetGroupPostByID(groupID, postID, viewerID int64) (model.GroupPost, error) {
+	return s.repo.GetGroupPostByID(groupID, postID, viewerID)
+}
+
+func (s *GroupService) AddGroupLike(groupPostID, userID int64, likeType string) error {
+	return s.repo.AddGroupLike(groupPostID, userID, likeType)
+}
+
+func (s *GroupService) RemoveGroupLike(groupPostID, userID int64) error {
+	return s.repo.RemoveGroupLike(groupPostID, userID)
+}
+
+func (s *GroupService) GetGroupLikeCounts(groupPostID int64) (int, int, error) {
+	return s.repo.GetGroupLikeCounts(groupPostID)
+}
+
+func (s *GroupService) GetGroupPostAuthorID(groupPostID int64) (int64, error) {
+	return s.repo.GetGroupPostAuthorID(groupPostID)
 }
 
 func (s *GroupService) DeleteGroupPost(postID, authorID int64) error {

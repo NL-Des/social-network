@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import HeaderGroup from '@/app/components/home/HeaderGroup'
 import { CurrentUser } from '@/app/components/home/Header'
@@ -18,7 +18,7 @@ function getInitials(name: string): string {
   return name.split(/[._\s-]/).map((w) => w[0]?.toUpperCase() ?? '').join('').slice(0, 2) || '?'
 }
 
-export default function GroupPostPage() {
+function GroupPostContent() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const postId       = searchParams.get('id')   ?? ''
@@ -139,5 +139,13 @@ export default function GroupPostPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function GroupPostPage() {
+  return (
+    <Suspense>
+      <GroupPostContent />
+    </Suspense>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import HeaderPost from '@/app/components/home/HeaderPost'
 import { CurrentUser } from '@/app/components/home/Header'
@@ -48,7 +48,7 @@ function formatDate(iso: string): string {
   }
 }
 
-export default function PostPage() {
+function PostContent() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const postId       = searchParams.get('id')
@@ -140,4 +140,8 @@ export default function PostPage() {
       </div>
     </div>
   )
+}
+
+export default function PostPage() {
+  return <Suspense><PostContent /></Suspense>
 }

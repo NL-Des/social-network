@@ -52,6 +52,7 @@ services:
             - postgres-data:/var/lib/postgresql
 
     backend:
+        profiles: [prod]
         build:
             context: ./backend
             dockerfile: Dockerfile
@@ -69,6 +70,7 @@ services:
             - ./public:/root/public
 
     frontend:
+        profiles: [prod]
         build:
             context: .
             dockerfile: Dockerfile

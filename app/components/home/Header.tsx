@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import NotificationList from './notification'
+import { useWebSocket } from '@/lib/useWebSocket'
 import { logoutAction } from '@/app/auth/logout/actions'
 
 export interface CurrentUser {
@@ -21,8 +22,38 @@ const NAV_LINKS = [
 
 export default function Header({ user }: { user: CurrentUser }) {
   const pathname = usePathname()
-  const [notifOpen, setNotifOpen] = useState(false)
+  const [notifOpen, setNotifOpen]   = useState(false)
+  const [wsUrl, setWsUrl]           = useState<string | null>(null)
+  const [badge, setBadge]           = useState(0)
   const notifRef = useRef<HTMLDivElement>(null)
+  const wasOpen  = useRef(false)
+
+  // Récupère le token WS une seule fois
+  useEffect(() => {
+    fetch('/api/ws-token')
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => { if (data?.token) setWsUrl(`ws://localhost:5090/ws?token=${data.token}`) })
+      .catch(() => {})
+  }, [])
+
+  // Compte initial des notifs non lues
+  useEffect(() => {
+    fetch('/api/notifications')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: { read: boolean }[]) => {
+        setBadge(Array.isArray(data) ? data.filter((n) => !n.read).length : 0)
+      })
+      .catch(() => {})
+  }, [])
+
+  // WS persistant : incrémente le badge quand une notif arrive (panel fermé ou ouvert)
+  const handleWsMessage = useCallback((data: unknown) => {
+    const msg = data as { type?: string }
+    if (msg.type === 'notification') {
+      setBadge((prev) => prev + 1)
+    }
+  }, [])
+  useWebSocket(wsUrl, handleWsMessage)
 
   // Ferme le panneau si on clique en dehors
   useEffect(() => {
@@ -33,6 +64,12 @@ export default function Header({ user }: { user: CurrentUser }) {
     }
     if (notifOpen) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [notifOpen])
+
+  // Reset badge quand le panel se ferme
+  useEffect(() => {
+    if (wasOpen.current && !notifOpen) setBadge(0)
+    wasOpen.current = notifOpen
   }, [notifOpen])
 
   return (
@@ -56,7 +93,7 @@ export default function Header({ user }: { user: CurrentUser }) {
               key={link.href}
               href={link.href}
               className={`text-white hover:text-brand-text transition-colors text-lg px-5 py-2 rounded-lg ${
-                pathname === link.href || (link.href === '/groupes' && pathname.startsWith('/inside-groups'))
+                !notifOpen && (pathname === link.href || (link.href === '/groupes' && pathname.startsWith('/inside-groups')))
                   ? 'border border-brand-border shadow-[0_0_12px_rgba(73,199,255,0.6)]'
                   : ''
               }`}
@@ -65,22 +102,23 @@ export default function Header({ user }: { user: CurrentUser }) {
             </Link>
           ))}
 
-          {/* Bouton Notifications + panneau déroulant */}
+          {/* Bouton Notifications + badge + panneau */}
           <div ref={notifRef} className="relative">
             <button
               onClick={() => setNotifOpen((o) => !o)}
-              className={`text-white hover:text-brand-text transition-colors text-lg px-5 py-2 rounded-lg ${
-                notifOpen
-                  ? 'border border-brand-border shadow-[0_0_12px_rgba(73,199,255,0.6)]'
-                  : ''
+              className={`relative text-white hover:text-brand-text transition-colors text-lg px-5 py-2 rounded-lg ${
+                notifOpen ? 'border border-brand-border shadow-[0_0_12px_rgba(73,199,255,0.6)]' : ''
               }`}
             >
               Notifications
+              {badge > 0 && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-purple-500 border-2 border-brand-card" />
+              )}
             </button>
 
             {notifOpen && (
               <div className="absolute right-0 top-[calc(100%+12px)] w-[420px] max-h-[70vh] overflow-y-auto bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5">
-                <NotificationList />
+                <NotificationList wsUrl={wsUrl} />
               </div>
             )}
           </div>

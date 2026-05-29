@@ -140,15 +140,18 @@ func (r *GroupRepo) IsGroupMember(groupID, userID int64) (bool, error) {
 	return count > 0, err
 }
 
-func (r *GroupRepo) GetGroupPosts(groupID int64) ([]model.GroupPost, error) {
+func (r *GroupRepo) GetGroupPosts(groupID, viewerID int64) ([]model.GroupPost, error) {
 	rows, err := r.db.Query(`
 		SELECT gp.id, gp.title, gp.content, gp.createdat,
-		       u.pseudo, COALESCE(u.avatar, '')
+		       COALESCE(u.pseudo, ''), COALESCE(u.avatar, ''),
+		       COALESCE((SELECT COUNT(*) FROM group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'like'), 0),
+		       COALESCE((SELECT COUNT(*) FROM group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'dislike'), 0),
+		       COALESCE((SELECT l."type" FROM group_post_likes l WHERE l.group_post_id = gp.id AND l.user_id = $2), '')
 		FROM group_posts gp
 		JOIN users u ON gp.authorid = u.id
 		WHERE gp.groupid = $1
 		ORDER BY gp.createdat DESC
-	`, groupID)
+	`, groupID, viewerID)
 	if err != nil {
 		return nil, err
 	}
@@ -158,13 +161,58 @@ func (r *GroupRepo) GetGroupPosts(groupID int64) ([]model.GroupPost, error) {
 	for rows.Next() {
 		var p model.GroupPost
 		var createdAt time.Time
-		if err := rows.Scan(&p.ID, &p.Title, &p.Content, &createdAt, &p.Author.Username, &p.Author.ProfilePicture); err != nil {
+		if err := rows.Scan(&p.ID, &p.Title, &p.Content, &createdAt, &p.Author.Username, &p.Author.ProfilePicture, &p.Likes, &p.Dislikes, &p.UserLike); err != nil {
 			return nil, err
 		}
 		p.CreatedAt = createdAt.Format(time.RFC3339)
 		posts = append(posts, p)
 	}
 	return posts, rows.Err()
+}
+
+func (r *GroupRepo) AddGroupLike(groupPostID, userID int64, likeType string) error {
+	_, err := r.db.Exec(`DELETE FROM group_post_likes WHERE group_post_id = $1 AND user_id = $2`, groupPostID, userID)
+	if err != nil {
+		return err
+	}
+	_, err = r.db.Exec(`INSERT INTO group_post_likes (group_post_id, user_id, "type") VALUES ($1, $2, $3)`, groupPostID, userID, likeType)
+	return err
+}
+
+func (r *GroupRepo) RemoveGroupLike(groupPostID, userID int64) error {
+	_, err := r.db.Exec(`DELETE FROM group_post_likes WHERE group_post_id = $1 AND user_id = $2`, groupPostID, userID)
+	return err
+}
+
+func (r *GroupRepo) GetGroupPostAuthorID(groupPostID int64) (int64, error) {
+	var authorID int64
+	err := r.db.QueryRow(`SELECT authorid FROM group_posts WHERE id = $1`, groupPostID).Scan(&authorID)
+	return authorID, err
+}
+
+func (r *GroupRepo) GetGroupLikeCounts(groupPostID int64) (likes int, dislikes int, err error) {
+	rows, err := r.db.Query(`
+		SELECT "type", COUNT(*) FROM group_post_likes
+		WHERE group_post_id = $1
+		GROUP BY "type"
+	`, groupPostID)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var t string
+		var count int
+		if err := rows.Scan(&t, &count); err != nil {
+			continue
+		}
+		if t == "like" {
+			likes = count
+		} else {
+			dislikes = count
+		}
+	}
+	return likes, dislikes, rows.Err()
 }
 
 func (r *GroupRepo) CreateGroupPost(groupID, authorID int64, title, content string) error {
@@ -175,16 +223,19 @@ func (r *GroupRepo) CreateGroupPost(groupID, authorID int64, title, content stri
 	return err
 }
 
-func (r *GroupRepo) GetGroupPostByID(groupID, postID int64) (model.GroupPost, error) {
+func (r *GroupRepo) GetGroupPostByID(groupID, postID, viewerID int64) (model.GroupPost, error) {
 	var p model.GroupPost
 	var createdAt time.Time
 	err := r.db.QueryRow(`
 		SELECT gp.id, gp.title, gp.content, gp.createdat,
-		       u.pseudo, COALESCE(u.avatar, '')
+		       COALESCE(u.pseudo, ''), COALESCE(u.avatar, ''),
+		       COALESCE((SELECT COUNT(*) FROM group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'like'), 0),
+		       COALESCE((SELECT COUNT(*) FROM group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'dislike'), 0),
+		       COALESCE((SELECT l."type" FROM group_post_likes l WHERE l.group_post_id = gp.id AND l.user_id = $3), '')
 		FROM group_posts gp
 		JOIN users u ON gp.authorid = u.id
 		WHERE gp.id = $1 AND gp.groupid = $2
-	`, postID, groupID).Scan(&p.ID, &p.Title, &p.Content, &createdAt, &p.Author.Username, &p.Author.ProfilePicture)
+	`, postID, groupID, viewerID).Scan(&p.ID, &p.Title, &p.Content, &createdAt, &p.Author.Username, &p.Author.ProfilePicture, &p.Likes, &p.Dislikes, &p.UserLike)
 	if err != nil {
 		return model.GroupPost{}, err
 	}

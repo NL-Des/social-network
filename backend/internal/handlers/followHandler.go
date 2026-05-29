@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
+	"social-network/backend/internal/model"
 	"social-network/backend/internal/service"
 
 	"github.com/gorilla/mux"
@@ -12,10 +14,12 @@ import (
 
 type FollowHandler struct {
 	FollowService *service.FollowService
+	UserService   *service.UserService
+	NotifService  *service.NotificationService
 }
 
-func NewFollowHandler(s *service.FollowService) *FollowHandler {
-	return &FollowHandler{FollowService: s}
+func NewFollowHandler(s *service.FollowService, us *service.UserService, ns *service.NotificationService) *FollowHandler {
+	return &FollowHandler{FollowService: s, UserService: us, NotifService: ns}
 }
 
 // POST /users/{id}/follow
@@ -65,6 +69,18 @@ func (h *FollowHandler) Unfollow(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+
+	go func() {
+		actor, err := h.UserService.GetProfile(viewerID)
+		if err != nil {
+			return
+		}
+		if err := h.NotifService.Notify(int64(targetID), model.NotifUnfollow, model.NotificationPayload{
+			ActorName: actor.Username,
+		}); err != nil {
+			log.Printf("unfollow notif: %v", err)
+		}
+	}()
 
 	w.WriteHeader(http.StatusNoContent)
 }

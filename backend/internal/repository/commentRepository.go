@@ -85,7 +85,7 @@ func (r *CommentRepo) GetCommentAuthorID(commentID int) (string, error) {
 */
 func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error) {
 	rows, err := r.db.Query(
-		`SELECT c.ID, c.content, c.createdat, c.updatedat, u.username, u.avatar
+		`SELECT c.ID, c.content, c.createdat, c.updatedat, COALESCE(u.pseudo, ''), COALESCE(u.avatar, '')
 		FROM comments c
 		JOIN users u ON c.authorID = u.ID
 		WHERE c.postID = $1

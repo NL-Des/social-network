@@ -11,6 +11,7 @@ export interface Post {
   likes?: number
   dislikes?: number
   userLike?: string
+  groupId?: string
 }
 
 import Link from 'next/link'
@@ -145,16 +146,23 @@ export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) 
   )
 }
 
-function LikeButtons({ postId, initialLikes, initialDislikes, initialUserLike }: {
+function LikeButtons({ postId, initialLikes, initialDislikes, initialUserLike, apiBase }: {
   postId: string
   initialLikes: number
   initialDislikes: number
   initialUserLike: string
+  apiBase: string
 }) {
   const [likes, setLikes] = useState(initialLikes)
   const [dislikes, setDislikes] = useState(initialDislikes)
   const [userLike, setUserLike] = useState(initialUserLike)
   const [pending, setPending] = useState(false)
+
+  // Sync les compteurs depuis le parent (mise à jour WS) — userLike exclu (géré localement)
+  useEffect(() => {
+    setLikes(initialLikes)
+    setDislikes(initialDislikes)
+  }, [initialLikes, initialDislikes])
 
   async function handleVote(type: 'like' | 'dislike') {
     if (pending) return
@@ -170,7 +178,7 @@ function LikeButtons({ postId, initialLikes, initialDislikes, initialUserLike }:
       setLikes(type === 'like' ? likes - 1 : likes)
       setDislikes(type === 'dislike' ? dislikes - 1 : dislikes)
       try {
-        await fetch(`/api/posts/${postId}/like`, { method: 'DELETE' })
+        await fetch(`${apiBase}/${postId}/like`, { method: 'DELETE' })
       } catch {
         setLikes(prevLikes)
         setDislikes(prevDislikes)
@@ -183,7 +191,7 @@ function LikeButtons({ postId, initialLikes, initialDislikes, initialUserLike }:
       setLikes(type === 'like' ? likes + 1 : (wasOther && prevUserLike === 'like' ? likes - 1 : likes))
       setDislikes(type === 'dislike' ? dislikes + 1 : (wasOther && prevUserLike === 'dislike' ? dislikes - 1 : dislikes))
       try {
-        await fetch(`/api/posts/${postId}/like`, {
+        await fetch(`${apiBase}/${postId}/like`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type }),
@@ -209,7 +217,7 @@ function LikeButtons({ postId, initialLikes, initialDislikes, initialUserLike }:
             : 'text-brand-text/60 hover:text-brand-text border border-transparent hover:border-brand-border/40'
         } disabled:opacity-50`}
       >
-        <span>+1</span>
+        <span>👍</span>
         <span>{likes}</span>
       </button>
       <button
@@ -221,7 +229,7 @@ function LikeButtons({ postId, initialLikes, initialDislikes, initialUserLike }:
             : 'text-brand-text/60 hover:text-brand-text border border-transparent hover:border-brand-border/40'
         } disabled:opacity-50`}
       >
-        <span>-1</span>
+        <span>👎</span>
         <span>{dislikes}</span>
       </button>
     </div>
@@ -240,12 +248,15 @@ const postCardBody = (post: Post) => (
       <p className="font-bold text-brand-text text-base mb-2">{post.title}</p>
     )}
     <p className="text-brand-text text-lg leading-7 whitespace-pre-line">{post.content}</p>
-    <LikeButtons
-      postId={post.id}
-      initialLikes={post.likes ?? 0}
-      initialDislikes={post.dislikes ?? 0}
-      initialUserLike={post.userLike ?? ''}
-    />
+    {post.likes !== undefined && (
+      <LikeButtons
+        postId={post.id}
+        initialLikes={post.likes ?? 0}
+        initialDislikes={post.dislikes ?? 0}
+        initialUserLike={post.userLike ?? ''}
+        apiBase={post.groupId ? `/api/group-posts/${post.groupId}` : '/api/posts'}
+      />
+    )}
   </>
 )
 

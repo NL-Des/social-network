@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import HeaderGroup from '@/app/components/home/HeaderGroup'
 import { fetchMe } from '@/lib/fetchMe'
@@ -9,6 +9,7 @@ import LeftSidebarGroupListOfUsers, { SidebarUser } from '@/app/components/home/
 import RightSidebarGroupListOfConversations, { Conversation } from '@/app/components/home/RightSidebarGroupListOfConversations'
 import PostCard, { Post, CreatePostButton } from '@/app/components/home/PostCard'
 import GroupComments from '@/app/components/home/GroupComments'
+import { useWebSocket } from '@/lib/useWebSocket'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -18,6 +19,9 @@ interface ApiGroupPost {
   title: string
   content: string
   createdAt: string
+  likes: number
+  dislikes: number
+  userLike: string
 }
 
 interface ApiGroupMember {
@@ -33,7 +37,7 @@ function getInitials(name: string): string {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function InsideGroupPage() {
+function InsideGroupContent() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const groupId      = searchParams.get('id') ?? ''
@@ -47,6 +51,7 @@ export default function InsideGroupPage() {
   const [selectedPost, setSelectedPost] = useState<ApiGroupPost | null>(null)
   const [deleting, setDeleting]     = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [wsUrl, setWsUrl]           = useState<string | null>(null)
 
   useEffect(() => {
     fetchMe()
@@ -57,6 +62,25 @@ export default function InsideGroupPage() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [router])
+
+  useEffect(() => {
+    fetch('/api/ws-token')
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => { if (data?.token) setWsUrl(`ws://localhost:5090/ws?token=${data.token}`) })
+      .catch(() => {})
+  }, [])
+
+  const handleWsMessage = useCallback((data: unknown) => {
+    const msg = data as { type?: string; data?: { post_id?: number; likes?: number; dislikes?: number } }
+    if (msg.type === 'group_post_like_update' && msg.data) {
+      const { post_id, likes, dislikes } = msg.data
+      setPosts((prev) => prev.map((p) =>
+        p.id === String(post_id) ? { ...p, likes, dislikes } : p
+      ))
+    }
+  }, [])
+
+  useWebSocket(wsUrl, handleWsMessage)
 
   useEffect(() => {
     if (!groupId) return
@@ -88,10 +112,14 @@ export default function InsideGroupPage() {
       .then((data: ApiGroupPost[]) => {
         setPosts(
           (data ?? []).map((p) => ({
-            id:      String(p.id),
-            author:  { name: p.author.username, initials: getInitials(p.author.username) },
-            title:   p.title,
-            content: p.content,
+            id:       String(p.id),
+            author:   { name: p.author.username, initials: getInitials(p.author.username) },
+            title:    p.title,
+            content:  p.content,
+            likes:    p.likes,
+            dislikes: p.dislikes,
+            userLike: p.userLike,
+            groupId:  groupId,
           }))
         )
       })
@@ -99,7 +127,8 @@ export default function InsideGroupPage() {
   }, [groupId])
 
   useEffect(() => {
-    if (user) fetchPosts()
+    if (!user) return
+    fetchPosts()
   }, [user, fetchPosts])
 
   function handleSelectPost(postId: string) {
@@ -235,4 +264,8 @@ export default function InsideGroupPage() {
       </div>
     </div>
   )
+}
+
+export default function InsideGroupPage() {
+  return <Suspense><InsideGroupContent /></Suspense>
 }

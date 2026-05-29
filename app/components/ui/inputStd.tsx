@@ -1,4 +1,11 @@
-export default function InputStd({type, placeholder, name, className}) {
+interface InputStdProps {
+  type: string
+  placeholder: string
+  name: string
+  className?: string
+}
+
+export default function InputStd({ type, placeholder, name, className }: InputStdProps) {
   return (
     <input
       type={type}
