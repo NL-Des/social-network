@@ -7,7 +7,7 @@ export async function GET() {
   if (!sessionToken) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
   try {
-    const res = await fetch('http://localhost:5090/notifications', {
+    const res = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/notifications`, {
       headers: { Cookie: `session_token=${sessionToken.value}` },
     })
     if (!res.ok) return NextResponse.json({ error: 'Failed' }, { status: res.status })

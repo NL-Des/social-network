@@ -11,7 +11,7 @@ export async function DELETE(_req: Request, { params }: Context) {
 
   try {
     const res = await fetch(
-      `http://localhost:5090/group-chat/${id}/posts/${postId}/comments/${commentId}`,
+      `${process.env.BACKEND_URL ?? 'http://localhost:5090'}/group-chat/${id}/posts/${postId}/comments/${commentId}`,
       {
         method: 'DELETE',
         headers: { Cookie: `session_token=${sessionToken.value}` },

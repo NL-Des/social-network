@@ -11,7 +11,7 @@ export async function PATCH(request: Request) {
 
   const body = await request.json();
 
-  const response = await fetch("http://localhost:5090/me/profile/visibility", {
+  const response = await fetch(`${process.env.BACKEND_URL ?? "http://localhost:5090"}/me/profile/visibility`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",

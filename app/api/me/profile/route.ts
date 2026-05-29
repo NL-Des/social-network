@@ -11,7 +11,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const res = await fetch('http://localhost:5090/me/profile', {
+    const res = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/me/profile`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

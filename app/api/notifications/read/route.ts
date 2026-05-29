@@ -7,7 +7,7 @@ export async function PATCH() {
   if (!sessionToken) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
   try {
-    const res = await fetch('http://localhost:5090/notifications/read', {
+    const res = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/notifications/read`, {
       method: 'PATCH',
       headers: { Cookie: `session_token=${sessionToken.value}` },
     })

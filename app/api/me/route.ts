@@ -9,7 +9,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  const response = await fetch('http://localhost:5090/me/profile', {
+  const response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/me/profile`, {
     headers: { Cookie: `session_token=${sessionToken.value}` },
   })
 

@@ -14,7 +14,7 @@ export async function DELETE(
   }
 
   try {
-    const res = await fetch(`http://localhost:5090/users/${id}/follow/reject`, {
+    const res = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/users/${id}/follow/reject`, {
       method: 'DELETE',
       headers: { Cookie: `session_token=${sessionToken.value}` },
     })

@@ -16,7 +16,7 @@ export async function POST(
   const body = await request.json()
 
   try {
-    const response = await fetch(`http://localhost:5090/posts/${id}/like`, {
+    const response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/posts/${id}/like`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ export async function DELETE(
   const { id } = await params
 
   try {
-    const response = await fetch(`http://localhost:5090/posts/${id}/like`, {
+    const response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/posts/${id}/like`, {
       method: 'DELETE',
       headers: { Cookie: `session_token=${sessionToken.value}` },
     })

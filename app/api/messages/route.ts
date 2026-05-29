@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const response = await fetch(`http://localhost:5090/messages?with=${withId}`, {
+    const response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/messages?with=${withId}`, {
       headers: { Cookie: `session_token=${sessionToken.value}` },
     })
 

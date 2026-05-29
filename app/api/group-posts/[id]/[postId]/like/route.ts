@@ -12,7 +12,7 @@ export async function POST(request: NextRequest, { params }: Params) {
   const body = await request.json()
 
   try {
-    const response = await fetch(`http://localhost:5090/group-chat/${id}/posts/${postId}/like`, {
+    const response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/group-chat/${id}/posts/${postId}/like`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Cookie: `session_token=${sessionToken.value}` },
       body: JSON.stringify(body),
@@ -35,7 +35,7 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
   const { id, postId } = await params
 
   try {
-    const response = await fetch(`http://localhost:5090/group-chat/${id}/posts/${postId}/like`, {
+    const response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/group-chat/${id}/posts/${postId}/like`, {
       method: 'DELETE',
       headers: { Cookie: `session_token=${sessionToken.value}` },
     })

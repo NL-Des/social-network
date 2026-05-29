@@ -13,7 +13,7 @@ export async function DELETE(
   const body = await request.json().catch(() => ({}))
 
   try {
-    const res = await fetch(`http://localhost:5090/group-chat/${id}/leave`, {
+    const res = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/group-chat/${id}/leave`, {
       method: 'DELETE',
       headers: {
         Cookie: `session_token=${sessionToken.value}`,

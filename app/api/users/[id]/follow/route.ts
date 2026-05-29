@@ -13,7 +13,7 @@ export async function POST(
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
 
-  const response = await fetch(`http://localhost:5090/users/${id}/follow`, {
+  const response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/users/${id}/follow`, {
     method: "POST",
     headers: { Cookie: `session_token=${sessionToken.value}` },
   });
@@ -37,7 +37,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
 
-  const response = await fetch(`http://localhost:5090/users/${id}/follow`, {
+  const response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/users/${id}/follow`, {
     method: "DELETE",
     headers: { Cookie: `session_token=${sessionToken.value}` },
   });

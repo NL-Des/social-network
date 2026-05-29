@@ -8,7 +8,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (!sessionToken) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
   try {
-    const res = await fetch(`http://localhost:5090/group-chat/${id}/posts`, {
+    const res = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/group-chat/${id}/posts`, {
       headers: { Cookie: `session_token=${sessionToken.value}` },
     })
     if (!res.ok) return NextResponse.json({ error: 'Failed' }, { status: res.status })
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   try {
     const body = await request.json()
-    const res = await fetch(`http://localhost:5090/group-chat/${id}/posts`, {
+    const res = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/group-chat/${id}/posts`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

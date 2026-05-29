@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers'
 import { NextResponse, NextRequest } from 'next/server'
 
+const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:5090'
+
 export async function GET(request: NextRequest) {
   const cookieStore = await cookies()
   const sessionToken = cookieStore.get('session_token')
@@ -10,9 +12,7 @@ export async function GET(request: NextRequest) {
   }
 
   const id = request.nextUrl.searchParams.get('id')
-  const url = id
-    ? `http://localhost:5090/posts?id=${id}`
-    : 'http://localhost:5090/posts'
+  const url = id ? `${BACKEND}/posts?id=${id}` : `${BACKEND}/posts`
 
   try {
     const response = await fetch(url, {

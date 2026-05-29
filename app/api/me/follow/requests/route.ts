@@ -10,7 +10,7 @@ export async function GET() {
   }
 
   try {
-    const res = await fetch('http://localhost:5090/me/follow/requests', {
+    const res = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/me/follow/requests`, {
       headers: { Cookie: `session_token=${sessionToken.value}` },
     })
     if (!res.ok) return NextResponse.json({ error: 'Erreur' }, { status: res.status })

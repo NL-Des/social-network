@@ -10,7 +10,7 @@ export async function GET() {
   }
 
   try {
-    const response = await fetch('http://localhost:5090/conversations', {
+    const response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/conversations`, {
       headers: { Cookie: `session_token=${sessionToken.value}` },
     })
 

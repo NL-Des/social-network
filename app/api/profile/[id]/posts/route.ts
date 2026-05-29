@@ -15,7 +15,7 @@ export async function GET(
   const { id } = await params
 
   try {
-    const response = await fetch(`http://localhost:5090/users/${id}/posts`, {
+    const response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/users/${id}/posts`, {
       headers: { Cookie: `session_token=${sessionToken.value}` },
     })
 

@@ -14,7 +14,7 @@ export async function PATCH(
   }
 
   try {
-    const res = await fetch(`http://localhost:5090/users/${id}/follow/accept`, {
+    const res = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/users/${id}/follow/accept`, {
       method: 'PATCH',
       headers: { Cookie: `session_token=${sessionToken.value}` },
     })
