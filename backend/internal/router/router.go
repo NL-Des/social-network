@@ -10,10 +10,8 @@ import (
 )
 
 func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, followHandler *handlers.FollowHandler, auth *middleware.AuthMiddleware) http.Handler {
-
 	router := mux.NewRouter()
 
-	// Routes profil
 	router.Handle("/users/{id}/profile",
 		auth.RequireAuth(http.HandlerFunc(profilHandler.GetProfile)),
 	).Methods("GET")

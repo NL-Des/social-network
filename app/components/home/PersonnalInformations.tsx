@@ -7,6 +7,13 @@ interface PersonnalInformationsProps {
   user: UserProfile
 }
 
+function formatDate(raw: string): string {
+  if (!raw) return ''
+  const d = new Date(raw)
+  if (isNaN(d.getTime())) return raw
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
 export default function PersonnalInformations({ user }: PersonnalInformationsProps) {
   const [formOpen, setFormOpen] = useState(false)
   const [oldPassword, setOldPassword] = useState('')
@@ -25,7 +32,7 @@ export default function PersonnalInformations({ user }: PersonnalInformationsPro
   }, [formOpen])
 
   return (
-    <div className="relative bg-brand-card border border-brand-border rounded-2xl p-12 flex flex-col justify-between">
+    <div className="relative bg-brand-card border border-brand-border rounded-2xl p-6 flex flex-col justify-between">
       <div>
         <h2 className="font-bold text-[#49C7FF] text-base mb-5 text-center">
           Informations personnelle
@@ -35,7 +42,7 @@ export default function PersonnalInformations({ user }: PersonnalInformationsPro
             { label: 'Nom', value: user.lastName },
             { label: 'Prénom', value: user.firstName },
             { label: 'Adresse mail', value: user.email },
-            { label: 'Date de naissance', value: user.birthDate },
+            { label: 'Date de naissance', value: formatDate(user.birthDate) },
           ].map(({ label, value }) => (
             <div key={label} className="flex gap-2">
               <dt className="text-brand-border">{label}:</dt>
@@ -45,14 +52,7 @@ export default function PersonnalInformations({ user }: PersonnalInformationsPro
         </dl>
       </div>
 
-      <div className="flex gap-3 mt-5">
-        <button className="flex-1 py-2 px-4 rounded-lg border border-brand-border text-brand-text text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95">
-          S&apos;Abonner
-        </button>
-        <button className="flex-1 py-2 px-4 rounded-lg border border-brand-border text-brand-text text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95">
-          Se Désabonner
-        </button>
-      </div>
+
 
       <div ref={formRef} className="relative mt-3">
         <button

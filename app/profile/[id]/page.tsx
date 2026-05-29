@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Header, { CurrentUser } from "@/app/components/home/Header";
+import { fetchMe } from "@/lib/fetchMe";
 import RightSidebar, { Group, SidebarUser } from "@/app/components/home/RightSidebar";
 import type { ProfilePageProps, Contact } from "@/app/profile/actions";
 
@@ -110,18 +111,18 @@ function PublicProfileContent({
       <Header user={headerUser} />
 
       <div className="pt-[104px] flex-1 overflow-hidden px-4 pb-4">
-        <div className="grid grid-cols-[1fr_264px] gap-15 pt-4 h-full">
-          <div className="flex flex-col gap-15 h-full">
-            <div className="flex-1 grid grid-cols-[auto_1fr] gap-15 items-stretch">
-              <div className="flex items-center justify-center px-4">
-                <div className="w-100 h-100 rounded-full bg-gray-600 flex items-center justify-center shadow-neon ring-4 ring-brand-border/30">
+        <div className="grid grid-cols-[1fr_264px] gap-5 pt-4 h-full">
+          <div className="flex flex-col gap-5 h-full">
+            <div className="shrink-0 grid grid-cols-[auto_1fr] gap-5 items-stretch">
+              <div className="flex items-center justify-center px-2">
+                <div className="w-44 h-44 rounded-full bg-gray-600 flex items-center justify-center shadow-neon ring-4 ring-brand-border/30">
                   <span className="text-5xl font-extrabold text-white tracking-tight">
                     {data.user.initials}
                   </span>
                 </div>
               </div>
 
-              <div className="bg-brand-card border border-brand-border rounded-2xl p-12 flex flex-col justify-between">
+              <div className="bg-brand-card border border-brand-border rounded-2xl p-6 flex flex-col justify-between">
                 <div>
                   <h2 className="font-retro text-brand-border text-base mb-5 text-center">
                     Informations personnelles
@@ -162,7 +163,7 @@ function PublicProfileContent({
               </div>
             </div>
 
-            <div className="flex-1 grid grid-cols-2 gap-15">
+            <div className="flex-1 grid grid-cols-2 gap-5">
               <div className="bg-brand-card border border-brand-border rounded-2xl p-5">
                 <h2 className="font-retro text-brand-border text-base mb-4 text-center">
                   Suivi(e)s
@@ -188,7 +189,7 @@ function PublicProfileContent({
           </div>
 
           <div className="h-full">
-            <RightSidebar groups={mockGroups} users={mockSidebarUsers} />
+            <RightSidebar groups={mockGroups} />
           </div>
         </div>
       </div>
@@ -198,21 +199,25 @@ function PublicProfileContent({
 
 export default function Page() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const [data, setData] = useState<ProfilePageProps | null>(null);
+  const [me, setMe] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPublicProfile(id)
-      .then((result) => {
-        setData(result);
+    Promise.all([fetchPublicProfile(id), fetchMe()])
+      .then(([profileData, meData]) => {
+        if (!meData) { router.replace("/auth/login"); return; }
+        setData(profileData);
+        setMe(meData);
         setLoading(false);
       })
       .catch((err: Error) => {
         setError(err.message ?? "Impossible de charger le profil.");
         setLoading(false);
       });
-  }, [id]);
+  }, [id, router]);
 
   if (loading) {
     return (
@@ -240,12 +245,5 @@ export default function Page() {
     );
   }
 
-  const headerUser: CurrentUser = {
-    name: `${data.user.firstName} ${data.user.lastName[0]}.`,
-    username: data.user.username,
-    followers: data.user.followersCount,
-    initials: data.user.initials,
-  };
-
-  return <PublicProfileContent data={data} headerUser={headerUser} />;
+  return <PublicProfileContent data={data} headerUser={me!} />;
 }

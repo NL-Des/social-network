@@ -20,7 +20,6 @@ import (
 
 func main() {
 
-	// db, err := database.DbOrchestrationDev()
 	db, err := database.DbOrchestration()
 	if err != nil {
 		log.Println("Error with DB", err)
@@ -36,38 +35,36 @@ func main() {
 		}
 	}
 
+	// Repositories
 	userRepo := repository.NewUserRepo(db)
 	sessionRepo := repository.NewSessionRepo(db)
-	userService := service.NewUserService(userRepo)
-	sessionService := service.NewSessionService(sessionRepo)
-
-	profileRepo := repository.NewProfilRepository(db)
-	profileService := service.NewProfilService(profileRepo)
-	profileHandler := handlers.NewProfilHandler(profileService)
-
+	profilRepo := repository.NewProfilRepository(db)
 	followRepo := repository.NewFollowRepository(db)
-	followService := service.NewFollowService(followRepo)
-	followHandler := handlers.NewFollowHandler(followService)
-
-	logoutHandler := handlers.NewLogoutHandler(sessionService)
-	registerHandler := handlers.NewRegisterHandler(userService)
-	loginHandler := handlers.NewLoginHandler(userService, sessionService)
-	meHandler := handlers.NewMeHandler(userService)
-	usersHandler := handlers.NewUsersHandler(userService)
-	authMiddleware := middleware.NewAuthMiddleware(sessionService)
-
 	messageRepo := repository.NewMessageRepo(db)
-	messageService := service.NewMessageService(messageRepo)
-	messageHandler := handlers.NewMessageHandler(messageService)
-
 	groupRepo := repository.NewGroupRepo(db)
-	groupService := service.NewGroupService(groupRepo)
-	groupHandler := handlers.NewGroupHandler(groupService, userService)
-
 	postRepo := repository.NewPostRepo(db)
 	tagRepo := repository.NewTagRepo(db)
 	commentRepo := repository.NewCommentRepo(db)
+
+	// Services
+	userService := service.NewUserService(userRepo)
+	sessionService := service.NewSessionService(sessionRepo)
+	profilService := service.NewProfilService(profilRepo)
+	followService := service.NewFollowService(followRepo)
+	messageService := service.NewMessageService(messageRepo)
+	groupService := service.NewGroupService(groupRepo)
 	postService := service.NewPostAndCommentsService(postRepo, tagRepo, commentRepo)
+
+	// Handlers
+	authMiddleware := middleware.NewAuthMiddleware(sessionService)
+	logoutHandler := handlers.NewLogoutHandler(sessionService)
+	registerHandler := handlers.NewRegisterHandler(userService)
+	loginHandler := handlers.NewLoginHandler(userService, sessionService)
+	usersHandler := handlers.NewUsersHandler(userService)
+	profilHandler := handlers.NewProfilHandler(profilService)
+	followHandler := handlers.NewFollowHandler(followService)
+	messageHandler := handlers.NewMessageHandler(messageService)
+	groupHandler := handlers.NewGroupHandler(groupService, userService)
 	postHandler := handlers.NewPostAndCommentsHandler(userService, sessionService, postService)
 
 	// WebSocket hub
@@ -100,15 +97,14 @@ func main() {
 		}
 	}
 
+	// ServeMux pour les routes classiques
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handlers.HomeHandler)
 	mux.HandleFunc("/auth/login", loginHandler.LoginHandler)
 	mux.HandleFunc("/auth/register", registerHandler.RegisterHandler)
 	mux.HandleFunc("/auth/logout", logoutHandler.HandleLogout)
 
-	mux.HandleFunc("/user/me", authMiddleware.RequireAuth(meHandler.HandleMe))
 	mux.HandleFunc("/users", authMiddleware.RequireAuth(usersHandler.HandleUsers))
-	mux.HandleFunc("/user/profile", authMiddleware.RequireAuth(meHandler.HandleProfile))
 	mux.HandleFunc("/conversations", authMiddleware.RequireAuth(messageHandler.HandleConversations))
 	mux.HandleFunc("/messages", authMiddleware.RequireAuth(messageHandler.HandleMessages))
 	mux.HandleFunc("/group-chat", authMiddleware.RequireAuth(groupHandler.HandleGroups))
@@ -150,7 +146,8 @@ func main() {
 		ws.ServeWs(hub, w, r, userIDInt)
 	})
 
-	r := router.NewRouter(mux, profileHandler, followHandler, authMiddleware)
+	// Gorilla Mux router avec les routes profil/follow (délègue le reste au ServeMux)
+	r := router.NewRouter(mux, profilHandler, followHandler, authMiddleware)
 
 	fmt.Println("Démarrage sur http://localhost:5090")
 	log.Fatal(http.ListenAndServe(":5090", r))

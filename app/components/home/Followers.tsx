@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import type { Contact } from '@/app/profile/actions'
 
@@ -40,12 +40,16 @@ interface FollowersProps {
 export default function Followers({ following }: FollowersProps) {
   const [list, setList] = useState<Contact[]>(following)
 
+  useEffect(() => {
+    setList(following)
+  }, [following])
+
   return (
-    <div className="bg-brand-card border border-brand-border rounded-2xl p-5">
-      <h2 className="font-bold text-[#49C7FF] text-base mb-4 text-center">
+    <div className="bg-brand-card border border-brand-border rounded-2xl p-5 h-full overflow-hidden flex flex-col">
+      <h2 className="font-bold text-[#49C7FF] text-base mb-4 text-center shrink-0">
         Suivi(e)s
       </h2>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 overflow-y-auto flex-1">
         {list.map((c) => (
           <ContactRow
             key={c.id}

@@ -5,7 +5,7 @@ interface VisibilityAccountProps {
 
 export default function VisibilityAccount({ visibility, onChange }: VisibilityAccountProps) {
   return (
-    <div className="bg-brand-card border border-brand-border rounded-2xl p-12">
+    <div className="bg-brand-card border border-brand-border rounded-2xl p-6">
       <h2 className="font-bold text-[#49C7FF] text-base mb-5 text-center">
         Visibilité
       </h2>
