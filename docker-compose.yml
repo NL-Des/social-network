@@ -42,13 +42,42 @@ services:
     postgres-db:
         image: postgres:18
         container_name: postgres-db
-        environment :
-            - POSTGRES_USER=myuser
-            - POSTGRES_PASSWORD=mypassword
-            - POSTGRES_DB=mydatabase
+        environment:
+            - POSTGRES_USER=${DB_USER:-myuser}
+            - POSTGRES_PASSWORD=${DB_PASSWORD:-mypassword}
+            - POSTGRES_DB=${DB_NAME:-mydatabase}
         ports:
             - "5432:5432"
         volumes:
             - postgres-data:/var/lib/postgresql
+
+    backend:
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+        ports:
+            - "5090:5090"
+        environment:
+            - DB_HOST=postgres-db
+            - DB_PORT=5432
+            - DB_USER=${DB_USER:-myuser}
+            - DB_PASSWORD=${DB_PASSWORD:-mypassword}
+            - DB_NAME=${DB_NAME:-mydatabase}
+        depends_on:
+            - postgres-db
+        volumes:
+            - ./public:/root/public
+
+    frontend:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - "3000:3000"
+        environment:
+            - BACKEND_URL=http://backend:5090
+        depends_on:
+            - backend
+
 volumes:
     postgres-data:
