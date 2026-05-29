@@ -148,3 +148,12 @@ func (r *ProfilRepository) UpdateVisibility(userID int, isPrivate bool) error {
     `, isPrivate, userID)
 	return err
 }
+
+func (r *ProfilRepository) UpdateProfile(userID int, firstName, lastName, pseudo, aboutMe string) error {
+	_, err := r.db.Exec(`
+        UPDATE users
+        SET firstname = $1, lastname = $2, pseudo = $3, aboutme = $4
+        WHERE id = $5
+    `, firstName, lastName, pseudo, aboutMe, userID)
+	return err
+}

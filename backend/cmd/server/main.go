@@ -120,6 +120,7 @@ func main() {
 	mux.HandleFunc("/group-chat/{id}/posts/{postId}/comments/{commentId}", authMiddleware.RequireAuth(groupHandler.HandleGroupCommentDelete))
 	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
 	mux.HandleFunc("/posts", authMiddleware.RequireAuth(postHandler.PostAndCommentsHandler))
+	mux.HandleFunc("/group-chat/{id}/members", authMiddleware.RequireAuth(groupHandler.HandleGroupMembers))
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -150,7 +151,7 @@ func main() {
 		ws.ServeWs(hub, w, r, userIDInt)
 	})
 
-	r := router.NewRouter(mux, profileHandler, followHandler, authMiddleware)
+	r := router.NewRouter(mux, profileHandler, followHandler, postHandler, authMiddleware)
 
 	fmt.Println("Démarrage sur http://localhost:5090")
 	log.Fatal(http.ListenAndServe(":5090", r))

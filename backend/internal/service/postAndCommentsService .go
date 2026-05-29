@@ -17,8 +17,24 @@ func NewPostAndCommentsService(pr *repository.PostRepo, tr *repository.TagRepo, 
 	return &PostAndCommentsService{postRepo: pr, tagRepo: tr, commentRepo: cr}
 }
 
-func (s *PostAndCommentsService) GetAllPosts() ([]model.Post, error) {
-	return s.postRepo.GetAllPosts()
+func (s *PostAndCommentsService) GetAllPosts(viewerID int) ([]model.Post, error) {
+	return s.postRepo.GetAllPosts(viewerID)
+}
+
+/*
+* Ajoute ou met à jour un like/dislike sur un post.
+* Paramètres : postID, userID, likeType ("like" ou "dislike")
+*/
+func (s *PostAndCommentsService) LikePost(postID, userID int, likeType string) error {
+	return s.postRepo.AddLike(postID, userID, likeType)
+}
+
+/*
+* Supprime un like/dislike sur un post.
+* Paramètres : postID, userID
+*/
+func (s *PostAndCommentsService) UnlikePost(postID, userID int) error {
+	return s.postRepo.RemoveLike(postID, userID)
 }
 
 /*

@@ -95,6 +95,27 @@ func (h *ProfilHandler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GET /users/{id}/posts — retourne les posts publics d'un utilisateur
+func (h *ProfilHandler) GetUserPosts(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "invalid user id", http.StatusBadRequest)
+		return
+	}
+
+	posts, err := h.ProfilService.GetUserPosts(userID)
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(posts); err != nil {
+		log.Printf("encode user posts: %v", err)
+	}
+}
+
 func (h *ProfilHandler) UpdateVisibility(w http.ResponseWriter, r *http.Request) {
 	viewerID, ok := r.Context().Value("userID").(int)
 	if !ok {
@@ -112,6 +133,33 @@ func (h *ProfilHandler) UpdateVisibility(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := h.ProfilService.UpdateVisibility(viewerID, body.IsPrivate); err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// PUT /me/profile
+func (h *ProfilHandler) UpdateMyProfile(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body struct {
+		FirstName string `json:"firstName"`
+		LastName  string `json:"lastName"`
+		Pseudo    string `json:"pseudo"`
+		AboutMe   string `json:"aboutMe"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid body", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.ProfilService.UpdateProfile(userID, body.FirstName, body.LastName, body.Pseudo, body.AboutMe); err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}

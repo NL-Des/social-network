@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 
 export interface UserProfile {
+  id: number;
   firstName: string;
   lastName: string;
   username: string;
@@ -10,6 +11,7 @@ export interface UserProfile {
   birthDate: string;
   followersCount: number;
   initials: string;
+  description?: string;
 }
 
 export interface Contact {
@@ -73,6 +75,7 @@ export default async function profileAction(): Promise<ProfilePageProps> {
 
   return {
     user: {
+      id: data.id ?? 0,
       firstName: data.firstName,
       lastName: data.lastName,
       username: data.pseudo,         
@@ -80,6 +83,7 @@ export default async function profileAction(): Promise<ProfilePageProps> {
       birthDate: data.dateOfBirth ?? "",
       followersCount: data.followers?.length ?? 0,
       initials: getInitials(data.firstName, data.lastName),
+      description: data.aboutMe ?? '',
     },
     following: (data.following ?? []).map((c: any) => ({
       id: String(c.id),

@@ -8,6 +8,9 @@ export interface Post {
   }
   title?: string
   content: string
+  likes?: number
+  dislikes?: number
+  userLike?: string
 }
 
 import Link from 'next/link'
@@ -142,6 +145,89 @@ export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) 
   )
 }
 
+function LikeButtons({ postId, initialLikes, initialDislikes, initialUserLike }: {
+  postId: string
+  initialLikes: number
+  initialDislikes: number
+  initialUserLike: string
+}) {
+  const [likes, setLikes] = useState(initialLikes)
+  const [dislikes, setDislikes] = useState(initialDislikes)
+  const [userLike, setUserLike] = useState(initialUserLike)
+  const [pending, setPending] = useState(false)
+
+  async function handleVote(type: 'like' | 'dislike') {
+    if (pending) return
+    setPending(true)
+
+    const prevLikes = likes
+    const prevDislikes = dislikes
+    const prevUserLike = userLike
+
+    if (userLike === type) {
+      // toggle off
+      setUserLike('')
+      setLikes(type === 'like' ? likes - 1 : likes)
+      setDislikes(type === 'dislike' ? dislikes - 1 : dislikes)
+      try {
+        await fetch(`/api/posts/${postId}/like`, { method: 'DELETE' })
+      } catch {
+        setLikes(prevLikes)
+        setDislikes(prevDislikes)
+        setUserLike(prevUserLike)
+      }
+    } else {
+      // switch or new vote
+      const wasOther = userLike !== ''
+      setUserLike(type)
+      setLikes(type === 'like' ? likes + 1 : (wasOther && prevUserLike === 'like' ? likes - 1 : likes))
+      setDislikes(type === 'dislike' ? dislikes + 1 : (wasOther && prevUserLike === 'dislike' ? dislikes - 1 : dislikes))
+      try {
+        await fetch(`/api/posts/${postId}/like`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type }),
+        })
+      } catch {
+        setLikes(prevLikes)
+        setDislikes(prevDislikes)
+        setUserLike(prevUserLike)
+      }
+    }
+
+    setPending(false)
+  }
+
+  return (
+    <div className="flex items-center gap-3 mt-4 pt-3 border-t border-brand-border/20">
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleVote('like') }}
+        disabled={pending}
+        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm transition-all ${
+          userLike === 'like'
+            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
+            : 'text-brand-text/60 hover:text-brand-text border border-transparent hover:border-brand-border/40'
+        } disabled:opacity-50`}
+      >
+        <span>+1</span>
+        <span>{likes}</span>
+      </button>
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleVote('dislike') }}
+        disabled={pending}
+        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm transition-all ${
+          userLike === 'dislike'
+            ? 'bg-red-500/20 text-red-400 border border-red-500/40'
+            : 'text-brand-text/60 hover:text-brand-text border border-transparent hover:border-brand-border/40'
+        } disabled:opacity-50`}
+      >
+        <span>-1</span>
+        <span>{dislikes}</span>
+      </button>
+    </div>
+  )
+}
+
 const postCardBody = (post: Post) => (
   <>
     <div className="flex items-center gap-3 mb-5">
@@ -154,6 +240,12 @@ const postCardBody = (post: Post) => (
       <p className="font-bold text-brand-text text-base mb-2">{post.title}</p>
     )}
     <p className="text-brand-text text-lg leading-7 whitespace-pre-line">{post.content}</p>
+    <LikeButtons
+      postId={post.id}
+      initialLikes={post.likes ?? 0}
+      initialDislikes={post.dislikes ?? 0}
+      initialUserLike={post.userLike ?? ''}
+    />
   </>
 )
 

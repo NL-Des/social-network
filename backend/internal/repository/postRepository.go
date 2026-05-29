@@ -14,7 +14,7 @@ type PostRepo struct {
 	db *sql.DB
 }
 
-func NewPostRepo(db *sql.DB) *PostRepo{
+func NewPostRepo(db *sql.DB) *PostRepo {
 	return &PostRepo{db: db}
 }
 
@@ -25,7 +25,7 @@ func NewPostRepo(db *sql.DB) *PostRepo{
 func (r *PostRepo) CreateNewPost(authorID string, postData model.Post) (int, error) {
 	postData.Title = template.HTMLEscapeString(strings.TrimSpace(postData.Title))
 	var postID int
-	
+
 	query := `
         INSERT INTO posts (authorID, title, content, privacy)
         VALUES ($1, $2, $3, $4)
@@ -33,11 +33,11 @@ func (r *PostRepo) CreateNewPost(authorID string, postData model.Post) (int, err
 
 	err := r.db.QueryRow(query, authorID, postData.Title, postData.Content, postData.Privacy).Scan(&postID)
 
-    if err != nil {
-        return 0, err
-    }
+	if err != nil {
+		return 0, err
+	}
 
-    return postID, nil
+	return postID, nil
 }
 
 /*
@@ -61,14 +61,13 @@ func (r *PostRepo) UpdateExistingPost(postData model.Post) error {
 * Paramètres : ID du post
 */
 func (r *PostRepo) DeleteExistingPost(postID int) error {
-		_, err := r.db.Exec(`
-		DELETE FROM posts
-		WHERE ID = $1
-		`, postID)
+	_, err := r.db.Exec(`
+	DELETE FROM posts
+	WHERE ID = $1
+	`, postID)
 
-		return err
+	return err
 }
-
 
 /*
 * Récupère l'ID de l'auteur d'un post particulier
@@ -92,22 +91,31 @@ func (r *PostRepo) GetPostAuthorID(postID int) (string, error) {
 }
 
 /*
-* Récupère un post dans la base de données à partir de son ID
-* Paramètres : ID du post
-* Renvoie : un post (titre, contenu, confidentialité, date) et les informations de son auteur (pseudo et avatar)
+* Récupère tous les posts visibles par viewerID, avec filtrage privacy et compteurs likes/dislikes.
+* Paramètres : viewerID (utilisateur connecté)
 */
-func (r *PostRepo) GetAllPosts() ([]model.Post, error) {
+func (r *PostRepo) GetAllPosts(viewerID int) ([]model.Post, error) {
 	rows, err := r.db.Query(`
-	SELECT p.ID, p.title, p.content, p.privacy, p.createdat, p.updatedat,
+	SELECT p.id, p.authorid, p.title, p.content, p.privacy, p.createdat, p.updatedat,
 	       u.username, u.avatar,
-	       COALESCE(array_agg(t.name) FILTER (WHERE t.name IS NOT NULL), '{}') AS tags
+	       COALESCE(array_agg(t.name) FILTER (WHERE t.name IS NOT NULL), '{}') AS tags,
+	       COALESCE((SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id AND pl.type = 'like'), 0) AS likes,
+	       COALESCE((SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id AND pl.type = 'dislike'), 0) AS dislikes,
+	       COALESCE((SELECT pl.type FROM post_likes pl WHERE pl.post_id = p.id AND pl.user_id = $1), '') AS user_like
 	FROM posts p
-	JOIN users u ON p.authorID = u.ID
-	LEFT JOIN post_tag pt ON pt.postID = p.ID
-	LEFT JOIN tag t ON t.ID = pt.tagID
-	GROUP BY p.ID, u.username, u.avatar
+	JOIN users u ON p.authorid = u.id
+	LEFT JOIN post_tag pt ON pt.postid = p.id
+	LEFT JOIN tag t ON t.id = pt.tagid
+	WHERE
+	    p.privacy = 'public'
+	    OR p.authorid = $1
+	    OR (p.privacy = 'almost-private' AND EXISTS (
+	        SELECT 1 FROM followers f
+	        WHERE f.followerid = $1 AND f.followingid = p.authorid AND f.status = 'accepted'
+	    ))
+	GROUP BY p.id, p.authorid, u.username, u.avatar
 	ORDER BY p.createdat DESC
-	`)
+	`, viewerID)
 	if err != nil {
 		return nil, err
 	}
@@ -117,10 +125,11 @@ func (r *PostRepo) GetAllPosts() ([]model.Post, error) {
 	for rows.Next() {
 		post := model.Post{}
 		if err := rows.Scan(
-			&post.ID, &post.Title, &post.Content, &post.Privacy,
+			&post.ID, &post.AuthorID, &post.Title, &post.Content, &post.Privacy,
 			&post.CreatedAt, &post.UpdatedAt,
 			&post.Author.Username, &post.Author.ProfilePicture,
 			pq.Array(&post.Tags),
+			&post.Likes, &post.Dislikes, &post.UserLike,
 		); err != nil {
 			return nil, err
 		}
@@ -150,4 +159,78 @@ func (r *PostRepo) GetPostFromID(postID int) (model.Post, error) {
 	}
 
 	return post, nil
-} 
+}
+
+/*
+* Ajoute ou met à jour un like/dislike sur un post.
+* Paramètres : postID, userID, likeType ("like" ou "dislike")
+*/
+func (r *PostRepo) AddLike(postID, userID int, likeType string) error {
+	_, err := r.db.Exec(`
+	INSERT INTO post_likes (post_id, user_id, type)
+	VALUES ($1, $2, $3)
+	ON CONFLICT (post_id, user_id) DO UPDATE SET type = $3
+	`, postID, userID, likeType)
+	return err
+}
+
+/*
+* Supprime un like/dislike sur un post.
+* Paramètres : postID, userID
+*/
+func (r *PostRepo) RemoveLike(postID, userID int) error {
+	_, err := r.db.Exec(`
+	DELETE FROM post_likes
+	WHERE post_id = $1 AND user_id = $2
+	`, postID, userID)
+	return err
+}
+
+/*
+* Retourne les compteurs de likes et dislikes pour un post.
+* Paramètres : postID
+*/
+func (r *PostRepo) GetLikeCounts(postID int) (likes int, dislikes int, err error) {
+	rows, err := r.db.Query(`
+	SELECT type, COUNT(*) FROM post_likes
+	WHERE post_id = $1
+	GROUP BY type
+	`, postID)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var likeType string
+		var count int
+		if err := rows.Scan(&likeType, &count); err != nil {
+			return 0, 0, err
+		}
+		if likeType == "like" {
+			likes = count
+		} else if likeType == "dislike" {
+			dislikes = count
+		}
+	}
+	return likes, dislikes, rows.Err()
+}
+
+/*
+* Retourne le vote de l'utilisateur pour un post ("like", "dislike", ou "").
+* Paramètres : postID, userID
+*/
+func (r *PostRepo) GetUserLike(postID, userID int) (string, error) {
+	var likeType string
+	err := r.db.QueryRow(`
+	SELECT type FROM post_likes
+	WHERE post_id = $1 AND user_id = $2
+	`, postID, userID).Scan(&likeType)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return likeType, nil
+}

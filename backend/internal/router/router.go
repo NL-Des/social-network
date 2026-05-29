@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, followHandler *handlers.FollowHandler, auth *middleware.AuthMiddleware) http.Handler {
+func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, followHandler *handlers.FollowHandler, postHandler *handlers.PostAndCommentsHandler, auth *middleware.AuthMiddleware) http.Handler {
 
 	router := mux.NewRouter()
 
@@ -22,10 +22,15 @@ func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, 
 		auth.RequireAuth(http.HandlerFunc(profilHandler.GetMyProfile)),
 	).Methods("GET")
 
+	router.Handle("/me/profile",
+		auth.RequireAuth(http.HandlerFunc(profilHandler.UpdateMyProfile)),
+	).Methods("PUT")
+
 	router.Handle("/me/profile/visibility",
 		auth.RequireAuth(http.HandlerFunc(profilHandler.UpdateVisibility)),
 	).Methods("PATCH")
 
+	// Routes follow
 	router.Handle("/users/{id}/follow",
 		auth.RequireAuth(http.HandlerFunc(followHandler.Follow)),
 	).Methods("POST")
@@ -33,6 +38,32 @@ func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, 
 	router.Handle("/users/{id}/follow",
 		auth.RequireAuth(http.HandlerFunc(followHandler.Unfollow)),
 	).Methods("DELETE")
+
+	router.Handle("/users/{id}/follow/status",
+		auth.RequireAuth(http.HandlerFunc(followHandler.GetFollowStatus)),
+	).Methods("GET")
+
+	router.Handle("/me/follow/requests",
+		auth.RequireAuth(http.HandlerFunc(followHandler.GetPendingRequests)),
+	).Methods("GET")
+
+	router.Handle("/users/{id}/follow/accept",
+		auth.RequireAuth(http.HandlerFunc(followHandler.AcceptFollowRequest)),
+	).Methods("PATCH")
+
+	router.Handle("/users/{id}/follow/reject",
+		auth.RequireAuth(http.HandlerFunc(followHandler.RejectFollowRequest)),
+	).Methods("DELETE")
+
+	// Posts d'un utilisateur
+	router.Handle("/users/{id}/posts",
+		auth.RequireAuth(http.HandlerFunc(profilHandler.GetUserPosts)),
+	).Methods("GET")
+
+	// Like / Unlike sur un post
+	router.Handle("/posts/{id}/like",
+		auth.RequireAuth(http.HandlerFunc(postHandler.HandleLike)),
+	).Methods("POST", "DELETE")
 
 	// Toutes les autres routes : ServeMux
 	router.PathPrefix("/").Handler(serverMux)
