@@ -97,3 +97,12 @@ func (s *ProfilService) GetProfile(viewerID, profileID int) (*model.PublicProfil
 func (s *ProfilService) UpdateVisibility(userID int, isPrivate bool) error {
 	return s.ProfilRepo.UpdateVisibility(userID, isPrivate)
 }
+
+// GetUserPosts retourne les posts d'un utilisateur via son ID.
+func (s *ProfilService) GetUserPosts(userID int) ([]model.AllPosts, error) {
+	return s.ProfilRepo.GetPosts(userID)
+}
+
+func (s *ProfilService) UpdateProfile(userID int, firstName, lastName, pseudo, aboutMe string) error {
+	return s.ProfilRepo.UpdateProfile(userID, firstName, lastName, pseudo, aboutMe)
+}

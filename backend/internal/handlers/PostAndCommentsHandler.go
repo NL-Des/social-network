@@ -7,12 +7,14 @@ import (
 	"social-network/backend/internal/service"
 	"strconv"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 type PostAndCommentsHandler struct {
 	UserService    *service.UserService
 	SessionService *service.SessionService
-	PostService *service.PostAndCommentsService
+	PostService    *service.PostAndCommentsService
 }
 
 func NewPostAndCommentsHandler(us *service.UserService, ss *service.SessionService, ps *service.PostAndCommentsService) *PostAndCommentsHandler {
@@ -37,47 +39,36 @@ func (h *PostAndCommentsHandler) PostAndCommentsHandler(w http.ResponseWriter, r
 		tagList = strings.Fields(tags)
 	}
 
-	// Récupération des données de l'utilisateur connecté
-	cookie, err := r.Cookie("session_token")
-	if err != nil {
-		http.Error(w, "Aucun cookie trouvé", http.StatusUnauthorized)
+	// Récupération des données de l'utilisateur connecté via le contexte (injecté par authMiddleware)
+	userIDInt, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
-	userID, err := h.SessionService.GetUserID(cookie.Value)
-
-	if err != nil {
-		http.Error(w, "Erreur de récupération de session", http.StatusInternalServerError)
-		return
-	}
-
+	userID := strconv.Itoa(userIDInt)
 
 	// Gestion des commentaires (ajout ou modification)
 	if mode == "newcomment" || mode == "editcomment" {
 		h.CommentHandler(w, r, content, mode, userID)
 	}
-	
+
 	// Gestion des posts (ajout ou modification)
 	if mode == "editpost" || mode == "newpost" {
-		postData := model.Post {
-			Title: title,
-			Content:content,
-			Privacy:privacy,
-			Tags: tagList,
+		postData := model.Post{
+			Title:   title,
+			Content: content,
+			Privacy: privacy,
+			Tags:    tagList,
 		}
-	
-	h.PostHandler(w, r, postData, mode, userID)
+
+		h.PostHandler(w, r, postData, mode, userID)
 	}
 }
 
 func (h *PostAndCommentsHandler) handleGetPosts(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_token")
-	if err != nil {
+	userIDInt, ok := r.Context().Value("userID").(int)
+	if !ok {
 		http.Error(w, "Non authentifié", http.StatusUnauthorized)
-		return
-	}
-	userID, err := h.SessionService.GetUserID(cookie.Value)
-	if err != nil || userID == "" {
-		http.Error(w, "Session invalide", http.StatusUnauthorized)
 		return
 	}
 
@@ -99,7 +90,7 @@ func (h *PostAndCommentsHandler) handleGetPosts(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	posts, err := h.PostService.GetAllPosts()
+	posts, err := h.PostService.GetAllPosts(userIDInt)
 	if err != nil {
 		http.Error(w, "Erreur de récupération des posts", http.StatusInternalServerError)
 		return
@@ -112,21 +103,20 @@ func (h *PostAndCommentsHandler) handleGetPosts(w http.ResponseWriter, r *http.R
 
 func (h *PostAndCommentsHandler) CommentHandler(w http.ResponseWriter, r *http.Request, content, mode, userID string) {
 	postID, err := strconv.Atoi(r.FormValue("postID"))
-		if err !=nil {
-			http.Error(w, "Erreur de récupération de l'ID de post", http.StatusInternalServerError)
-			return
-		}
+	if err != nil {
+		http.Error(w, "Erreur de récupération de l'ID de post", http.StatusInternalServerError)
+		return
+	}
 
 	if mode == "newcomment" {
-			err := h.PostService.AddCommentOnPost(postID, userID, content)
-			if err != nil {
+		err := h.PostService.AddCommentOnPost(postID, userID, content)
+		if err != nil {
 			http.Error(w, "Erreur dans l'ajout de commentaire", http.StatusInternalServerError)
-		
 		}
-		return 
+		return
 	} else if mode == "editcomment" {
 		commentID, err := strconv.Atoi(r.FormValue("commentID"))
-		if err !=nil {
+		if err != nil {
 			http.Error(w, "Erreur de récupération de l'ID de commentaire", http.StatusInternalServerError)
 			return
 		}
@@ -134,7 +124,7 @@ func (h *PostAndCommentsHandler) CommentHandler(w http.ResponseWriter, r *http.R
 		if err != nil {
 			http.Error(w, "Erreur dans la modification du commentaire", http.StatusInternalServerError)
 		}
-		return 
+		return
 	}
 }
 
@@ -142,7 +132,7 @@ func (h *PostAndCommentsHandler) PostHandler(w http.ResponseWriter, r *http.Requ
 	if mode == "editpost" {
 		var err error
 		postData.ID, err = strconv.Atoi(r.FormValue("postID"))
-		if err !=nil {
+		if err != nil {
 			http.Error(w, "Erreur de récupération de l'ID de post", http.StatusInternalServerError)
 			return
 		}
@@ -163,5 +153,49 @@ func (h *PostAndCommentsHandler) PostHandler(w http.ResponseWriter, r *http.Requ
 			return
 		}
 	}
+}
 
+// HandleLike gère POST /posts/{id}/like (like/dislike) et DELETE /posts/{id}/like (unlike)
+func (h *PostAndCommentsHandler) HandleLike(w http.ResponseWriter, r *http.Request) {
+	userIDInt, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	postID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "ID de post invalide", http.StatusBadRequest)
+		return
+	}
+
+	if r.Method == http.MethodDelete {
+		if err := h.PostService.UnlikePost(postID, userIDInt); err != nil {
+			http.Error(w, "Erreur lors de la suppression du like", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	// POST : body JSON { "type": "like" | "dislike" }
+	var body struct {
+		Type string `json:"type"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Body invalide", http.StatusBadRequest)
+		return
+	}
+	if body.Type != "like" && body.Type != "dislike" {
+		http.Error(w, "Type invalide (like ou dislike attendu)", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.PostService.LikePost(postID, userIDInt, body.Type); err != nil {
+		http.Error(w, "Erreur lors de l'ajout du like", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

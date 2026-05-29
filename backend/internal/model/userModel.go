@@ -23,11 +23,10 @@ type UserListItem struct {
 	Name      string `json:"name"`
 	Initials  string `json:"initials"`
 	Following bool   `json:"following"`
-	IsPrivate bool   `json:"isPrivate"`
 }
 
 type User struct {
-	ID             int    `json:"id"`
+	ID             int       `json:"id"`
 	Name           string `json:"name"`
 	FirstName      string `json:"firstName"`
 	Birthday       string `json:"birthday"`

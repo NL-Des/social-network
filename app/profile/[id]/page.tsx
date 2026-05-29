@@ -3,8 +3,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Header, { CurrentUser } from "@/app/components/home/Header";
+<<<<<<< HEAD
 import { fetchMe } from "@/lib/fetchMe";
 import RightSidebar, { Group, SidebarUser } from "@/app/components/home/RightSidebar";
+=======
+import RightSidebar from "@/app/components/home/RightSidebar";
+>>>>>>> worktree-agent-a79da06e1929c5980
 import type { ProfilePageProps, Contact } from "@/app/profile/actions";
 
 function getInitials(firstName: string, lastName: string): string {
@@ -22,6 +26,7 @@ async function fetchPublicProfile(id: string): Promise<ProfilePageProps> {
 
   return {
     user: {
+      id: data.id ?? 0,
       firstName: data.firstName,
       lastName: data.lastName,
       username: data.pseudo,
@@ -30,12 +35,12 @@ async function fetchPublicProfile(id: string): Promise<ProfilePageProps> {
       followersCount: data.followers?.length ?? 0,
       initials: getInitials(data.firstName, data.lastName),
     },
-    following: (data.following ?? []).map((c: any) => ({
+    following: (data.following ?? []).map((c: { id: number; username: string }) => ({
       id: String(c.id),
       name: c.username,
       initials: c.username?.slice(0, 2).toUpperCase() ?? "??",
     })),
-    followers: (data.followers ?? []).map((c: any) => ({
+    followers: (data.followers ?? []).map((c: { id: number; username: string }) => ({
       id: String(c.id),
       name: c.username,
       initials: c.username?.slice(0, 2).toUpperCase() ?? "??",
@@ -56,21 +61,6 @@ async function fetchPublicProfile(id: string): Promise<ProfilePageProps> {
   };
 }
 
-const mockGroups: Group[] = [
-  { id: "1", name: "Photo Urbaine", membersCount: "890" },
-  { id: "2", name: "Dev Frontend", membersCount: "3,4k" },
-  { id: "3", name: "Design & UX", membersCount: "1,2k" },
-];
-
-const mockSidebarUsers: SidebarUser[] = [
-  { id: "1", name: "Audrey D", initials: "AD", online: true },
-  { id: "2", name: "Jade C", initials: "JC", online: true },
-  { id: "3", name: "Mathis P", initials: "MP", online: false },
-  { id: "4", name: "Nathan L", initials: "NL", online: false },
-  { id: "5", name: "Nathan P", initials: "NP", online: false },
-  { id: "6", name: "Valentine L", initials: "VL", online: false },
-];
-
 function ContactRow({ contact }: { contact: Contact }) {
   return (
     <div className="flex items-center gap-3 py-2">
@@ -90,20 +80,28 @@ function PublicProfileContent({
   headerUser: CurrentUser;
 }) {
   const { id } = useParams<{ id: string }>();
-  const [isFollowing, setIsFollowing] = useState(data.isFollowing);
+  const [followStatus, setFollowStatus] = useState<string>(
+    data.isFollowing ? "accepted" : ""
+  );
+
+  useEffect(() => {
+    if (data.isOwner) return;
+    fetch(`/api/users/${id}/follow/status`)
+      .then((r) => r.ok ? r.json() : { status: "" })
+      .then((d: { status: string }) => setFollowStatus(d.status ?? ""))
+      .catch(() => {});
+  }, [id, data.isOwner]);
 
   async function handleFollow() {
-    const response = await fetch(`/api/users/${id}/follow`, {
-      method: "POST",
-    });
-    if (response.ok) setIsFollowing(true);
+    const response = await fetch(`/api/users/${id}/follow`, { method: "POST" });
+    if (response.ok) {
+      setFollowStatus(data.visibility === "private" ? "pending" : "accepted");
+    }
   }
 
   async function handleUnfollow() {
-    const response = await fetch(`/api/users/${id}/follow`, {
-      method: "DELETE",
-    });
-    if (response.ok) setIsFollowing(false);
+    const response = await fetch(`/api/users/${id}/follow`, { method: "DELETE" });
+    if (response.ok) setFollowStatus("");
   }
 
   return (
@@ -143,19 +141,28 @@ function PublicProfileContent({
 
                 {!data.isOwner && (
                   <div className="mt-5">
-                    {isFollowing ? (
+                    {followStatus === "accepted" ? (
                       <button
                         onClick={handleUnfollow}
                         className="w-full py-2 px-4 rounded-lg border border-brand-border text-brand-text text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95"
                       >
                         Se désabonner
                       </button>
+                    ) : followStatus === "pending" ? (
+                      <button
+                        disabled
+                        className="w-full py-2 px-4 rounded-lg border border-brand-border/40 text-brand-text/50 text-base cursor-not-allowed"
+                      >
+                        Demande en attente
+                      </button>
                     ) : (
                       <button
                         onClick={handleFollow}
                         className="w-full py-2 px-4 rounded-lg border border-brand-border text-brand-text text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95"
                       >
-                        S&apos;abonner
+                        {data.visibility === "private"
+                          ? "Demander à suivre"
+                          : "S’abonner"}
                       </button>
                     )}
                   </div>
@@ -189,7 +196,11 @@ function PublicProfileContent({
           </div>
 
           <div className="h-full">
+<<<<<<< HEAD
             <RightSidebar groups={mockGroups} />
+=======
+            <RightSidebar />
+>>>>>>> worktree-agent-a79da06e1929c5980
           </div>
         </div>
       </div>

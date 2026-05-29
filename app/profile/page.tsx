@@ -17,6 +17,7 @@ const mockGroups: Group[] = [
   { id: '3', name: 'Design & UX',   membersCount: '1,2k' },
 ]
 
+<<<<<<< HEAD
 const mockUserPosts: Post[] = [
   {
     id: '1',
@@ -46,8 +47,45 @@ const mockUserPosts: Post[] = [
 ]
 
 
+=======
+>>>>>>> worktree-agent-a79da06e1929c5980
 function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUser: CurrentUser }) {
   const [visibility, setVisibility] = useState<'private' | 'public'>(data.visibility ?? 'public')
+  const [posts, setPosts] = useState<Post[]>([])
+
+  useEffect(() => {
+    if (!data.user.id) return
+    fetch(`/api/profile/${data.user.id}/posts`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((raw: Array<{ id: number; title: string; content: string }>) => {
+        setPosts(
+          raw.map((p) => ({
+            id: String(p.id),
+            author: {
+              name: data.user.username,
+              initials: data.user.initials,
+            },
+            title: p.title,
+            content: p.content,
+          }))
+        )
+      })
+      .catch(() => {})
+  }, [data.user.id, data.user.username, data.user.initials])
+
+  async function handleVisibilityChange(value: 'private' | 'public') {
+    setVisibility(value)
+    try {
+      const response = await fetch('/api/profile/visibility', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPrivate: value === 'private' }),
+      })
+      if (!response.ok) setVisibility(visibility)
+    } catch {
+      setVisibility(visibility)
+    }
+  }
 
   async function handleVisibilityChange(value: 'private' | 'public') {
     setVisibility(value)
@@ -89,12 +127,25 @@ function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUs
               <Subscribers followers={data.followers} />
               <div className="bg-brand-card border border-brand-border rounded-2xl p-5 overflow-hidden flex flex-col">
                 <h2 className="font-bold text-[#49C7FF] text-base mb-4 text-center shrink-0">
+<<<<<<< HEAD
                   Évènements
                 </h2>
                 <div className="overflow-y-auto flex flex-col gap-4 flex-1">
                   {mockUserPosts.map((post) => (
                     <PostCard key={post.id} post={post} />
                   ))}
+=======
+                  Posts
+                </h2>
+                <div className="overflow-y-auto flex flex-col gap-4 flex-1">
+                  {posts.length === 0 ? (
+                    <p className="text-brand-text/40 text-sm text-center mt-4">Aucun post</p>
+                  ) : (
+                    posts.map((post) => (
+                      <PostCard key={post.id} post={post} />
+                    ))
+                  )}
+>>>>>>> worktree-agent-a79da06e1929c5980
                 </div>
               </div>
             </div>
