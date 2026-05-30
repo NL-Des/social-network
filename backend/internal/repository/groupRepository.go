@@ -14,6 +14,7 @@ type GroupInfo struct {
 	Title     string  `json:"title"`
 	Initials  string  `json:"initials"`
 	MemberIDs []int64 `json:"member_ids"`
+	CreatorID int64   `json:"creator_id"`
 }
 
 type GroupRepo struct {
@@ -61,9 +62,15 @@ func (r *GroupRepo) CreateGroup(title, description string, creatorID int64, memb
 	return groupID, nil
 }
 
+func (r *GroupRepo) GetGroupTitle(groupID int64) (string, error) {
+	var title string
+	err := r.db.QueryRow(`SELECT title FROM groups WHERE id = $1`, groupID).Scan(&title)
+	return title, err
+}
+
 func (r *GroupRepo) GetUserGroups(userID int64) ([]GroupInfo, error) {
 	rows, err := r.db.Query(`
-		SELECT g.id, g.title
+		SELECT g.id, g.title, g.creatorid
 		FROM groups g
 		JOIN group_members gm ON gm.groupid = g.id
 		WHERE gm.userid = $1 AND gm.status = 'member'
@@ -77,7 +84,7 @@ func (r *GroupRepo) GetUserGroups(userID int64) ([]GroupInfo, error) {
 	groups := make([]GroupInfo, 0)
 	for rows.Next() {
 		var g GroupInfo
-		if err := rows.Scan(&g.ID, &g.Title); err != nil {
+		if err := rows.Scan(&g.ID, &g.Title, &g.CreatorID); err != nil {
 			return nil, err
 		}
 		words := strings.Fields(g.Title)
@@ -337,6 +344,31 @@ func (r *GroupRepo) GetGroupMessages(groupID int64) ([]model.GroupMessage, error
 		messages = append(messages, msg)
 	}
 	return messages, rows.Err()
+}
+
+func (r *GroupRepo) RemoveGroupMember(groupID, targetUserID, requestingUserID int64) error {
+	var creatorID int64
+	err := r.db.QueryRow(`SELECT creatorid FROM groups WHERE id = $1`, groupID).Scan(&creatorID)
+	if err != nil {
+		return err
+	}
+	if creatorID != requestingUserID {
+		return fmt.Errorf("non autorisé")
+	}
+	if targetUserID == requestingUserID {
+		return fmt.Errorf("le créateur ne peut pas se retirer lui-même")
+	}
+	_, err = r.db.Exec(`DELETE FROM group_members WHERE groupid = $1 AND userid = $2`, groupID, targetUserID)
+	return err
+}
+
+func (r *GroupRepo) AddGroupMember(groupID, userID, invitedByID int64) error {
+	_, err := r.db.Exec(`
+		INSERT INTO group_members (groupid, userid, invitedby, status)
+		VALUES ($1, $2, $3, 'member')
+		ON CONFLICT DO NOTHING
+	`, groupID, userID, invitedByID)
+	return err
 }
 
 type GroupMember struct {

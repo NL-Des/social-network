@@ -2,6 +2,8 @@ package groupChatWebsocket
 
 import (
 	"log"
+	"time"
+
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/websocket"
 )
@@ -55,6 +57,7 @@ func (h *GroupChatHandler) Handle(sender *websocket.Client, payload model.GroupM
 
 	// 4. Diffusion à tous les membres connectés (delta : le message complet)
 	// BroadcastToUser ne fait rien si le membre n'est pas connecté, c'est safe.
+	payload.SentAt = time.Now()
 	wsMsg := websocket.MessageWs{
 		Type: "group_message",
 		Data: payload,

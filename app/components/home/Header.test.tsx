@@ -13,6 +13,7 @@ vi.mock('next/link', () => ({
 }))
 
 const user: CurrentUser = {
+  id: '1',
   name: 'John Doe',
   username: 'johndoe',
   followers: 42,

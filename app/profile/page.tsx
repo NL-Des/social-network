@@ -126,6 +126,7 @@ export default function Page() {
   }
 
   const headerUser: CurrentUser = {
+    id: String(data.user.id ?? ''),
     name: `${data.user.firstName} ${data.user.lastName?.[0] ?? ''}.`,
     username: data.user.username,
     followers: data.user.followersCount,

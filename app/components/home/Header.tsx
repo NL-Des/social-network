@@ -8,6 +8,7 @@ import { useWebSocket } from '@/lib/useWebSocket'
 import { logoutAction } from '@/app/auth/logout/actions'
 
 export interface CurrentUser {
+  id: string
   name: string
   username: string
   followers: number

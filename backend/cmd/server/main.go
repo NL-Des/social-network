@@ -124,6 +124,7 @@ func main() {
 	mux.HandleFunc("/test", authMiddleware.RequireAuth(handlers.TestAuthHandler))
 	mux.HandleFunc("/posts", authMiddleware.RequireAuth(postHandler.PostAndCommentsHandler))
 	mux.HandleFunc("/group-chat/{id}/members", authMiddleware.RequireAuth(groupHandler.HandleGroupMembers))
+	mux.HandleFunc("/group-chat/{id}/members/{userId}", authMiddleware.RequireAuth(groupHandler.HandleRemoveMember))
 	mux.HandleFunc("/notifications", authMiddleware.RequireAuth(notifHandler.HandleNotifications))
 	mux.HandleFunc("/notifications/read", authMiddleware.RequireAuth(notifHandler.HandleMarkAllRead))
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {

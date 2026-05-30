@@ -21,9 +21,10 @@ interface GroupMessagesProps {
   group: GroupChat
   currentUserId: string
   initialMessages: GroupMessage[]
+  usersMap: Record<string, string>
 }
 
-const WS_BASE = 'ws://localhost:5090/ws'
+const WS_BASE = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:5090/ws'
 
 const wsColors: Record<WsStatus, string> = {
   open:       'bg-green-500',
@@ -32,7 +33,7 @@ const wsColors: Record<WsStatus, string> = {
   error:      'bg-red-500',
 }
 
-export default function GroupMessages({ group, currentUserId, initialMessages }: GroupMessagesProps) {
+export default function GroupMessages({ group, currentUserId, initialMessages, usersMap }: GroupMessagesProps) {
   const [messages, setMessages] = useState<GroupMessage[]>(initialMessages)
   const [wsUrl, setWsUrl]       = useState<string | null>(null)
   const bottomRef               = useRef<HTMLDivElement>(null)
@@ -57,7 +58,7 @@ export default function GroupMessages({ group, currentUserId, initialMessages }:
       ...prev,
       {
         id:         Date.now().toString(),
-        senderName: String(msg.data.sender_id),
+        senderName: usersMap[String(msg.data.sender_id)] ?? String(msg.data.sender_id),
         senderId:   String(msg.data.sender_id),
         text:       msg.data.body,
         date:       new Date(msg.data.sent_at).toLocaleDateString('fr-FR'),

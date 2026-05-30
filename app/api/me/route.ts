@@ -20,6 +20,7 @@ export async function GET() {
   const data = await response.json()
 
   return NextResponse.json({
+    id: String(data.id ?? ''),
     name: `${data.firstName ?? ''} ${data.lastName?.[0] ?? ''}.`.trim(),
     username: data.pseudo ?? '',
     followers: data.followers?.length ?? 0,

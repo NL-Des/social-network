@@ -90,3 +90,15 @@ func (s *GroupService) DeleteGroupComment(commentID, authorID int64) error {
 func (s *GroupService) GetGroupMembers(groupID int) ([]repository.GroupMember, error) {
 	return s.repo.GetGroupMembers(groupID)
 }
+
+func (s *GroupService) AddGroupMember(groupID, userID, invitedByID int64) error {
+	return s.repo.AddGroupMember(groupID, userID, invitedByID)
+}
+
+func (s *GroupService) RemoveGroupMember(groupID, targetUserID, requestingUserID int64) error {
+	return s.repo.RemoveGroupMember(groupID, targetUserID, requestingUserID)
+}
+
+func (s *GroupService) GetGroupTitle(groupID int64) (string, error) {
+	return s.repo.GetGroupTitle(groupID)
+}

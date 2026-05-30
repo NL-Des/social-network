@@ -19,9 +19,16 @@ export interface ChatConversation {
   unread?: number
 }
 
+interface GroupOption {
+  id: string
+  title: string
+  initials: string
+}
+
 interface MessagesProps {
   conversation: ChatConversation
   initialMessages: Message[]
+  groups?: GroupOption[]
 }
 
 const WS_BASE = 'ws://localhost:5090/ws'
@@ -33,11 +40,27 @@ const wsColors: Record<WsStatus, string> = {
   error:      'bg-red-500',
 }
 
-export default function Messages({ conversation, initialMessages }: MessagesProps) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages)
-  const [wsUrl, setWsUrl]       = useState<string | null>(null)
-  const bottomRef               = useRef<HTMLDivElement>(null)
-  const [draft, setDraft]       = useState('')
+export default function Messages({ conversation, initialMessages, groups = [] }: MessagesProps) {
+  const [messages, setMessages]   = useState<Message[]>(initialMessages)
+  const [wsUrl, setWsUrl]         = useState<string | null>(null)
+  const bottomRef                 = useRef<HTMLDivElement>(null)
+  const [draft, setDraft]         = useState('')
+  const [showInvite, setShowInvite] = useState(false)
+  const [inviting, setInviting]   = useState(false)
+
+  async function handleInvite(groupId: string) {
+    setInviting(true)
+    try {
+      await fetch(`/api/group-chat/${groupId}/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: Number(conversation.id) }),
+      })
+    } finally {
+      setInviting(false)
+      setShowInvite(false)
+    }
+  }
 
   useEffect(() => {
     fetch('/api/ws-token')
@@ -97,6 +120,37 @@ export default function Messages({ conversation, initialMessages }: MessagesProp
           {conversation.initials}
         </div>
         <p className="flex-1 text-white font-semibold text-lg">{conversation.name}</p>
+
+        {groups.length > 0 && (
+          <div className="relative">
+            <button
+              onClick={() => setShowInvite((v) => !v)}
+              title="Inviter dans un groupe"
+              className="w-7 h-7 rounded-full border border-brand-border text-[#49C7FF] text-base flex items-center justify-center hover:bg-white/10 transition-colors font-bold"
+            >
+              +
+            </button>
+            {showInvite && (
+              <div className="absolute right-0 top-[calc(100%+8px)] w-52 bg-brand-card border border-brand-border rounded-xl shadow-neon p-2 flex flex-col gap-1 z-20">
+                <p className="text-brand-text/50 text-xs px-2 pb-1">Inviter dans...</p>
+                {groups.map((g) => (
+                  <button
+                    key={g.id}
+                    onClick={() => handleInvite(g.id)}
+                    disabled={inviting}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-left disabled:opacity-40"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-purple-700 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                      {g.initials}
+                    </div>
+                    <span className="text-white text-sm truncate">{g.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <span className={`w-2 h-2 rounded-full ${wsColors[status]}`} title={status} />
       </div>
 

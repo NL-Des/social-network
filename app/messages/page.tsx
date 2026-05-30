@@ -10,6 +10,7 @@ import Messages, { Message, ChatConversation } from '@/app/components/home/Messa
 import GroupMessages, { GroupMessage, GroupChat } from '@/app/components/home/GroupMessages'
 import { useGroupStatuses } from '@/lib/useGroupStatuses'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
+import { useWebSocket } from '@/lib/useWebSocket'
 
 const mockGroups: Group[] = [
   { id: '1', name: 'Photo Urbaine', membersCount: '890'  },
@@ -44,6 +45,7 @@ interface ApiGroupInfo {
   title: string
   initials: string
   member_ids: number[]
+  creator_id?: number
 }
 
 function MessagesContent() {
@@ -60,6 +62,21 @@ function MessagesContent() {
   const [activeGroupId, setActiveGroupId]     = useState<string | null>(null)
   const [messages, setMessages]               = useState<Message[]>([])
   const [groupMessages, setGroupMessages]     = useState<GroupMessage[]>([])
+  const [wsUrl, setWsUrl]                     = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/ws-token')
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => { if (data?.token) setWsUrl(`${process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:5090/ws'}?token=${data.token}`) })
+      .catch(() => {})
+  }, [])
+
+  const handleWsMessage = useCallback((data: unknown) => {
+    const msg = data as { type?: string }
+    if (msg.type === 'group_member_added') loadGroups()
+  }, [])
+
+  useWebSocket(wsUrl, handleWsMessage)
 
   useEffect(() => {
     fetchMe()
@@ -95,6 +112,7 @@ function MessagesContent() {
           title:     g.title,
           initials:  g.initials,
           memberIds: (g.member_ids ?? []).map(String),
+          creatorId: String(g.creator_id ?? ''),
         })))
       })
       .catch(() => {})
@@ -171,16 +189,15 @@ function MessagesContent() {
     if (activeGroupId) fetchGroupMessages(activeGroupId)
   }, [activeGroupId, fetchGroupMessages])
 
-  // Récupère l'id numérique de l'utilisateur courant depuis /api/users et /api/me combinés
-  // On utilise allUsers + user.name pour trouver l'id approximatif — fallback sur '' si introuvable
   useEffect(() => {
-    if (!user || allUsers.length === 0) return
-    const found = allUsers.find((u) => u.name === user.name)
-    if (found) setUserId(found.id)
-  }, [user, allUsers])
+    if (!user) return
+    setUserId(user.id)
+  }, [user])
 
   const { onlineUsers } = useOnlineStatus()
   const groupStatuses   = useGroupStatuses(groups, activeGroupId, onlineUsers)
+
+  const usersMap = Object.fromEntries(allUsers.map((u) => [u.id, u.name]))
 
   if (loading) {
     return (
@@ -229,6 +246,7 @@ function MessagesContent() {
               onGroupLeft={loadGroups}
               groupStatuses={groupStatuses}
               allUsers={allUsers}
+              currentUserId={userId ?? undefined}
             />
           </div>
 
@@ -239,12 +257,14 @@ function MessagesContent() {
                 group={activeGroup}
                 currentUserId={userId ?? ''}
                 initialMessages={groupMessages}
+                usersMap={usersMap}
               />
             ) : activeConversation ? (
               <Messages
                 key={activeConversation.id}
                 conversation={activeConversation}
                 initialMessages={messages}
+                groups={groups}
               />
             ) : (
               <div className="h-full bg-brand-card border border-brand-border rounded-2xl flex items-center justify-center">

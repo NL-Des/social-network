@@ -15,6 +15,7 @@ export interface GroupConversation {
   title: string
   initials: string
   memberIds: string[]
+  creatorId: string
 }
 
 type GroupStatus = 'online' | 'offline' | 'unread'
@@ -142,6 +143,7 @@ interface LeftSidebarProps {
   onGroupLeft?: () => void
   groupStatuses: Record<string, GroupStatus>
   allUsers?: MemberInfo[]
+  currentUserId?: string
 }
 
 export default function LeftSidebar({
@@ -155,11 +157,23 @@ export default function LeftSidebar({
   onGroupLeft,
   groupStatuses,
   allUsers = [],
+  currentUserId,
 }: LeftSidebarProps) {
   const [search, setSearch]               = useState('')
   const [showModal, setShowModal]         = useState(false)
   const [openMembersId, setOpenMembersId] = useState<string | null>(null)
   const [leavingId, setLeavingId]         = useState<string | null>(null)
+  const [removingId, setRemovingId]       = useState<string | null>(null)
+
+  async function handleRemoveMember(groupId: string, userId: string) {
+    setRemovingId(userId)
+    try {
+      await fetch(`/api/group-chat/${groupId}/members/${userId}`, { method: 'DELETE' })
+      onGroupLeft?.()
+    } finally {
+      setRemovingId(null)
+    }
+  }
 
   async function handleLeave(groupId: string) {
     setLeavingId(groupId)
@@ -172,9 +186,6 @@ export default function LeftSidebar({
     }
   }
 
-  const filteredConvs = conversations.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase())
-  )
   const filteredGroups = groups.filter((g) =>
     g.title.toLowerCase().includes(search.toLowerCase())
   )
@@ -209,34 +220,6 @@ export default function LeftSidebar({
         />
 
         <div className="flex-1 overflow-y-auto flex flex-col gap-1">
-          {/* Conversations privées */}
-          {filteredConvs.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => onSelect(c.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left ${
-                activeId === c.id
-                  ? 'border border-brand-border shadow-[0_0_10px_rgba(73,199,255,0.35)]'
-                  : 'hover:bg-white/5'
-              }`}
-            >
-              <div className="relative shrink-0 flex items-center">
-                {c.online && (
-                  <span className="absolute -left-2.5 w-2 h-2 bg-green-500 rounded-full" />
-                )}
-                <div className="w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center text-white text-sm font-bold">
-                  {c.initials}
-                </div>
-              </div>
-              <span className="flex-1 text-white text-base truncate">{c.name}</span>
-              {c.unread ? (
-                <span className="shrink-0 w-5 h-5 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                  {c.unread}
-                </span>
-              ) : null}
-            </button>
-          ))}
-
           {/* Séparateur groupes */}
           {filteredGroups.length > 0 && (
             <div className="pt-3 pb-1">
@@ -293,6 +276,16 @@ export default function LeftSidebar({
                             {m.initials}
                           </div>
                           <span className="text-brand-text text-sm truncate">{m.name}</span>
+                          {currentUserId === g.creatorId && m.id !== currentUserId && (
+                            <button
+                              onClick={() => handleRemoveMember(g.id, m.id)}
+                              disabled={removingId === m.id}
+                              title="Retirer du groupe"
+                              className="ml-auto w-5 h-5 flex items-center justify-center rounded-full text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-colors text-xs disabled:opacity-40"
+                            >
+                              ×
+                            </button>
+                          )}
                         </div>
                       ))
                     )}

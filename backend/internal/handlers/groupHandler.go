@@ -351,13 +351,8 @@ func (h *GroupHandler) HandleGroupCommentDelete(w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// HandleGroupMembers gère GET /group-chat/{id}/members
+// HandleGroupMembers gère GET et POST /group-chat/{id}/members
 func (h *GroupHandler) HandleGroupMembers(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
-		return
-	}
-
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
@@ -376,14 +371,41 @@ func (h *GroupHandler) HandleGroupMembers(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	members, err := h.GroupService.GetGroupMembers(int(groupID))
-	if err != nil {
-		http.Error(w, "erreur serveur", http.StatusInternalServerError)
-		return
-	}
+	switch r.Method {
+	case http.MethodGet:
+		members, err := h.GroupService.GetGroupMembers(int(groupID))
+		if err != nil {
+			http.Error(w, "erreur serveur", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(members)
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(members)
+	case http.MethodPost:
+		var body struct {
+			UserID int64 `json:"user_id"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.UserID == 0 {
+			http.Error(w, "user_id invalide", http.StatusBadRequest)
+			return
+		}
+		if err := h.GroupService.AddGroupMember(groupID, body.UserID, int64(userID)); err != nil {
+			http.Error(w, "erreur serveur", http.StatusInternalServerError)
+			return
+		}
+		// Notifie tous les membres (y compris le nouveau) pour qu'ils rechargent la liste
+		if memberIDs, err := h.GroupService.GetMemberIDs(groupID); err == nil {
+			event := ws.MessageWs{Type: "group_member_added", Data: map[string]int64{"group_id": groupID}}
+			for _, mid := range memberIDs {
+				h.Hub.BroadcastToUser(mid, event)
+			}
+		}
+		go h.sendGroupAddedNotif(groupID, int64(userID), body.UserID)
+		w.WriteHeader(http.StatusNoContent)
+
+	default:
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+	}
 }
 
 // HandleGroupPostLike gère POST/DELETE /group-chat/{id}/posts/{postId}/like
@@ -473,4 +495,68 @@ func (h *GroupHandler) broadcastGroupLikeUpdate(groupPostID int64, excludeUserID
 			"dislikes": dislikes,
 		},
 	}, int64(excludeUserID))
+}
+
+
+// HandleRemoveMember gère DELETE /group-chat/{id}/members/{userId}
+func (h *GroupHandler) HandleRemoveMember(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+	requesterID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
+		return
+	}
+	targetID, err := strconv.ParseInt(r.PathValue("userId"), 10, 64)
+	if err != nil {
+		http.Error(w, "id utilisateur invalide", http.StatusBadRequest)
+		return
+	}
+	if err := h.GroupService.RemoveGroupMember(groupID, targetID, int64(requesterID)); err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+	go h.sendGroupRemovedNotif(groupID, int64(requesterID), targetID)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *GroupHandler) sendGroupAddedNotif(groupID, actorID, targetID int64) {
+	actor, err := h.UserService.GetProfile(int(actorID))
+	if err != nil {
+		return
+	}
+	title, err := h.GroupService.GetGroupTitle(groupID)
+	if err != nil {
+		return
+	}
+	if err := h.NotifService.Notify(targetID, model.NotifGroupInvite, model.NotificationPayload{
+		ActorName: actor.Username,
+		GroupName: title,
+	}); err != nil {
+		log.Printf("sendGroupAddedNotif: %v", err)
+	}
+}
+
+func (h *GroupHandler) sendGroupRemovedNotif(groupID, actorID, targetID int64) {
+	actor, err := h.UserService.GetProfile(int(actorID))
+	if err != nil {
+		return
+	}
+	title, err := h.GroupService.GetGroupTitle(groupID)
+	if err != nil {
+		return
+	}
+	if err := h.NotifService.Notify(targetID, model.NotifBannedFromGroup, model.NotificationPayload{
+		ActorName: actor.Username,
+		GroupName: title,
+	}); err != nil {
+		log.Printf("sendGroupRemovedNotif: %v", err)
+	}
 }
