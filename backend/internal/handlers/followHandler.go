@@ -42,10 +42,28 @@ func (h *FollowHandler) Follow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.FollowService.Follow(viewerID, targetID); err != nil {
+	status, err := h.FollowService.Follow(viewerID, targetID)
+	if err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+
+	go func() {
+		actor, err := h.UserService.GetProfile(viewerID)
+		if err != nil {
+			return
+		}
+		kind := model.NotifFollow
+		if status == "pending" {
+			kind = model.NotifFollowRequest
+		}
+		if err := h.NotifService.Notify(int64(targetID), kind, model.NotificationPayload{
+			ActorID:   int64(viewerID),
+			ActorName: actor.Username,
+		}); err != nil {
+			log.Printf("follow notif: %v", err)
+		}
+	}()
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -76,6 +94,7 @@ func (h *FollowHandler) Unfollow(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err := h.NotifService.Notify(int64(targetID), model.NotifUnfollow, model.NotificationPayload{
+			ActorID:   int64(viewerID),
 			ActorName: actor.Username,
 		}); err != nil {
 			log.Printf("unfollow notif: %v", err)

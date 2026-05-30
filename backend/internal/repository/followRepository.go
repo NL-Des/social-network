@@ -84,10 +84,11 @@ func (r *FollowRepository) RejectFollowRequest(followerID, followingID int) erro
 	return err
 }
 
-func (r *FollowRepository) Follow(followerID, followingID int) error {
+// Follow insère la relation et retourne le statut résultant ("accepted" ou "pending").
+func (r *FollowRepository) Follow(followerID, followingID int) (string, error) {
 	isPrivate, err := r.IsPrivateProfile(followingID)
 	if err != nil {
-		return err
+		return "", err
 	}
 	status := "accepted"
 	if isPrivate {
@@ -98,7 +99,7 @@ func (r *FollowRepository) Follow(followerID, followingID int) error {
 		VALUES ($1, $2, $3)
 		ON CONFLICT DO NOTHING
 	`, followerID, followingID, status)
-	return err
+	return status, err
 }
 
 func (r *FollowRepository) Unfollow(followerID, followingID int) error {

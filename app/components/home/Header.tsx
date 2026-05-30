@@ -26,7 +26,6 @@ export default function Header({ user }: { user: CurrentUser }) {
   const [wsUrl, setWsUrl]           = useState<string | null>(null)
   const [badge, setBadge]           = useState(0)
   const notifRef = useRef<HTMLDivElement>(null)
-  const wasOpen  = useRef(false)
 
   // Récupère le token WS une seule fois
   useEffect(() => {
@@ -66,10 +65,9 @@ export default function Header({ user }: { user: CurrentUser }) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [notifOpen])
 
-  // Reset badge quand le panel se ferme
+  // Reset badge quand le panel s'ouvre (l'utilisateur lit ses notifs)
   useEffect(() => {
-    if (wasOpen.current && !notifOpen) setBadge(0)
-    wasOpen.current = notifOpen
+    if (notifOpen) setBadge(0)
   }, [notifOpen])
 
   return (

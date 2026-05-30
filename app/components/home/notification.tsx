@@ -1,11 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useWebSocket } from '@/lib/useWebSocket'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type NotifKind =
+  | 'follow'
   | 'follow_request'
   | 'group_invite'
   | 'notif_new_post_in_group'
@@ -21,6 +22,7 @@ export interface BackendNotification {
   receiver_id: number
   kind: NotifKind
   payload: {
+    actor_id?: number
     actor_name?: string
     group_name?: string
     post_title?: string
@@ -38,6 +40,8 @@ function formatNotif(n: BackendNotification): { symbol: string; color: string; m
   const post  = n.payload.post_title  || 'une publication'
 
   switch (n.kind) {
+    case 'follow':
+      return { symbol: '+', color: 'bg-purple-600', message: `${actor} s'est abonné(e) à votre profil.` }
     case 'follow_request':
       return { symbol: '+', color: 'bg-purple-600', message: `${actor} souhaite vous suivre.` }
     case 'group_invite':
@@ -79,25 +83,25 @@ interface NotificationListProps {
 export default function NotificationList({ wsUrl, onUnreadCountChange }: NotificationListProps) {
   const [notifications, setNotifications] = useState<BackendNotification[]>([])
   const [loading, setLoading] = useState(true)
+  // IDs des notifs non-lues au moment du chargement → gardent le highlight pendant toute la session
+  const initialUnreadIds = useRef<Set<number>>(new Set())
 
-  // Chargement initial + mark-all-read à l'unmount (seulement si les notifs ont été chargées)
   useEffect(() => {
-    let cancelled = false
     let loaded = false
 
     fetch('/api/notifications')
       .then((res) => res.ok ? res.json() : [])
       .then((data: BackendNotification[]) => {
-        if (cancelled) return
+        const list = Array.isArray(data) ? data : []
+        initialUnreadIds.current = new Set(list.filter((n) => !n.read).map((n) => n.id))
         loaded = true
-        setNotifications(Array.isArray(data) ? data : [])
+        setNotifications(list)
         setLoading(false)
       })
-      .catch(() => { if (!cancelled) setLoading(false) })
+      .catch(() => setLoading(false))
 
+    // Marquer comme lus à la fermeture du panel (pour que le badge reste visible pendant la visite)
     return () => {
-      cancelled = true
-      // Ne marque comme lu que si on a vraiment affiché les notifs
       if (loaded) fetch('/api/notifications/read', { method: 'PATCH' }).catch(() => {})
     }
   }, [])
@@ -112,8 +116,10 @@ export default function NotificationList({ wsUrl, onUnreadCountChange }: Notific
   const handleWsMessage = useCallback((data: unknown) => {
     const msg = data as { type?: string; data?: { kind?: string; payload?: BackendNotification['payload'] } }
     if (msg.type === 'notification') {
+      const newId = Date.now()
+      initialUnreadIds.current.add(newId)
       const fake: BackendNotification = {
-        id:          Date.now(),
+        id:          newId,
         receiver_id: 0,
         kind:        (msg.data?.kind ?? 'follow_request') as NotifKind,
         payload:     msg.data?.payload ?? {},
@@ -127,6 +133,26 @@ export default function NotificationList({ wsUrl, onUnreadCountChange }: Notific
   useWebSocket(wsUrl ?? null, handleWsMessage)
 
   const unreadCount = notifications.filter((n) => !n.read).length
+
+  function deleteOne(id: number) {
+    setNotifications((prev) => prev.filter((n) => n.id !== id))
+    fetch(`/api/notifications/${id}`, { method: 'DELETE' }).catch(() => {})
+  }
+
+  function deleteAll() {
+    setNotifications([])
+    fetch('/api/notifications', { method: 'DELETE' }).catch(() => {})
+  }
+
+  async function handleAccept(n: BackendNotification) {
+    await fetch(`/api/users/${n.payload.actor_id}/follow/accept`, { method: 'PATCH' }).catch(() => {})
+    deleteOne(n.id)
+  }
+
+  async function handleReject(n: BackendNotification) {
+    await fetch(`/api/users/${n.payload.actor_id}/follow/reject`, { method: 'DELETE' }).catch(() => {})
+    deleteOne(n.id)
+  }
 
   if (loading) {
     return <p className="text-brand-text text-sm text-center py-4">Chargement…</p>
@@ -144,19 +170,32 @@ export default function NotificationList({ wsUrl, onUnreadCountChange }: Notific
             </span>
           )}
         </div>
+        {notifications.length > 0 && (
+          <button
+            onClick={deleteAll}
+            className="text-xs text-red-400 hover:text-red-300 transition-colors"
+          >
+            Tout supprimer
+          </button>
+        )}
       </div>
 
       {/* Liste */}
       <div className="flex flex-col gap-3 max-h-96 overflow-y-auto pr-1">
-        {notifications.filter((n) => !n.read).length === 0 ? (
+        {notifications.length === 0 ? (
           <p className="text-brand-text/60 text-sm text-center py-4">Aucune notification.</p>
         ) : (
-          notifications.filter((n) => !n.read).slice(0, 10).map((n) => {
+          notifications.slice(0, 30).map((n) => {
             const { symbol, color, message } = formatNotif(n)
+            const isNew = initialUnreadIds.current.has(n.id) || !n.read
             return (
               <div
                 key={n.id}
-                className="flex items-start gap-4 p-4 rounded-2xl border border-brand-border shadow-[0_0_10px_rgba(73,199,255,0.2)] bg-brand-card w-full"
+                className={`flex items-start gap-4 p-4 rounded-2xl border shadow-[0_0_10px_rgba(73,199,255,0.2)] w-full ${
+                  isNew
+                    ? 'border-[#49C7FF]/50 bg-[#49C7FF]/5 shadow-[0_0_12px_rgba(73,199,255,0.3)]'
+                    : 'border-brand-border bg-brand-card'
+                }`}
               >
                 {/* Badge type */}
                 <span
@@ -169,9 +208,38 @@ export default function NotificationList({ wsUrl, onUnreadCountChange }: Notific
                 <div className="flex-1 min-w-0">
                   <p className="text-brand-text text-sm leading-snug">{message}</p>
                   <p className="text-brand-text/50 text-xs mt-1">{formatDate(n.created_at)}</p>
+                  {n.kind === 'follow_request' && n.payload.actor_id && (
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => handleAccept(n)}
+                        className="px-3 py-1 rounded-lg bg-green-600/20 border border-green-500/40 text-green-400 text-xs hover:bg-green-600/40 transition-colors"
+                      >
+                        ✓ Accepter
+                      </button>
+                      <button
+                        onClick={() => handleReject(n)}
+                        className="px-3 py-1 rounded-lg bg-red-600/20 border border-red-500/40 text-red-400 text-xs hover:bg-red-600/40 transition-colors"
+                      >
+                        ✕ Refuser
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                <span className="shrink-0 w-2 h-2 rounded-full bg-brand-border mt-1" />
+                <div className="shrink-0 flex flex-col items-center gap-2 mt-1">
+                  {isNew ? (
+                    <span className="w-2 h-2 rounded-full bg-purple-500" />
+                  ) : (
+                    <span className="w-2 h-2" />
+                  )}
+                  <button
+                    onClick={() => deleteOne(n.id)}
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-brand-text/40 hover:text-red-400 hover:bg-red-400/10 transition-colors text-base leading-none"
+                    aria-label="Supprimer"
+                  >
+                    ×
+                  </button>
+                </div>
               </div>
             )
           })

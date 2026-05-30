@@ -3,6 +3,7 @@ package model
 type NotifKind string
 
 const (
+	NotifFollow               NotifKind = "follow"
 	NotifFollowRequest        NotifKind = "follow_request"
 	NotifGroupInvite          NotifKind = "group_invite"
 	NotifNewPostInGroup       NotifKind = "notif_new_post_in_group"
@@ -15,6 +16,7 @@ const (
 )
 
 type NotificationPayload struct {
+	ActorID   int64  `json:"actor_id,omitempty"`
 	ActorName string `json:"actor_name,omitempty"`
 	GroupName string `json:"group_name,omitempty"`
 	PostTitle string `json:"post_title,omitempty"`

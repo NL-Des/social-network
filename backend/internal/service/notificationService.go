@@ -40,3 +40,11 @@ func (s *NotificationService) MarkRead(notifID, userID int64) error {
 func (s *NotificationService) MarkAllRead(userID int64) error {
 	return s.repo.MarkAllRead(userID)
 }
+
+func (s *NotificationService) Delete(notifID, userID int64) error {
+	return s.repo.Delete(notifID, userID)
+}
+
+func (s *NotificationService) DeleteAll(userID int64) error {
+	return s.repo.DeleteAll(userID)
+}

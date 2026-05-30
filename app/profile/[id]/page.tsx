@@ -278,7 +278,7 @@ function PublicProfileContent({
                     {data.user.birthDate && (
                       <div className="flex gap-2">
                         <dt className="text-brand-border">Date de naissance:</dt>
-                        <dd className="text-brand-text">{data.user.birthDate}</dd>
+                        <dd className="text-brand-text">{(() => { const d = data.user.birthDate?.split('T')[0]?.split('-'); return d?.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : data.user.birthDate })()}</dd>
                       </div>
                     )}
                     {/* À propos */}

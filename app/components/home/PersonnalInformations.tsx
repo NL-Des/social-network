@@ -75,7 +75,7 @@ export default function PersonnalInformations({ user }: PersonnalInformationsPro
             { label: 'Nom', value: user.lastName },
             { label: 'Prénom', value: user.firstName },
             { label: 'Adresse mail', value: user.email },
-            { label: 'Date de naissance', value: user.birthDate },
+            { label: 'Date de naissance', value: (() => { const d = user.birthDate?.split('T')[0]?.split('-'); return d?.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : '' })() },
           ].map(({ label, value }) => (
             <div key={label} className="flex gap-2">
               <dt className="text-brand-border">{label}:</dt>
@@ -97,7 +97,7 @@ export default function PersonnalInformations({ user }: PersonnalInformationsPro
         </button>
 
         {editFormOpen && (
-          <div className="absolute bottom-[calc(100%+12px)] left-0 right-0 bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-4 z-10">
+          <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-4 z-10">
             <h3 className="font-bold text-[#49C7FF] text-base text-center">
               Modifier le profil
             </h3>
@@ -155,7 +155,7 @@ export default function PersonnalInformations({ user }: PersonnalInformationsPro
         </button>
 
         {pwFormOpen && (
-          <div className="absolute bottom-[calc(100%+12px)] left-0 right-0 bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-4 z-10">
+          <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-4 z-10">
             <h3 className="font-bold text-[#49C7FF] text-base text-center">
               Modifier le mot de passe
             </h3>

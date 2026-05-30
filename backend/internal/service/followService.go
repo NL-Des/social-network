@@ -13,7 +13,7 @@ func NewFollowService(repo *repository.FollowRepository) *FollowService {
 	return &FollowService{FollowRepo: repo}
 }
 
-func (s *FollowService) Follow(followerID, followingID int) error {
+func (s *FollowService) Follow(followerID, followingID int) (string, error) {
 	return s.FollowRepo.Follow(followerID, followingID)
 }
 

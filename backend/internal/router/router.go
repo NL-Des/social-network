@@ -70,6 +70,10 @@ func NewRouter(serverMux *http.ServeMux, profilHandler *handlers.ProfilHandler, 
 		auth.RequireAuth(http.HandlerFunc(notifHandler.HandleMarkRead)),
 	).Methods("PATCH")
 
+	router.Handle("/notifications/{id}",
+		auth.RequireAuth(http.HandlerFunc(notifHandler.HandleDelete)),
+	).Methods("DELETE")
+
 	// Routes événements de groupe
 	router.Handle("/group-chat/{id}/events",
 		auth.RequireAuth(http.HandlerFunc(eventHandler.HandleGroupEvents)),

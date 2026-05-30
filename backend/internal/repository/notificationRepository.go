@@ -70,3 +70,19 @@ func (r *NotificationRepository) MarkAllRead(userID int64) error {
 	)
 	return err
 }
+
+func (r *NotificationRepository) Delete(notifID, userID int64) error {
+	_, err := r.db.Exec(
+		`DELETE FROM notifications WHERE id = $1 AND receiver_id = $2`,
+		notifID, userID,
+	)
+	return err
+}
+
+func (r *NotificationRepository) DeleteAll(userID int64) error {
+	_, err := r.db.Exec(
+		`DELETE FROM notifications WHERE receiver_id = $1`,
+		userID,
+	)
+	return err
+}
