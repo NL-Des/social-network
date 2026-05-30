@@ -157,3 +157,18 @@ func (r *ProfilRepository) UpdateProfile(userID int, firstName, lastName, pseudo
     `, firstName, lastName, pseudo, aboutMe, userID)
 	return err
 }
+
+func (r *ProfilRepository) GetFollowStatus(followerID, followingID int) (string, error) {
+	var status string
+	err := r.db.QueryRow(`
+		SELECT status FROM followers
+		WHERE followerID = $1 AND followingID = $2
+	`, followerID, followingID).Scan(&status)
+	if err == sql.ErrNoRows {
+		return "none", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return status, nil
+}

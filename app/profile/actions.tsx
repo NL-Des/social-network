@@ -12,6 +12,7 @@ export interface UserProfile {
   followersCount: number;
   initials: string;
   description?: string;
+  avatar?: string;
 }
 
 export interface Contact {
@@ -84,6 +85,7 @@ export default async function profileAction(): Promise<ProfilePageProps> {
       followersCount: data.followers?.length ?? 0,
       initials: getInitials(data.firstName, data.lastName),
       description: data.aboutMe ?? '',
+      avatar: data.avatar ?? "",
     },
     following: (data.following ?? []).map((c: any) => ({
       id: String(c.id),

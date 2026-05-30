@@ -9,8 +9,7 @@ import (
 )
 
 var (
-	ErrUserNotFound   = errors.New("user not found")
-	ErrProfilePrivate = errors.New("profile is private")
+	ErrUserNotFound = errors.New("user not found")
 )
 
 type ProfilService struct {
@@ -21,12 +20,8 @@ func NewProfilService(repo *repository.ProfilRepository) *ProfilService {
 	return &ProfilService{ProfilRepo: repo}
 }
 
-// Retourne un profil public en tenant compte de l'utilisateur qui le consulte :
-// Si l'utilisateur consulte son propre profil : accès complet
-// Si le profil est privé et que l'utilisateur n’est pas le propriétaire : accès restreint
 func (s *ProfilService) GetProfile(viewerID, profileID int) (*model.PublicProfile, error) {
 
-	// Récupération de l'utilisateur cible
 	user, err := s.ProfilRepo.GetUserByID(profileID)
 	if err == sql.ErrNoRows {
 		return nil, ErrUserNotFound
@@ -37,31 +32,42 @@ func (s *ProfilService) GetProfile(viewerID, profileID int) (*model.PublicProfil
 
 	isOwner := viewerID == profileID
 
-	// Si ce n'est pas son profil et que le compte est privé : interdit
+	// Profil privé et pas le propriétaire
 	if !isOwner && user.IsPrivate {
-		isFollower, err := s.ProfilRepo.IsFollower(viewerID, profileID)
+		followStatus, err := s.ProfilRepo.GetFollowStatus(viewerID, profileID)
 		if err != nil {
 			return nil, err
 		}
-		if !isFollower {
-			return nil, ErrProfilePrivate
+
+		// Pas encore accepté : infos minimales seulement
+		if followStatus != "accepted" {
+			return &model.PublicProfile{
+				ID:           user.ID,
+				Pseudo:       user.Username,
+				FirstName:    user.FirstName,
+				LastName:     user.Name,
+				Avatar:       user.ProfilePicture,
+				IsPrivate:    true,
+				IsAccessible: false,
+				FollowStatus: followStatus,
+			}, nil
 		}
 	}
 
-	// Construction du profil
+	// Profil accessible : construction complète
 	profile := &model.PublicProfile{
-		ID:          user.ID,
-		Pseudo:      user.Username,
-		LastName:    user.Name,
-		FirstName:   user.FirstName,
-		DateOfBirth: user.Birthday,
-		AboutMe:     user.Description,
-		Avatar:      user.ProfilePicture,
-		IsPrivate:   user.IsPrivate,
-		CanEdit:     isOwner,
+		ID:           user.ID,
+		Pseudo:       user.Username,
+		LastName:     user.Name,
+		FirstName:    user.FirstName,
+		DateOfBirth:  user.Birthday,
+		AboutMe:      user.Description,
+		Avatar:       user.ProfilePicture,
+		IsPrivate:    user.IsPrivate,
+		IsAccessible: true,
+		CanEdit:      isOwner,
 	}
 
-	// Followers / Following / Posts
 	followers, err := s.ProfilRepo.GetFollowers(profileID)
 	if err != nil {
 		log.Printf("GetFollowers(%d): %v", profileID, err)
@@ -89,6 +95,7 @@ func (s *ProfilService) GetProfile(viewerID, profileID int) (*model.PublicProfil
 			log.Printf("IsFollower(%d, %d): %v", viewerID, profileID, err)
 		}
 		profile.IsFollowing = isFollower
+		profile.FollowStatus = "accepted"
 	}
 
 	return profile, nil
@@ -98,7 +105,6 @@ func (s *ProfilService) UpdateVisibility(userID int, isPrivate bool) error {
 	return s.ProfilRepo.UpdateVisibility(userID, isPrivate)
 }
 
-// GetUserPosts retourne les posts d'un utilisateur via son ID.
 func (s *ProfilService) GetUserPosts(userID int) ([]model.AllPosts, error) {
 	return s.ProfilRepo.GetPosts(userID)
 }

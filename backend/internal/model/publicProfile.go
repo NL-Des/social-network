@@ -1,22 +1,23 @@
 package model
 
 type PublicProfile struct {
-	ID          int    `json:"id"`
-	Pseudo      string `json:"pseudo"`
-	FirstName   string `json:"firstName"`
-	LastName    string `json:"lastName"`
-	DateOfBirth string `json:"dateOfBirth"`
-	AboutMe     string `json:"aboutMe"`
-	Avatar      string `json:"avatar"`
-	IsPrivate   bool   `json:"isPrivate"`
+	ID           int    `json:"id"`
+	Pseudo       string `json:"pseudo"`
+	FirstName    string `json:"firstName"`
+	LastName     string `json:"lastName"`
+	DateOfBirth  string `json:"dateOfBirth"`
+	AboutMe      string `json:"aboutMe"`
+	Avatar       string `json:"avatar"`
+	IsPrivate    bool   `json:"isPrivate"`
+	IsAccessible bool   `json:"isAccessible"`
 
 	Followers []Follower  `json:"followers"`
 	Following []Following `json:"following"`
 	Posts     []AllPosts  `json:"posts"`
 
-	// indique si l’utilisateur connecté est propriétaire du profil
-	CanEdit     bool `json:"canEdit"`
-	IsFollowing bool `json:"isFollowing"`
+	CanEdit      bool   `json:"canEdit"`
+	IsFollowing  bool   `json:"isFollowing"`
+	FollowStatus string `json:"followStatus"`
 }
 
 type Follower struct {

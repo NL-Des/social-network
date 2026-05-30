@@ -19,7 +19,6 @@ func NewProfilHandler(s *service.ProfilService) *ProfilHandler {
 	return &ProfilHandler{ProfilService: s}
 }
 
-// /profile/{id}
 func (h *ProfilHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	viewerID, ok := r.Context().Value("userID").(int)
 	if !ok {
@@ -27,7 +26,6 @@ func (h *ProfilHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Récupération de l'ID dans l'URL via Mux
 	vars := mux.Vars(r)
 	profileID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -35,43 +33,21 @@ func (h *ProfilHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// POUR TEST
-	/* fakeUser := map[string]interface{}{
-		"id":        profileID,
-		"pseudo":    "TestUser",
-		"bio":       "Ceci est un faux utilisateur pour test",
-		"followers": []string{"Alice", "Bob"},
-		"following": []string{"Charlie"},
-		"posts":     []string{"Post 1", "Post 2"},
-		"canEdit":   viewerID == profileID,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(fakeUser)
-	return */
-
-	// Appel au service métier
 	profile, err := h.ProfilService.GetProfile(viewerID, profileID)
 	if err != nil {
-
 		switch err {
 		case service.ErrUserNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		case service.ErrProfilePrivate:
-			http.Error(w, err.Error(), http.StatusForbidden)
 		default:
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 		}
-
 		return
 	}
 
-	// Réponse JSON
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(profile); err != nil {
 		log.Printf("encode profile: %v", err)
 	}
-
 }
 
 // /me

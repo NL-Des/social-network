@@ -106,23 +106,19 @@ function RightSidebarInner({ groups: groupsProp }: RightSidebarProps) {
             const isDropdownOpen = privateOpenId === user.id
 
             if (user.isPrivate && !onMessagesPage) {
-              return (
-                <div key={user.id} className="flex flex-col -mx-2">
-                  <button
-                    onClick={() => setPrivateOpenId(isDropdownOpen ? null : user.id)}
-                    className="flex items-center gap-3 rounded-xl px-2 py-1 hover:bg-white/5 transition-colors text-left w-full"
-                  >
-                    {avatar}
-                    <p className="text-white text-lg">{user.name}</p>
-                  </button>
-                  {isDropdownOpen && (
-                    <p className="text-red-400 text-sm px-2 pb-1 pl-11">
-                      Ce profil est privé
-                    </p>
-                  )}
-                </div>
-              )
-            }
+  return (
+    <div key={user.id} className="flex items-center gap-3 rounded-xl px-2 py-1 -mx-2">
+      <Link
+        href={`/profile/${user.id}`}
+        onClick={() => handleClearUnread(user.id)}
+        className="flex items-center gap-3 flex-1 hover:bg-white/5 rounded-xl transition-colors"
+      >
+        {avatar}
+        <p className="text-white text-lg">{user.name}</p>
+      </Link>
+    </div>
+  )
+}
 
             const inner = (
               <>
