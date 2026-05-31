@@ -43,6 +43,10 @@ func (s *ChatGroupService) GetChatGroupMembers(chatGroupID int64) ([]repository.
 	return s.repo.GetChatGroupMembers(chatGroupID)
 }
 
+func (s *ChatGroupService) GetChatGroupTitle(chatGroupID int64) (string, error) {
+	return s.repo.GetChatGroupTitle(chatGroupID)
+}
+
 func (s *ChatGroupService) AddChatGroupMember(chatGroupID, userID int64) error {
 	return s.repo.AddChatGroupMember(chatGroupID, userID)
 }

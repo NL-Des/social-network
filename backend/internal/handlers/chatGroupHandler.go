@@ -2,21 +2,26 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/gorilla/mux"
+	"social-network/backend/internal/model"
 	"social-network/backend/internal/service"
 	ws "social-network/backend/internal/websocket"
 )
 
 type ChatGroupHandler struct {
-	Service *service.ChatGroupService
-	Hub     *ws.Hub
+	Service      *service.ChatGroupService
+	UserService  *service.UserService
+	NotifService *service.NotificationService
+	Hub          *ws.Hub
 }
 
-func NewChatGroupHandler(s *service.ChatGroupService, hub *ws.Hub) *ChatGroupHandler {
-	return &ChatGroupHandler{Service: s, Hub: hub}
+func NewChatGroupHandler(s *service.ChatGroupService, us *service.UserService, ns *service.NotificationService, hub *ws.Hub) *ChatGroupHandler {
+	return &ChatGroupHandler{Service: s, UserService: us, NotifService: ns, Hub: hub}
 }
 
 // HandleChatGroups gère GET/POST /chat-groups
@@ -75,7 +80,7 @@ func (h *ChatGroupHandler) HandleChatGroupMessages(w http.ResponseWriter, r *htt
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id invalide", http.StatusBadRequest)
 		return
@@ -101,7 +106,7 @@ func (h *ChatGroupHandler) HandleChatGroupMembers(w http.ResponseWriter, r *http
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id invalide", http.StatusBadRequest)
 		return
@@ -140,6 +145,7 @@ func (h *ChatGroupHandler) HandleChatGroupMembers(w http.ResponseWriter, r *http
 				h.Hub.BroadcastToUser(mid, event)
 			}
 		}
+		go h.sendChatGroupAddedNotif(id, int64(userID), body.UserID)
 		w.WriteHeader(http.StatusNoContent)
 
 	default:
@@ -158,12 +164,12 @@ func (h *ChatGroupHandler) HandleChatGroupMemberRemove(w http.ResponseWriter, r 
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id invalide", http.StatusBadRequest)
 		return
 	}
-	targetID, err := strconv.ParseInt(r.PathValue("userId"), 10, 64)
+	targetID, err := strconv.ParseInt(mux.Vars(r)["userId"], 10, 64)
 	if err != nil {
 		http.Error(w, "userId invalide", http.StatusBadRequest)
 		return
@@ -173,6 +179,23 @@ func (h *ChatGroupHandler) HandleChatGroupMemberRemove(w http.ResponseWriter, r 
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *ChatGroupHandler) sendChatGroupAddedNotif(chatGroupID, actorID, targetID int64) {
+	actor, err := h.UserService.GetProfile(int(actorID))
+	if err != nil {
+		return
+	}
+	title, err := h.Service.GetChatGroupTitle(chatGroupID)
+	if err != nil {
+		return
+	}
+	if err := h.NotifService.Notify(targetID, model.NotifGroupInvite, model.NotificationPayload{
+		ActorName: actor.Username,
+		GroupName: title,
+	}); err != nil {
+		log.Printf("sendChatGroupAddedNotif: %v", err)
+	}
 }
 
 // HandleLeaveChatGroup gère DELETE /chat-groups/{id}/leave
@@ -186,7 +209,7 @@ func (h *ChatGroupHandler) HandleLeaveChatGroup(w http.ResponseWriter, r *http.R
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id invalide", http.StatusBadRequest)
 		return

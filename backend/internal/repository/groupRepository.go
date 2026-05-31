@@ -482,6 +482,36 @@ func (r *GroupRepo) GetGroupCreatorID(groupID int64) (int64, error) {
 	return creatorID, err
 }
 
+func (r *GroupRepo) TransferAdmin(groupID, currentAdminID, newAdminID int64) error {
+	var creatorID int64
+	if err := r.db.QueryRow(`SELECT creatorid FROM groups WHERE id = $1`, groupID).Scan(&creatorID); err != nil {
+		return err
+	}
+	if creatorID != currentAdminID {
+		return fmt.Errorf("non autorisé")
+	}
+	var count int
+	if err := r.db.QueryRow(`
+		SELECT COUNT(*) FROM group_members WHERE groupid = $1 AND userid = $2 AND status = 'member'
+	`, groupID, newAdminID).Scan(&count); err != nil || count == 0 {
+		return fmt.Errorf("utilisateur non membre du groupe")
+	}
+	_, err := r.db.Exec(`UPDATE groups SET creatorid = $1, leaderid = $1 WHERE id = $2`, newAdminID, groupID)
+	return err
+}
+
+func (r *GroupRepo) DeleteGroup(groupID, userID int64) error {
+	var creatorID int64
+	if err := r.db.QueryRow(`SELECT creatorid FROM groups WHERE id = $1`, groupID).Scan(&creatorID); err != nil {
+		return err
+	}
+	if creatorID != userID {
+		return fmt.Errorf("non autorisé")
+	}
+	_, err := r.db.Exec(`DELETE FROM groups WHERE id = $1`, groupID)
+	return err
+}
+
 // ─── Members ─────────────────────────────────────────────────────────────────
 
 func (r *GroupRepo) GetGroupMembers(groupID int) ([]GroupMember, error) {

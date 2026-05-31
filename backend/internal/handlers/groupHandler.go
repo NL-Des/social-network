@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/service"
 	ws "social-network/backend/internal/websocket"
@@ -99,7 +100,7 @@ func (h *GroupHandler) HandleLeaveGroup(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
 		return
@@ -119,7 +120,7 @@ func (h *GroupHandler) HandleGroupPosts(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
 		return
@@ -183,13 +184,13 @@ func (h *GroupHandler) HandleGroupPostDetail(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
 		return
 	}
 
-	postID, err := strconv.ParseInt(r.PathValue("postId"), 10, 64)
+	postID, err := strconv.ParseInt(mux.Vars(r)["postId"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de post invalide", http.StatusBadRequest)
 		return
@@ -231,13 +232,13 @@ func (h *GroupHandler) HandleGroupPostComments(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
 		return
 	}
 
-	postID, err := strconv.ParseInt(r.PathValue("postId"), 10, 64)
+	postID, err := strconv.ParseInt(mux.Vars(r)["postId"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de post invalide", http.StatusBadRequest)
 		return
@@ -296,13 +297,13 @@ func (h *GroupHandler) HandleGroupCommentDelete(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
 		return
 	}
 
-	commentID, err := strconv.ParseInt(r.PathValue("commentId"), 10, 64)
+	commentID, err := strconv.ParseInt(mux.Vars(r)["commentId"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de commentaire invalide", http.StatusBadRequest)
 		return
@@ -329,7 +330,7 @@ func (h *GroupHandler) HandleGroupMembers(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
 		return
@@ -386,13 +387,13 @@ func (h *GroupHandler) HandleGroupPostLike(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
 		return
 	}
 
-	postID, err := strconv.ParseInt(r.PathValue("postId"), 10, 64)
+	postID, err := strconv.ParseInt(mux.Vars(r)["postId"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de post invalide", http.StatusBadRequest)
 		return
@@ -479,12 +480,12 @@ func (h *GroupHandler) HandleRemoveMember(w http.ResponseWriter, r *http.Request
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
 		return
 	}
-	targetID, err := strconv.ParseInt(r.PathValue("userId"), 10, 64)
+	targetID, err := strconv.ParseInt(mux.Vars(r)["userId"], 10, 64)
 	if err != nil {
 		http.Error(w, "id utilisateur invalide", http.StatusBadRequest)
 		return
@@ -514,6 +515,59 @@ func (h *GroupHandler) sendGroupAddedNotif(groupID, actorID, targetID int64) {
 	}
 }
 
+// HandleDeleteGroup gère DELETE /group-chat/{id}
+func (h *GroupHandler) HandleDeleteGroup(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
+	if err != nil {
+		http.Error(w, "id invalide", http.StatusBadRequest)
+		return
+	}
+	if err := h.GroupService.DeleteGroup(groupID, int64(userID)); err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// HandleTransferAdmin gère PUT /group-chat/{id}/transfer-admin
+func (h *GroupHandler) HandleTransferAdmin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
+	if err != nil {
+		http.Error(w, "id invalide", http.StatusBadRequest)
+		return
+	}
+	var body struct {
+		UserID int64 `json:"user_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.UserID == 0 {
+		http.Error(w, "user_id invalide", http.StatusBadRequest)
+		return
+	}
+	if err := h.GroupService.TransferAdmin(groupID, int64(userID), body.UserID); err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // HandleAllGroups gère GET /groups (tous les groupes avec statut de l'utilisateur)
 func (h *GroupHandler) HandleAllGroups(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -541,7 +595,7 @@ func (h *GroupHandler) HandleJoinRequest(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
 		return
@@ -584,7 +638,7 @@ func (h *GroupHandler) HandleJoinRequests(w http.ResponseWriter, r *http.Request
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
 		return
@@ -616,12 +670,12 @@ func (h *GroupHandler) HandleJoinRequestAction(w http.ResponseWriter, r *http.Re
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 	if err != nil {
 		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
 		return
 	}
-	targetID, err := strconv.ParseInt(r.PathValue("userId"), 10, 64)
+	targetID, err := strconv.ParseInt(mux.Vars(r)["userId"], 10, 64)
 	if err != nil {
 		http.Error(w, "id utilisateur invalide", http.StatusBadRequest)
 		return

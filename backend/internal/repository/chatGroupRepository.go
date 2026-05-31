@@ -194,6 +194,12 @@ func (r *ChatGroupRepo) GetChatGroupMembers(chatGroupID int64) ([]GroupMember, e
 	return members, rows.Err()
 }
 
+func (r *ChatGroupRepo) GetChatGroupTitle(chatGroupID int64) (string, error) {
+	var title string
+	err := r.db.QueryRow(`SELECT title FROM chat_groups WHERE id = $1`, chatGroupID).Scan(&title)
+	return title, err
+}
+
 func (r *ChatGroupRepo) AddChatGroupMember(chatGroupID, userID int64) error {
 	_, err := r.db.Exec(`
 		INSERT INTO chat_group_members (chat_group_id, userid)

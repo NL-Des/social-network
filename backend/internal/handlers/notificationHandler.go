@@ -74,6 +74,20 @@ func (h *NotificationHandler) HandleMarkAllRead(w http.ResponseWriter, r *http.R
 }
 
 // DELETE /notifications/{id}
+// DELETE /notifications
+func (h *NotificationHandler) HandleDeleteAll(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if err := h.service.DeleteAll(int64(userID)); err != nil {
+		http.Error(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *NotificationHandler) HandleDelete(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)

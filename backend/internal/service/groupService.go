@@ -121,3 +121,11 @@ func (s *GroupService) RejectJoinRequest(groupID, userID int64) error {
 func (s *GroupService) GetGroupCreatorID(groupID int64) (int64, error) {
 	return s.repo.GetGroupCreatorID(groupID)
 }
+
+func (s *GroupService) TransferAdmin(groupID, currentAdminID, newAdminID int64) error {
+	return s.repo.TransferAdmin(groupID, currentAdminID, newAdminID)
+}
+
+func (s *GroupService) DeleteGroup(groupID, userID int64) error {
+	return s.repo.DeleteGroup(groupID, userID)
+}
