@@ -313,38 +313,6 @@ func (r *GroupRepo) DeleteGroupComment(commentID, authorID int64) error {
 	return nil
 }
 
-func (r *GroupRepo) CreateGroupMessage(groupID, senderID int64, content string) error {
-	_, err := r.db.Exec(`
-		INSERT INTO group_chats (groupid, senderid, content)
-		VALUES ($1, $2, $3)
-	`, groupID, senderID, content)
-	return err
-}
-
-func (r *GroupRepo) GetGroupMessages(groupID int64) ([]model.GroupMessage, error) {
-	rows, err := r.db.Query(`
-		SELECT id, groupid, senderid, content, createdat
-		FROM group_chats
-		WHERE groupid = $1
-		ORDER BY createdat ASC
-	`, groupID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	messages := make([]model.GroupMessage, 0)
-	for rows.Next() {
-		var msg model.GroupMessage
-		var createdAt time.Time
-		if err := rows.Scan(&msg.ID, &msg.GroupID, &msg.SenderID, &msg.Body, &createdAt); err != nil {
-			return nil, err
-		}
-		msg.SentAt = createdAt
-		messages = append(messages, msg)
-	}
-	return messages, rows.Err()
-}
 
 func (r *GroupRepo) RemoveGroupMember(groupID, targetUserID, requestingUserID int64) error {
 	var creatorID int64
@@ -377,6 +345,144 @@ type GroupMember struct {
 	Initials  string `json:"initials"`
 	IsCreator bool   `json:"isCreator"`
 }
+
+// ─── Join Requests ───────────────────────────────────────────────────────────
+
+type GroupInfoWithStatus struct {
+	ID          int64  `json:"id"`
+	Title       string `json:"title"`
+	Initials    string `json:"initials"`
+	Description string `json:"description"`
+	MemberCount int    `json:"member_count"`
+	CreatorID   int64  `json:"creator_id"`
+	UserStatus  string `json:"user_status"` // "member", "pending", "none"
+}
+
+type JoinRequest struct {
+	UserID   int64  `json:"user_id"`
+	Name     string `json:"name"`
+	Initials string `json:"initials"`
+}
+
+func (r *GroupRepo) GetAllGroups(userID int64) ([]GroupInfoWithStatus, error) {
+	rows, err := r.db.Query(`
+		SELECT g.id, g.title, COALESCE(g.description, ''),
+		       (SELECT COUNT(*) FROM group_members gm2 WHERE gm2.groupid = g.id AND gm2.status = 'member'),
+		       g.creatorid,
+		       COALESCE((SELECT gm.status FROM group_members gm WHERE gm.groupid = g.id AND gm.userid = $1), 'none')
+		FROM groups g
+		ORDER BY g.createdat DESC
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	groups := make([]GroupInfoWithStatus, 0)
+	for rows.Next() {
+		var g GroupInfoWithStatus
+		if err := rows.Scan(&g.ID, &g.Title, &g.Description, &g.MemberCount, &g.CreatorID, &g.UserStatus); err != nil {
+			return nil, err
+		}
+		words := strings.Fields(g.Title)
+		for i, w := range words {
+			if i >= 2 {
+				break
+			}
+			if len(w) > 0 {
+				g.Initials += strings.ToUpper(string([]rune(w)[0]))
+			}
+		}
+		if g.Initials == "" {
+			g.Initials = "G"
+		}
+		groups = append(groups, g)
+	}
+	return groups, rows.Err()
+}
+
+func (r *GroupRepo) CreateJoinRequest(groupID, userID int64) error {
+	_, err := r.db.Exec(`
+		INSERT INTO group_members (groupid, userid, invitedby, status)
+		VALUES ($1, $2, $2, 'pending')
+		ON CONFLICT (groupid, userid) DO NOTHING
+	`, groupID, userID)
+	return err
+}
+
+func (r *GroupRepo) CancelJoinRequest(groupID, userID int64) error {
+	_, err := r.db.Exec(`
+		DELETE FROM group_members
+		WHERE groupid = $1 AND userid = $2 AND status = 'pending'
+	`, groupID, userID)
+	return err
+}
+
+func (r *GroupRepo) GetJoinRequests(groupID int64) ([]JoinRequest, error) {
+	rows, err := r.db.Query(`
+		SELECT u.id, u.firstname, u.lastname
+		FROM group_members gm
+		JOIN users u ON u.id = gm.userid
+		WHERE gm.groupid = $1 AND gm.status = 'pending'
+		ORDER BY gm.joinedat ASC
+	`, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	reqs := make([]JoinRequest, 0)
+	for rows.Next() {
+		var req JoinRequest
+		var firstname, lastname string
+		if err := rows.Scan(&req.UserID, &firstname, &lastname); err != nil {
+			return nil, err
+		}
+		req.Name = firstname
+		if len(lastname) > 0 {
+			req.Name += " " + lastname
+		}
+		if len(firstname) > 0 {
+			req.Initials += strings.ToUpper(string([]rune(firstname)[0]))
+		}
+		if len(lastname) > 0 {
+			req.Initials += strings.ToUpper(string([]rune(lastname)[0]))
+		}
+		reqs = append(reqs, req)
+	}
+	return reqs, rows.Err()
+}
+
+func (r *GroupRepo) ApproveJoinRequest(groupID, userID int64) error {
+	result, err := r.db.Exec(`
+		UPDATE group_members SET status = 'member'
+		WHERE groupid = $1 AND userid = $2 AND status = 'pending'
+	`, groupID, userID)
+	if err != nil {
+		return err
+	}
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
+		return fmt.Errorf("demande introuvable")
+	}
+	return nil
+}
+
+func (r *GroupRepo) RejectJoinRequest(groupID, userID int64) error {
+	_, err := r.db.Exec(`
+		DELETE FROM group_members
+		WHERE groupid = $1 AND userid = $2 AND status = 'pending'
+	`, groupID, userID)
+	return err
+}
+
+func (r *GroupRepo) GetGroupCreatorID(groupID int64) (int64, error) {
+	var creatorID int64
+	err := r.db.QueryRow(`SELECT creatorid FROM groups WHERE id = $1`, groupID).Scan(&creatorID)
+	return creatorID, err
+}
+
+// ─── Members ─────────────────────────────────────────────────────────────────
 
 func (r *GroupRepo) GetGroupMembers(groupID int) ([]GroupMember, error) {
 	rows, err := r.db.Query(`

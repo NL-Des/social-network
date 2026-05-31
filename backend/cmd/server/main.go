@@ -47,6 +47,7 @@ func main() {
 	commentRepo := repository.NewCommentRepo(db)
 	notifRepo := repository.NewNotificationRepository(db)
 	eventRepo := repository.NewEventRepository(db)
+	chatGroupRepo := repository.NewChatGroupRepo(db)
 
 	// WebSocket hub (créé avant notifService qui en dépend)
 	hub := ws.NewHub()
@@ -59,6 +60,7 @@ func main() {
 	followService := service.NewFollowService(followRepo)
 	messageService := service.NewMessageService(messageRepo)
 	groupService := service.NewGroupService(groupRepo)
+	chatGroupService := service.NewChatGroupService(chatGroupRepo)
 	postService := service.NewPostAndCommentsService(postRepo, tagRepo, commentRepo)
 	notifService := service.NewNotificationService(notifRepo, hub)
 	eventService := service.NewEventService(eventRepo, groupRepo)
@@ -73,12 +75,13 @@ func main() {
 	followHandler := handlers.NewFollowHandler(followService, userService, notifService)
 	messageHandler := handlers.NewMessageHandler(messageService)
 	groupHandler := handlers.NewGroupHandler(groupService, userService, notifService, hub)
+	chatGroupHandler := handlers.NewChatGroupHandler(chatGroupService, hub)
 	postHandler := handlers.NewPostAndCommentsHandler(userService, sessionService, postService, notifService, hub)
 	notifHandler := handlers.NewNotificationHandler(notifService)
 	eventHandler := handlers.NewEventHandler(eventService)
 
 	pmHandler := privateMessage.NewPrivateMessageHandler(hub, messageService)
-	gcHandler := groupChat.NewGroupChatHandler(hub, groupService)
+	gcHandler := groupChat.NewGroupChatHandler(hub, chatGroupService)
 	hub.OnMessage = func(c *ws.Client, raw []byte) {
 		var envelope struct {
 			Type string          `json:"type"`
@@ -114,7 +117,6 @@ func main() {
 	mux.HandleFunc("/conversations", authMiddleware.RequireAuth(messageHandler.HandleConversations))
 	mux.HandleFunc("/messages", authMiddleware.RequireAuth(messageHandler.HandleMessages))
 	mux.HandleFunc("/group-chat", authMiddleware.RequireAuth(groupHandler.HandleGroups))
-	mux.HandleFunc("/group-chat/{id}/messages", authMiddleware.RequireAuth(groupHandler.HandleGroupMessages))
 	mux.HandleFunc("/group-chat/{id}/leave", authMiddleware.RequireAuth(groupHandler.HandleLeaveGroup))
 	mux.HandleFunc("/group-chat/{id}/posts", authMiddleware.RequireAuth(groupHandler.HandleGroupPosts))
 	mux.HandleFunc("/group-chat/{id}/posts/{postId}", authMiddleware.RequireAuth(groupHandler.HandleGroupPostDetail))
@@ -125,6 +127,15 @@ func main() {
 	mux.HandleFunc("/posts", authMiddleware.RequireAuth(postHandler.PostAndCommentsHandler))
 	mux.HandleFunc("/group-chat/{id}/members", authMiddleware.RequireAuth(groupHandler.HandleGroupMembers))
 	mux.HandleFunc("/group-chat/{id}/members/{userId}", authMiddleware.RequireAuth(groupHandler.HandleRemoveMember))
+	mux.HandleFunc("/groups", authMiddleware.RequireAuth(groupHandler.HandleAllGroups))
+	mux.HandleFunc("/chat-groups", authMiddleware.RequireAuth(chatGroupHandler.HandleChatGroups))
+	mux.HandleFunc("/chat-groups/{id}/messages", authMiddleware.RequireAuth(chatGroupHandler.HandleChatGroupMessages))
+	mux.HandleFunc("/chat-groups/{id}/members", authMiddleware.RequireAuth(chatGroupHandler.HandleChatGroupMembers))
+	mux.HandleFunc("/chat-groups/{id}/members/{userId}", authMiddleware.RequireAuth(chatGroupHandler.HandleChatGroupMemberRemove))
+	mux.HandleFunc("/chat-groups/{id}/leave", authMiddleware.RequireAuth(chatGroupHandler.HandleLeaveChatGroup))
+	mux.HandleFunc("/group-chat/{id}/join", authMiddleware.RequireAuth(groupHandler.HandleJoinRequest))
+	mux.HandleFunc("/group-chat/{id}/join-requests", authMiddleware.RequireAuth(groupHandler.HandleJoinRequests))
+	mux.HandleFunc("/group-chat/{id}/join-requests/{userId}", authMiddleware.RequireAuth(groupHandler.HandleJoinRequestAction))
 	mux.HandleFunc("/notifications", authMiddleware.RequireAuth(notifHandler.HandleNotifications))
 	mux.HandleFunc("/notifications/read", authMiddleware.RequireAuth(notifHandler.HandleMarkAllRead))
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {

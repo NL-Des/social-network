@@ -21,22 +21,13 @@ func (s *GroupService) GetUserGroups(userID int64) ([]repository.GroupInfo, erro
 	return s.repo.GetUserGroups(userID)
 }
 
-// CreateNewGroupMessage implémente GroupChatService (interface WS)
-func (s *GroupService) CreateNewGroupMessage(msg model.GroupMessage) error {
-	return s.repo.CreateGroupMessage(msg.GroupID, msg.SenderID, msg.Body)
-}
-
-// GetMemberIDs implémente GroupChatService (interface WS)
-func (s *GroupService) GetMemberIDs(groupID int64) ([]int64, error) {
-	return s.repo.GetGroupMemberIDs(groupID)
-}
-
-func (s *GroupService) GetGroupMessages(groupID int64) ([]model.GroupMessage, error) {
-	return s.repo.GetGroupMessages(groupID)
-}
 
 func (s *GroupService) IsGroupMember(groupID, userID int64) (bool, error) {
 	return s.repo.IsGroupMember(groupID, userID)
+}
+
+func (s *GroupService) GetGroupMemberIDs(groupID int64) ([]int64, error) {
+	return s.repo.GetGroupMemberIDs(groupID)
 }
 
 func (s *GroupService) LeaveGroup(groupID, userID int64) error {
@@ -101,4 +92,32 @@ func (s *GroupService) RemoveGroupMember(groupID, targetUserID, requestingUserID
 
 func (s *GroupService) GetGroupTitle(groupID int64) (string, error) {
 	return s.repo.GetGroupTitle(groupID)
+}
+
+func (s *GroupService) GetAllGroups(userID int64) ([]repository.GroupInfoWithStatus, error) {
+	return s.repo.GetAllGroups(userID)
+}
+
+func (s *GroupService) CreateJoinRequest(groupID, userID int64) error {
+	return s.repo.CreateJoinRequest(groupID, userID)
+}
+
+func (s *GroupService) CancelJoinRequest(groupID, userID int64) error {
+	return s.repo.CancelJoinRequest(groupID, userID)
+}
+
+func (s *GroupService) GetJoinRequests(groupID int64) ([]repository.JoinRequest, error) {
+	return s.repo.GetJoinRequests(groupID)
+}
+
+func (s *GroupService) ApproveJoinRequest(groupID, userID int64) error {
+	return s.repo.ApproveJoinRequest(groupID, userID)
+}
+
+func (s *GroupService) RejectJoinRequest(groupID, userID int64) error {
+	return s.repo.RejectJoinRequest(groupID, userID)
+}
+
+func (s *GroupService) GetGroupCreatorID(groupID int64) (int64, error) {
+	return s.repo.GetGroupCreatorID(groupID)
 }

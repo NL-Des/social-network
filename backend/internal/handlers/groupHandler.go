@@ -111,36 +111,6 @@ func (h *GroupHandler) HandleLeaveGroup(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// HandleGroupMessages gère GET /group-chat/{id}/messages
-func (h *GroupHandler) HandleGroupMessages(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value("userID").(int)
-	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
-	if err != nil {
-		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
-		return
-	}
-
-	isMember, err := h.GroupService.IsGroupMember(groupID, int64(userID))
-	if err != nil || !isMember {
-		http.Error(w, "accès non autorisé", http.StatusForbidden)
-		return
-	}
-
-	messages, err := h.GroupService.GetGroupMessages(groupID)
-	if err != nil {
-		http.Error(w, "erreur serveur", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(messages)
-}
-
 // HandleGroupPosts gère GET /group-chat/{id}/posts et POST /group-chat/{id}/posts
 func (h *GroupHandler) HandleGroupPosts(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
@@ -394,7 +364,7 @@ func (h *GroupHandler) HandleGroupMembers(w http.ResponseWriter, r *http.Request
 			return
 		}
 		// Notifie tous les membres (y compris le nouveau) pour qu'ils rechargent la liste
-		if memberIDs, err := h.GroupService.GetMemberIDs(groupID); err == nil {
+		if memberIDs, err := h.GroupService.GetGroupMemberIDs(groupID); err == nil {
 			event := ws.MessageWs{Type: "group_member_added", Data: map[string]int64{"group_id": groupID}}
 			for _, mid := range memberIDs {
 				h.Hub.BroadcastToUser(mid, event)
@@ -541,6 +511,189 @@ func (h *GroupHandler) sendGroupAddedNotif(groupID, actorID, targetID int64) {
 		GroupName: title,
 	}); err != nil {
 		log.Printf("sendGroupAddedNotif: %v", err)
+	}
+}
+
+// HandleAllGroups gère GET /groups (tous les groupes avec statut de l'utilisateur)
+func (h *GroupHandler) HandleAllGroups(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	groups, err := h.GroupService.GetAllGroups(int64(userID))
+	if err != nil {
+		http.Error(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(groups)
+}
+
+// HandleJoinRequest gère POST /group-chat/{id}/join (demande) et DELETE (annulation)
+func (h *GroupHandler) HandleJoinRequest(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodPost:
+		isMember, err := h.GroupService.IsGroupMember(groupID, int64(userID))
+		if err != nil {
+			http.Error(w, "erreur serveur", http.StatusInternalServerError)
+			return
+		}
+		if isMember {
+			http.Error(w, "déjà membre", http.StatusConflict)
+			return
+		}
+		if err := h.GroupService.CreateJoinRequest(groupID, int64(userID)); err != nil {
+			http.Error(w, "erreur serveur", http.StatusInternalServerError)
+			return
+		}
+		go h.sendJoinRequestNotif(groupID, int64(userID))
+		w.WriteHeader(http.StatusNoContent)
+
+	case http.MethodDelete:
+		if err := h.GroupService.CancelJoinRequest(groupID, int64(userID)); err != nil {
+			http.Error(w, "erreur serveur", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+
+	default:
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+	}
+}
+
+// HandleJoinRequests gère GET /group-chat/{id}/join-requests (admin : liste des demandes)
+func (h *GroupHandler) HandleJoinRequests(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
+		return
+	}
+	creatorID, err := h.GroupService.GetGroupCreatorID(groupID)
+	if err != nil || creatorID != int64(userID) {
+		http.Error(w, "accès non autorisé", http.StatusForbidden)
+		return
+	}
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+	reqs, err := h.GroupService.GetJoinRequests(groupID)
+	if err != nil {
+		http.Error(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(reqs)
+}
+
+// HandleJoinRequestAction gère PUT /group-chat/{id}/join-requests/{userId} (approuver)
+// et DELETE /group-chat/{id}/join-requests/{userId} (rejeter)
+func (h *GroupHandler) HandleJoinRequestAction(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	groupID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
+		return
+	}
+	targetID, err := strconv.ParseInt(r.PathValue("userId"), 10, 64)
+	if err != nil {
+		http.Error(w, "id utilisateur invalide", http.StatusBadRequest)
+		return
+	}
+	creatorID, err := h.GroupService.GetGroupCreatorID(groupID)
+	if err != nil || creatorID != int64(userID) {
+		http.Error(w, "accès non autorisé", http.StatusForbidden)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodPut:
+		if err := h.GroupService.ApproveJoinRequest(groupID, targetID); err != nil {
+			http.Error(w, "erreur serveur", http.StatusInternalServerError)
+			return
+		}
+		go h.sendJoinRequestAcceptedNotif(groupID, int64(userID), targetID)
+		if memberIDs, err := h.GroupService.GetGroupMemberIDs(groupID); err == nil {
+			event := ws.MessageWs{Type: "group_member_added", Data: map[string]int64{"group_id": groupID}}
+			for _, mid := range memberIDs {
+				h.Hub.BroadcastToUser(mid, event)
+			}
+		}
+		w.WriteHeader(http.StatusNoContent)
+
+	case http.MethodDelete:
+		if err := h.GroupService.RejectJoinRequest(groupID, targetID); err != nil {
+			http.Error(w, "erreur serveur", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+
+	default:
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+	}
+}
+
+func (h *GroupHandler) sendJoinRequestNotif(groupID, requesterID int64) {
+	creatorID, err := h.GroupService.GetGroupCreatorID(groupID)
+	if err != nil {
+		return
+	}
+	actor, err := h.UserService.GetProfile(int(requesterID))
+	if err != nil {
+		return
+	}
+	title, err := h.GroupService.GetGroupTitle(groupID)
+	if err != nil {
+		return
+	}
+	if err := h.NotifService.Notify(creatorID, model.NotifGroupJoinRequest, model.NotificationPayload{
+		ActorName: actor.Username,
+		GroupName: title,
+	}); err != nil {
+		log.Printf("sendJoinRequestNotif: %v", err)
+	}
+}
+
+func (h *GroupHandler) sendJoinRequestAcceptedNotif(groupID, actorID, targetID int64) {
+	actor, err := h.UserService.GetProfile(int(actorID))
+	if err != nil {
+		return
+	}
+	title, err := h.GroupService.GetGroupTitle(groupID)
+	if err != nil {
+		return
+	}
+	if err := h.NotifService.Notify(targetID, model.NotifGroupRequestAccepted, model.NotificationPayload{
+		ActorName: actor.Username,
+		GroupName: title,
+	}); err != nil {
+		log.Printf("sendJoinRequestAcceptedNotif: %v", err)
 	}
 }
 
