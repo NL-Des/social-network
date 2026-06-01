@@ -6,7 +6,7 @@ import HeaderPost from '@/app/components/home/HeaderPost'
 import { CurrentUser } from '@/app/components/home/Header'
 import { fetchMe } from '@/lib/fetchMe'
 import LeftSidebarPostListOfUsers from '@/app/components/home/LeftSidebarPostListOfUsers'
-import RightSidebar, { Group } from '@/app/components/home/RightSidebar'
+import RightSidebar from '@/app/components/home/RightSidebar'
 import Comments, { Post, Comment } from '@/app/components/home/Comments'
 import { useSidebarUsers } from '@/lib/useSidebarUsers'
 
@@ -25,12 +25,6 @@ interface ApiPost {
   createdAt: string
   comments: ApiComment[] | null
 }
-
-const mockGroups: Group[] = [
-  { id: '1', name: 'Photo Urbaine', membersCount: '890'  },
-  { id: '2', name: 'Dev Frontend',  membersCount: '3,4k' },
-  { id: '3', name: 'Design & UX',   membersCount: '1,2k' },
-]
 
 function getInitials(username: string): string {
   const parts = username.split(/[._-]/)
@@ -133,7 +127,7 @@ function PostContent() {
           </div>
 
           <div className="h-full">
-            <RightSidebar groups={mockGroups} />
+            <RightSidebar />
           </div>
 
         </div>

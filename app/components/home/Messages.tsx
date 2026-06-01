@@ -29,6 +29,7 @@ interface MessagesProps {
   conversation: ChatConversation
   initialMessages: Message[]
   groups?: GroupOption[]
+  isOnline?: boolean
 }
 
 const WS_BASE = 'ws://localhost:5090/ws'
@@ -40,7 +41,7 @@ const wsColors: Record<WsStatus, string> = {
   error:      'bg-red-500',
 }
 
-export default function Messages({ conversation, initialMessages, groups = [] }: MessagesProps) {
+export default function Messages({ conversation, initialMessages, groups = [], isOnline = false }: MessagesProps) {
   const [messages, setMessages]   = useState<Message[]>(initialMessages)
   const [wsUrl, setWsUrl]         = useState<string | null>(null)
   const bottomRef                 = useRef<HTMLDivElement>(null)
@@ -51,7 +52,7 @@ export default function Messages({ conversation, initialMessages, groups = [] }:
   async function handleInvite(groupId: string) {
     setInviting(true)
     try {
-      await fetch(`/api/group-chat/${groupId}/members`, {
+      await fetch(`/api/chat-groups/${groupId}/members`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: Number(conversation.id) }),
@@ -151,7 +152,7 @@ export default function Messages({ conversation, initialMessages, groups = [] }:
           </div>
         )}
 
-        <span className={`w-2 h-2 rounded-full ${wsColors[status]}`} title={status} />
+        <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`} title={isOnline ? 'En ligne' : 'Hors ligne'} />
       </div>
 
       {/* Messages */}

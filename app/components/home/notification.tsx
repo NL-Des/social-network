@@ -87,23 +87,18 @@ export default function NotificationList({ wsUrl, onUnreadCountChange }: Notific
   const initialUnreadIds = useRef<Set<number>>(new Set())
 
   useEffect(() => {
-    let loaded = false
-
     fetch('/api/notifications')
       .then((res) => res.ok ? res.json() : [])
       .then((data: BackendNotification[]) => {
         const list = Array.isArray(data) ? data : []
         initialUnreadIds.current = new Set(list.filter((n) => !n.read).map((n) => n.id))
-        loaded = true
         setNotifications(list)
         setLoading(false)
+        if (list.some((n) => !n.read)) {
+          fetch('/api/notifications/read', { method: 'PUT' }).catch(() => {})
+        }
       })
       .catch(() => setLoading(false))
-
-    // Marquer comme lus à la fermeture du panel (pour que le badge reste visible pendant la visite)
-    return () => {
-      if (loaded) fetch('/api/notifications/read', { method: 'PATCH' }).catch(() => {})
-    }
   }, [])
 
   // Remontée du badge au parent

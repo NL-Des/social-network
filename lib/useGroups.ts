@@ -8,10 +8,10 @@ export function useGroups(): Group[] {
     fetch('/api/group-chat')
       .then(r => r.ok ? r.json() : [])
       .then(data => setGroups(
-        (data ?? []).map((g: { id: number; title: string; memberCount?: number }) => ({
+        (data ?? []).map((g: { id: number; title: string; member_ids?: number[] }) => ({
           id: String(g.id),
           name: g.title,
-          membersCount: String(g.memberCount ?? 0),
+          membersCount: String(g.member_ids?.length ?? 0),
         }))
       ))
       .catch(() => {})

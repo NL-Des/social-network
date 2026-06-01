@@ -3,23 +3,18 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Header, { CurrentUser } from '@/app/components/home/Header'
-import { fetchMe } from '@/lib/fetchMe'
-import RightSidebar, { Group } from '@/app/components/home/RightSidebar'
 import LeftSidebarGroups, { GroupItem } from '@/app/components/home/LeftSidebarGroups'
-import CenterGroup from '@/app/components/home/CenterGroup'
-
-interface ApiGroup {
-  id: number
-  title: string
-  initials: string
-  member_ids: number[]
-}
+import GroupsCenter, { ApiGroupWithStatus } from '@/app/components/groups/GroupsCenter'
+import GroupsRightSidebar from '@/app/components/groups/GroupsRightSidebar'
+import { fetchMe } from '@/lib/fetchMe'
+import { useWebSocket } from '@/lib/useWebSocket'
 
 export default function GroupesPage() {
   const router = useRouter()
   const [user, setUser]         = useState<CurrentUser | null>(null)
-  const [groups, setGroups]   = useState<GroupItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const [allGroups, setAllGroups] = useState<ApiGroupWithStatus[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [wsUrl, setWsUrl]       = useState<string | null>(null)
 
   useEffect(() => {
     fetchMe()
@@ -31,27 +26,58 @@ export default function GroupesPage() {
       .finally(() => setLoading(false))
   }, [router])
 
-  const fetchGroups = useCallback(() => {
-    fetch('/api/group-chat')
+  useEffect(() => {
+    fetch('/api/ws-token')
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => { if (data?.token) setWsUrl(`ws://localhost:5090/ws?token=${data.token}`) })
+      .catch(() => {})
+  }, [])
+
+  const fetchAllGroups = useCallback(() => {
+    fetch('/api/groups')
       .then((res) => res.ok ? res.json() : [])
-      .then((data: ApiGroup[]) => {
-        setGroups(
-          (data ?? []).map((g) => ({
-            id:           String(g.id),
-            name:         g.title,
-            initials:     g.initials,
-            membersCount: String(g.member_ids.length),
-          }))
-        )
-      })
+      .then((data: ApiGroupWithStatus[]) => setAllGroups(data ?? []))
       .catch(() => {})
   }, [])
 
   useEffect(() => {
-    if (user) fetchGroups()
-  }, [user, fetchGroups])
+    if (user) fetchAllGroups()
+  }, [user, fetchAllGroups])
 
-  const sidebarGroups: Group[] = groups.map(({ id, name, membersCount }) => ({ id, name, membersCount }))
+  const myGroups: GroupItem[] = allGroups
+    .filter((g) => g.user_status === 'member' || g.creator_id === parseInt(user?.id ?? '0'))
+    .map((g) => ({
+      id:           String(g.id),
+      name:         g.title,
+      initials:     g.initials,
+      membersCount: String(g.member_count),
+      description:  g.description,
+    }))
+
+  const allGroupItems: GroupItem[] = allGroups.map((g) => ({
+    id:           String(g.id),
+    name:         g.title,
+    initials:     g.initials,
+    membersCount: String(g.member_count),
+    description:  g.description,
+  }))
+
+  const suggestedGroups = allGroups
+    .filter((g) => g.user_status !== 'member' && g.creator_id !== parseInt(user?.id ?? '0'))
+    .sort((a, b) => b.member_count - a.member_count)
+
+  const pendingCount = allGroups.filter((g) => g.user_status === 'pending').length
+
+  useWebSocket(wsUrl, useCallback((data: unknown) => {
+    const msg = data as { type?: string }
+    if (msg.type === 'group_member_added') fetchAllGroups()
+  }, [fetchAllGroups]))
+
+  function handleStatusChange(id: number, status: 'member' | 'pending' | 'none') {
+    setAllGroups((prev) =>
+      prev.map((g) => g.id === id ? { ...g, user_status: status } : g)
+    )
+  }
 
   if (loading) {
     return (
@@ -72,19 +98,32 @@ export default function GroupesPage() {
 
           <div className="h-full">
             <LeftSidebarGroups
-              groups={groups}
-              onSelect={(id) => router.push(`/inside-groups?id=${id}`)}
+              groups={allGroupItems}
+              onSelect={(id) => {
+                const g = allGroups.find((g) => String(g.id) === id)
+                if (g && (g.user_status === 'member' || g.creator_id === parseInt(user?.id ?? '0'))) {
+                  router.push(`/inside-groups?id=${id}`)
+                }
+              }}
+              onCreated={fetchAllGroups}
             />
           </div>
 
-          <CenterGroup
-            group={null}
-            onCreated={fetchGroups}
+          <GroupsCenter
+            allGroups={allGroups}
+            userId={parseInt(user.id)}
             onEnter={(id) => router.push(`/inside-groups?id=${id}`)}
+            onRefresh={fetchAllGroups}
+            onStatusChange={handleStatusChange}
+            pendingCount={pendingCount}
           />
 
           <div className="h-full">
-            <RightSidebar groups={sidebarGroups} />
+            <GroupsRightSidebar
+              suggestedGroups={suggestedGroups}
+              onJoin={(id, status) => handleStatusChange(id, status)}
+              onEnter={(id) => router.push(`/inside-groups?id=${id}`)}
+            />
           </div>
 
         </div>

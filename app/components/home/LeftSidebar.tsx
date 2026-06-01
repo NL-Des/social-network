@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export interface Conversation {
   id: string
@@ -56,7 +56,7 @@ function CreateGroupModal({ onClose, onCreated }: CreateGroupModalProps) {
     if (!title.trim()) return
     setLoading(true)
     try {
-      const res = await fetch('/api/group-chat', {
+      const res = await fetch('/api/chat-groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -144,6 +144,7 @@ interface LeftSidebarProps {
   groupStatuses: Record<string, GroupStatus>
   allUsers?: MemberInfo[]
   currentUserId?: string
+  membersRevision?: Record<string, number>
 }
 
 export default function LeftSidebar({
@@ -158,17 +159,60 @@ export default function LeftSidebar({
   groupStatuses,
   allUsers = [],
   currentUserId,
+  membersRevision = {},
 }: LeftSidebarProps) {
   const [search, setSearch]               = useState('')
   const [showModal, setShowModal]         = useState(false)
   const [openMembersId, setOpenMembersId] = useState<string | null>(null)
   const [leavingId, setLeavingId]         = useState<string | null>(null)
   const [removingId, setRemovingId]       = useState<string | null>(null)
+  const [addingId, setAddingId]           = useState<string | null>(null)
+  const [fetchedMembers, setFetchedMembers] = useState<Record<string, MemberInfo[]>>({})
+  const prevRevision = useRef<Record<string, number>>({})
+
+  useEffect(() => {
+    Object.entries(membersRevision).forEach(([groupId, rev]) => {
+      if (rev !== prevRevision.current[groupId]) {
+        prevRevision.current[groupId] = rev
+        fetchGroupMembers(groupId)
+      }
+    })
+  }, [membersRevision])
+
+  function fetchGroupMembers(groupId: string) {
+    fetch(`/api/chat-groups/${groupId}/members`)
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: { id: number; name: string; initials: string }[]) => {
+        setFetchedMembers((prev) => ({
+          ...prev,
+          [groupId]: (data ?? []).map((m) => ({
+            id:       String(m.id),
+            name:     m.name,
+            initials: m.initials,
+          })),
+        }))
+      })
+      .catch(() => {})
+  }
+
+  async function handleAddMember(groupId: string, userId: string) {
+    setAddingId(userId)
+    try {
+      const res = await fetch(`/api/chat-groups/${groupId}/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: parseInt(userId) }),
+      })
+      if (res.ok) fetchGroupMembers(groupId)
+    } finally {
+      setAddingId(null)
+    }
+  }
 
   async function handleRemoveMember(groupId: string, userId: string) {
     setRemovingId(userId)
     try {
-      await fetch(`/api/group-chat/${groupId}/members/${userId}`, { method: 'DELETE' })
+      await fetch(`/api/chat-groups/${groupId}/members/${userId}`, { method: 'DELETE' })
       onGroupLeft?.()
     } finally {
       setRemovingId(null)
@@ -178,7 +222,7 @@ export default function LeftSidebar({
   async function handleLeave(groupId: string) {
     setLeavingId(groupId)
     try {
-      await fetch(`/api/group-chat/${groupId}/leave`, { method: 'DELETE' })
+      await fetch(`/api/chat-groups/${groupId}/leave`, { method: 'DELETE' })
       setOpenMembersId(null)
       onGroupLeft?.()
     } finally {
@@ -230,9 +274,7 @@ export default function LeftSidebar({
           {/* Groupes de discussion */}
           {filteredGroups.map((g) => {
             const status  = groupStatuses[g.id] ?? 'offline'
-            const members = g.memberIds
-              .map((id) => allUsers.find((u) => u.id === id))
-              .filter(Boolean) as MemberInfo[]
+            const members = fetchedMembers[g.id] ?? []
             const membersOpen = openMembersId === g.id
 
             return (
@@ -257,7 +299,11 @@ export default function LeftSidebar({
                     <span className="flex-1 text-white text-base truncate">{g.title}</span>
                   </button>
                   <button
-                    onClick={() => setOpenMembersId(membersOpen ? null : g.id)}
+                    onClick={() => {
+                      const next = membersOpen ? null : g.id
+                      setOpenMembersId(next)
+                      if (next) fetchGroupMembers(next)
+                    }}
                     title="Membres du groupe"
                     className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-white/70 hover:text-[#49C7FF] hover:bg-white/10 transition-colors text-sm font-bold"
                   >
@@ -289,6 +335,7 @@ export default function LeftSidebar({
                         </div>
                       ))
                     )}
+
                     <button
                       onClick={() => handleLeave(g.id)}
                       disabled={leavingId === g.id}

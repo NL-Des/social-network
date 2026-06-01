@@ -4,19 +4,13 @@ import { Suspense, useEffect, useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Header, { CurrentUser } from '@/app/components/home/Header'
 import { fetchMe } from '@/lib/fetchMe'
-import RightSidebar, { Group } from '@/app/components/home/RightSidebar'
+import RightSidebar from '@/app/components/home/RightSidebar'
 import LeftSidebar, { Conversation, GroupConversation } from '@/app/components/home/LeftSidebar'
 import Messages, { Message, ChatConversation } from '@/app/components/home/Messages'
 import GroupMessages, { GroupMessage, GroupChat } from '@/app/components/home/GroupMessages'
 import { useGroupStatuses } from '@/lib/useGroupStatuses'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
 import { useWebSocket } from '@/lib/useWebSocket'
-
-const mockGroups: Group[] = [
-  { id: '1', name: 'Photo Urbaine', membersCount: '890'  },
-  { id: '2', name: 'Dev Frontend',  membersCount: '3,4k' },
-  { id: '3', name: 'Design & UX',   membersCount: '1,2k' },
-]
 
 interface ApiMessage {
   id: number
@@ -63,6 +57,7 @@ function MessagesContent() {
   const [messages, setMessages]               = useState<Message[]>([])
   const [groupMessages, setGroupMessages]     = useState<GroupMessage[]>([])
   const [wsUrl, setWsUrl]                     = useState<string | null>(null)
+  const [membersRevision, setMembersRevision] = useState<Record<string, number>>({})
 
   useEffect(() => {
     fetch('/api/ws-token')
@@ -71,10 +66,31 @@ function MessagesContent() {
       .catch(() => {})
   }, [])
 
-  const handleWsMessage = useCallback((data: unknown) => {
-    const msg = data as { type?: string }
-    if (msg.type === 'group_member_added') loadGroups()
+  const loadGroups = useCallback(() => {
+    fetch('/api/chat-groups')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: ApiGroupInfo[]) => {
+        setGroups(data.map((g) => ({
+          id:        String(g.id),
+          title:     g.title,
+          initials:  g.initials,
+          memberIds: [],
+          creatorId: '',
+        })))
+      })
+      .catch(() => {})
   }, [])
+
+  const handleWsMessage = useCallback((data: unknown) => {
+    const msg = data as { type?: string; data?: { group_id?: number } }
+    if (msg.type === 'group_member_added') {
+      loadGroups()
+      const groupId = String(msg.data?.group_id ?? '')
+      if (groupId) {
+        setMembersRevision((prev) => ({ ...prev, [groupId]: (prev[groupId] ?? 0) + 1 }))
+      }
+    }
+  }, [loadGroups])
 
   useWebSocket(wsUrl, handleWsMessage)
 
@@ -98,21 +114,6 @@ function MessagesContent() {
           name:     u.name,
           initials: u.initials,
           online:   false,
-        })))
-      })
-      .catch(() => {})
-  }, [])
-
-  const loadGroups = useCallback(() => {
-    fetch('/api/group-chat')
-      .then((res) => res.ok ? res.json() : [])
-      .then((data: ApiGroupInfo[]) => {
-        setGroups(data.map((g) => ({
-          id:        String(g.id),
-          title:     g.title,
-          initials:  g.initials,
-          memberIds: (g.member_ids ?? []).map(String),
-          creatorId: String(g.creator_id ?? ''),
         })))
       })
       .catch(() => {})
@@ -165,7 +166,7 @@ function MessagesContent() {
   }, [conversations, allUsers])
 
   const fetchGroupMessages = useCallback((groupId: string) => {
-    fetch(`/api/group-chat/${groupId}/messages`)
+    fetch(`/api/chat-groups/${groupId}/messages`)
       .then((res) => res.ok ? res.json() : [])
       .then((data: ApiGroupMessage[]) => {
         setGroupMessages(data.map((m) => ({
@@ -247,6 +248,7 @@ function MessagesContent() {
               groupStatuses={groupStatuses}
               allUsers={allUsers}
               currentUserId={userId ?? undefined}
+              membersRevision={membersRevision}
             />
           </div>
 
@@ -265,6 +267,7 @@ function MessagesContent() {
                 conversation={activeConversation}
                 initialMessages={messages}
                 groups={groups}
+                isOnline={onlineUsers.has(activeConversation.id)}
               />
             ) : (
               <div className="h-full bg-brand-card border border-brand-border rounded-2xl flex items-center justify-center">
@@ -274,7 +277,7 @@ function MessagesContent() {
           </div>
 
           <div className="h-full">
-            <RightSidebar groups={mockGroups} />
+            <RightSidebar />
           </div>
 
         </div>

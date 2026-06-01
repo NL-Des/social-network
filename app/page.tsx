@@ -6,7 +6,7 @@ import Header, { CurrentUser } from './components/home/Header'
 import { fetchMe } from '@/lib/fetchMe'
 import SearchFilter, { FilterItem } from './components/home/SearchFilter'
 import PostCard, { Post, CreatePostButton } from './components/home/PostCard'
-import RightSidebar, { Group } from './components/home/RightSidebar'
+import RightSidebar from './components/home/RightSidebar'
 import { useWebSocket } from '@/lib/useWebSocket'
 
 interface ApiPost {
@@ -22,12 +22,6 @@ interface ApiPost {
   dislikes: number
   userLike: string
 }
-
-const mockGroups: Group[] = [
-  { id: '1', name: 'Photo Urbaine', membersCount: '890' },
-  { id: '2', name: 'Dev Frontend', membersCount: '3,4k' },
-  { id: '3', name: 'Design & UX', membersCount: '1,2k' },
-]
 
 const mockFilters: FilterItem[] = [
   { label: 'Groupe', count: 3 },
@@ -134,7 +128,7 @@ export default function HomePage() {
           </div>
 
           <div className="h-full">
-            <RightSidebar groups={mockGroups} />
+            <RightSidebar />
           </div>
 
         </div>

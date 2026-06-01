@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Header, { CurrentUser } from '@/app/components/home/Header'
-import RightSidebar, { Group } from '@/app/components/home/RightSidebar'
+import RightSidebar from '@/app/components/home/RightSidebar'
 import PersonnalInformations from '@/app/components/home/PersonnalInformations'
 import VisibilityAccount from '@/app/components/home/VisibilityAccount'
 import Followers from '@/app/components/home/Followers'
@@ -10,12 +10,6 @@ import Subscribers from '@/app/components/home/Subscribers'
 import PostCard, { Post } from '@/app/components/home/PostCard'
 import profileAction from './actions'
 import type { ProfilePageProps } from './actions'
-
-const mockGroups: Group[] = [
-  { id: '1', name: 'Photo Urbaine', membersCount: '890' },
-  { id: '2', name: 'Dev Frontend',  membersCount: '3,4k' },
-  { id: '3', name: 'Design & UX',   membersCount: '1,2k' },
-]
 
 function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUser: CurrentUser }) {
   const [visibility, setVisibility] = useState<'private' | 'public'>(data.visibility ?? 'public')
@@ -97,7 +91,7 @@ function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUs
           </div>
 
           <div className="h-full">
-            <RightSidebar groups={mockGroups} />
+            <RightSidebar />
           </div>
 
         </div>
