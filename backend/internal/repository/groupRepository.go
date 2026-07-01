@@ -478,6 +478,45 @@ func (r *GroupRepo) RejectJoinRequest(groupID, userID int64) error {
 	return err
 }
 
+func (r *GroupRepo) InviteUserToGroup(groupID, targetUserID, inviterID int64) error {
+	var creatorID int64
+	if err := r.db.QueryRow(`SELECT creatorid FROM social_groups WHERE id = $1`, groupID).Scan(&creatorID); err != nil {
+		return err
+	}
+	if creatorID != inviterID {
+		return fmt.Errorf("non autorisé")
+	}
+	_, err := r.db.Exec(`
+		INSERT INTO social_group_members (groupid, userid, invitedby, status)
+		VALUES ($1, $2, $3, 'invited')
+		ON CONFLICT (groupid, userid) DO NOTHING
+	`, groupID, targetUserID, inviterID)
+	return err
+}
+
+func (r *GroupRepo) AcceptGroupInvite(groupID, userID int64) error {
+	result, err := r.db.Exec(`
+		UPDATE social_group_members SET status = 'member'
+		WHERE groupid = $1 AND userid = $2 AND status = 'invited'
+	`, groupID, userID)
+	if err != nil {
+		return err
+	}
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
+		return fmt.Errorf("invitation introuvable")
+	}
+	return nil
+}
+
+func (r *GroupRepo) DeclineGroupInvite(groupID, userID int64) error {
+	_, err := r.db.Exec(`
+		DELETE FROM social_group_members
+		WHERE groupid = $1 AND userid = $2 AND status = 'invited'
+	`, groupID, userID)
+	return err
+}
+
 func (r *GroupRepo) GetGroupCreatorID(groupID int64) (int64, error) {
 	var creatorID int64
 	err := r.db.QueryRow(`SELECT creatorid FROM social_groups WHERE id = $1`, groupID).Scan(&creatorID)

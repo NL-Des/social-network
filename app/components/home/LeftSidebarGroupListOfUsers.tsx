@@ -15,9 +15,17 @@ interface LeftSidebarGroupListOfUsersProps {
   users: SidebarUser[]
   groupName?: string
   groupId: string
+  currentUserId: string
+  creatorId: string | null
 }
 
-function AdminButton({ users, groupName, groupId }: { users: SidebarUser[]; groupName: string; groupId: string }) {
+interface InvitableUser {
+  id: number
+  name: string
+  initials: string
+}
+
+function AdminButton({ users, groupName, groupId, currentUserId }: { users: SidebarUser[]; groupName: string; groupId: string; currentUserId: string }) {
   const router = useRouter()
   const [formOpen, setFormOpen]       = useState(false)
   const [selectedAdmin, setSelectedAdmin] = useState<string>('')
@@ -25,6 +33,10 @@ function AdminButton({ users, groupName, groupId }: { users: SidebarUser[]; grou
   const [loading, setLoading]         = useState(false)
   const [error, setError]             = useState<string | null>(null)
   const [success, setSuccess]         = useState<string | null>(null)
+  const [inviteOpen, setInviteOpen]     = useState(false)
+  const [invitableUsers, setInvitableUsers] = useState<InvitableUser[]>([])
+  const [selectedInvite, setSelectedInvite]   = useState<string>('')
+  const [inviting, setInviting]         = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -36,6 +48,43 @@ function AdminButton({ users, groupName, groupId }: { users: SidebarUser[]; grou
     if (formOpen) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [formOpen])
+
+  useEffect(() => {
+    if (!inviteOpen) return
+    fetch('/api/users')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: InvitableUser[]) => {
+        const memberIds = new Set(users.map((u) => u.id))
+        setInvitableUsers((data ?? []).filter((u) => String(u.id) !== currentUserId && !memberIds.has(String(u.id))))
+      })
+      .catch(() => {})
+  }, [inviteOpen, users, currentUserId])
+
+  async function handleInvite() {
+    if (!selectedInvite) { setError('Sélectionnez un utilisateur.'); return }
+    setInviting(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      const res = await fetch(`/api/group-chat/${groupId}/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: parseInt(selectedInvite) }),
+      })
+      if (res.ok) {
+        setSuccess('Invitation envoyée.')
+        setInvitableUsers((prev) => prev.filter((u) => String(u.id) !== selectedInvite))
+        setSelectedInvite('')
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error ?? 'Erreur lors de l\'invitation.')
+      }
+    } catch {
+      setError('Erreur réseau.')
+    } finally {
+      setInviting(false)
+    }
+  }
 
   async function handleDeleteGroup() {
     if (!confirm(`Supprimer définitivement le groupe "${groupName}" ?`)) return
@@ -138,6 +187,38 @@ function AdminButton({ users, groupName, groupId }: { users: SidebarUser[]; grou
             >
               {loading ? '...' : 'Confirmer le transfert'}
             </button>
+          </div>
+
+          {/* Inviter un utilisateur */}
+          <div className="flex flex-col gap-1">
+            <button
+              onClick={() => setInviteOpen((o) => !o)}
+              className="flex items-center justify-between w-full text-brand-border text-sm px-1"
+            >
+              <span>Inviter un utilisateur</span>
+              <span style={{ display: 'inline-block', transform: inviteOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} className="transition-transform duration-200">▾</span>
+            </button>
+            {inviteOpen && (
+              <div className="flex flex-col gap-2 mt-1">
+                <select
+                  value={selectedInvite}
+                  onChange={(e) => setSelectedInvite(e.target.value)}
+                  className="bg-white/5 border border-brand-border/40 rounded-xl px-3 py-2 text-brand-text text-sm focus:outline-none focus:border-brand-border transition-all"
+                >
+                  <option value="">— Choisir un utilisateur —</option>
+                  {invitableUsers.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleInvite}
+                  disabled={inviting || !selectedInvite}
+                  className="w-full py-2 px-4 rounded-lg border border-brand-border text-brand-text text-sm shadow-neon hover:scale-105 transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {inviting ? '...' : 'Envoyer l\'invitation'}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Liste des membres — éjection */}
@@ -272,7 +353,8 @@ function LeaveGroupButton({ groupId }: { groupId: string }) {
   )
 }
 
-export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe', groupId }: LeftSidebarGroupListOfUsersProps) {
+export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe', groupId, currentUserId, creatorId }: LeftSidebarGroupListOfUsersProps) {
+  const isCreator = creatorId !== null && currentUserId === creatorId
 
   return (
     <aside className="h-full bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col overflow-hidden">
@@ -299,7 +381,14 @@ export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe
           ))}
         </div>
       </section>
-      <AdminButton users={users} groupName={groupName} groupId={groupId} />
+      {isCreator && (
+        <AdminButton
+          users={users.filter((u) => u.id !== currentUserId)}
+          groupName={groupName}
+          groupId={groupId}
+          currentUserId={currentUserId}
+        />
+      )}
       <LeaveGroupButton groupId={groupId} />
     </aside>
   )

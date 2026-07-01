@@ -47,6 +47,7 @@ function InsideGroupContent() {
   const [posts, setPosts]           = useState<Post[]>([])
   const [members, setMembers]       = useState<Conversation[]>([])
   const [sidebarUsers, setSidebarUsers] = useState<SidebarUser[]>([])
+  const [creatorId, setCreatorId]   = useState<string | null>(null)
   const [loading, setLoading]       = useState(true)
   const [activeId, setActiveId]     = useState<string | null>(null)
   const [selectedPost, setSelectedPost] = useState<ApiGroupPost | null>(null)
@@ -102,6 +103,8 @@ function InsideGroupContent() {
         }))
         setMembers(convs)
         setSidebarUsers(sidebar)
+        const creator = (data ?? []).find((m) => m.isCreator)
+        setCreatorId(creator ? String(creator.id) : null)
       })
       .catch(() => {})
   }, [groupId])
@@ -177,7 +180,13 @@ function InsideGroupContent() {
         <div className="h-full grid grid-cols-[280px_1fr_264px] gap-4 pt-4">
 
           <div className="h-full">
-            <LeftSidebarGroupListOfUsers users={sidebarUsers} groupName="Groupe" groupId={groupId} />
+            <LeftSidebarGroupListOfUsers
+              users={sidebarUsers}
+              groupName="Groupe"
+              groupId={groupId}
+              currentUserId={user.id}
+              creatorId={creatorId}
+            />
           </div>
 
           {/* Colonne centrale */}

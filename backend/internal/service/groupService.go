@@ -118,6 +118,18 @@ func (s *GroupService) RejectJoinRequest(groupID, userID int64) error {
 	return s.repo.RejectJoinRequest(groupID, userID)
 }
 
+func (s *GroupService) InviteUserToGroup(groupID, targetUserID, inviterID int64) error {
+	return s.repo.InviteUserToGroup(groupID, targetUserID, inviterID)
+}
+
+func (s *GroupService) AcceptGroupInvite(groupID, userID int64) error {
+	return s.repo.AcceptGroupInvite(groupID, userID)
+}
+
+func (s *GroupService) DeclineGroupInvite(groupID, userID int64) error {
+	return s.repo.DeclineGroupInvite(groupID, userID)
+}
+
 func (s *GroupService) GetGroupCreatorID(groupID int64) (int64, error) {
 	return s.repo.GetGroupCreatorID(groupID)
 }

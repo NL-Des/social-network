@@ -24,6 +24,7 @@ export interface BackendNotification {
   payload: {
     actor_id?: number
     actor_name?: string
+    group_id?: number
     group_name?: string
     post_title?: string
     created_at?: string
@@ -149,6 +150,16 @@ export default function NotificationList({ wsUrl, onUnreadCountChange }: Notific
     deleteOne(n.id)
   }
 
+  async function handleAcceptInvite(n: BackendNotification) {
+    await fetch(`/api/group-chat/${n.payload.group_id}/invite`, { method: 'PUT' }).catch(() => {})
+    deleteOne(n.id)
+  }
+
+  async function handleRejectInvite(n: BackendNotification) {
+    await fetch(`/api/group-chat/${n.payload.group_id}/invite`, { method: 'DELETE' }).catch(() => {})
+    deleteOne(n.id)
+  }
+
   if (loading) {
     return <p className="text-brand-text text-sm text-center py-4">Chargement…</p>
   }
@@ -213,6 +224,22 @@ export default function NotificationList({ wsUrl, onUnreadCountChange }: Notific
                       </button>
                       <button
                         onClick={() => handleReject(n)}
+                        className="px-3 py-1 rounded-lg bg-red-600/20 border border-red-500/40 text-red-400 text-xs hover:bg-red-600/40 transition-colors"
+                      >
+                        ✕ Refuser
+                      </button>
+                    </div>
+                  )}
+                  {n.kind === 'group_invite' && n.payload.group_id && (
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => handleAcceptInvite(n)}
+                        className="px-3 py-1 rounded-lg bg-green-600/20 border border-green-500/40 text-green-400 text-xs hover:bg-green-600/40 transition-colors"
+                      >
+                        ✓ Accepter
+                      </button>
+                      <button
+                        onClick={() => handleRejectInvite(n)}
                         className="px-3 py-1 rounded-lg bg-red-600/20 border border-red-500/40 text-red-400 text-xs hover:bg-red-600/40 transition-colors"
                       >
                         ✕ Refuser

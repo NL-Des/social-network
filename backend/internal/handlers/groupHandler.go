@@ -365,18 +365,51 @@ func (h *GroupHandler) HandleGroupMembers(w http.ResponseWriter, r *http.Request
 			http.Error(w, "user_id invalide", http.StatusBadRequest)
 			return
 		}
-		if err := h.GroupService.AddGroupMember(groupID, body.UserID, int64(userID)); err != nil {
-			http.Error(w, "erreur serveur", http.StatusInternalServerError)
+		// Seul le créateur peut inviter ; l'invité doit ensuite accepter (statut 'invited').
+		if err := h.GroupService.InviteUserToGroup(groupID, body.UserID, int64(userID)); err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
 			return
 		}
-		// Notifie tous les membres (y compris le nouveau) pour qu'ils rechargent la liste
+		go h.sendGroupAddedNotif(groupID, int64(userID), body.UserID)
+		w.WriteHeader(http.StatusNoContent)
+
+	default:
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+	}
+}
+
+// HandleInviteResponse gère PUT (accepter) et DELETE (refuser) /group-chat/{id}/invite
+func (h *GroupHandler) HandleInviteResponse(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
+	if err != nil {
+		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodPut:
+		if err := h.GroupService.AcceptGroupInvite(groupID, int64(userID)); err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
 		if memberIDs, err := h.GroupService.GetGroupMemberIDs(groupID); err == nil {
 			event := ws.MessageWs{Type: "group_member_added", Data: map[string]int64{"group_id": groupID}}
 			for _, mid := range memberIDs {
 				h.Hub.BroadcastToUser(mid, event)
 			}
 		}
-		go h.sendGroupAddedNotif(groupID, int64(userID), body.UserID)
+		w.WriteHeader(http.StatusNoContent)
+
+	case http.MethodDelete:
+		if err := h.GroupService.DeclineGroupInvite(groupID, int64(userID)); err != nil {
+			http.Error(w, "erreur serveur", http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusNoContent)
 
 	default:
@@ -514,6 +547,7 @@ func (h *GroupHandler) sendGroupAddedNotif(groupID, actorID, targetID int64) {
 	}
 	if err := h.NotifService.Notify(targetID, model.NotifGroupInvite, model.NotificationPayload{
 		ActorName: actor.Username,
+		GroupID:   groupID,
 		GroupName: title,
 	}); err != nil {
 		log.Printf("sendGroupAddedNotif: %v", err)

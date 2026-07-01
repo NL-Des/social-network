@@ -18,6 +18,7 @@ const (
 type NotificationPayload struct {
 	ActorID   int64  `json:"actor_id,omitempty"`
 	ActorName string `json:"actor_name,omitempty"`
+	GroupID   int64  `json:"group_id,omitempty"`
 	GroupName string `json:"group_name,omitempty"`
 	PostTitle string `json:"post_title,omitempty"`
 	CreatedAt string `json:"created_at,omitempty"`
