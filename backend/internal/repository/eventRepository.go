@@ -31,13 +31,13 @@ func (r *EventRepository) GetGroupEvents(groupID, viewerID int) ([]model.GroupEv
 			COUNT(CASE WHEN er.response = 'unsure'       THEN 1 END) AS unsure,
 			COUNT(CASE WHEN er.response = 'uninterested' THEN 1 END) AS uninterested,
 			COALESCE(
-				(SELECT ger.response FROM group_event_responses ger
+				(SELECT ger.response FROM social_group_event_responses ger
 				 WHERE ger.eventid = e.id AND ger.userid = $2 LIMIT 1),
 				''
 			) AS user_response
-		FROM group_events e
+		FROM social_group_events e
 		JOIN users u ON u.id = e.creatorid
-		LEFT JOIN group_event_responses er ON er.eventid = e.id
+		LEFT JOIN social_group_event_responses er ON er.eventid = e.id
 		WHERE e.groupid = $1
 		GROUP BY e.id, u.pseudo, u.firstname, u.lastname
 		ORDER BY e.eventdatetime ASC
@@ -70,7 +70,7 @@ func (r *EventRepository) CreateEvent(groupID, creatorID int, req model.CreateEv
 	var eventDatetime, createdAt time.Time
 
 	err := r.db.QueryRow(`
-		INSERT INTO group_events (groupid, creatorid, title, description, eventdatetime)
+		INSERT INTO social_group_events (groupid, creatorid, title, description, eventdatetime)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, groupid, creatorid, title, description, eventdatetime, createdat
 	`, groupID, creatorID, req.Title, req.Description, req.EventDatetime).Scan(
@@ -98,7 +98,7 @@ func (r *EventRepository) CreateEvent(groupID, creatorID int, req model.CreateEv
 
 func (r *EventRepository) DeleteEvent(eventID, userID int) error {
 	result, err := r.db.Exec(`
-		DELETE FROM group_events WHERE id = $1 AND creatorid = $2
+		DELETE FROM social_group_events WHERE id = $1 AND creatorid = $2
 	`, eventID, userID)
 	if err != nil {
 		return err
@@ -112,7 +112,7 @@ func (r *EventRepository) DeleteEvent(eventID, userID int) error {
 
 func (r *EventRepository) RespondToEvent(eventID, userID int, response string) error {
 	_, err := r.db.Exec(`
-		INSERT INTO group_event_responses (eventid, userid, response)
+		INSERT INTO social_group_event_responses (eventid, userid, response)
 		VALUES ($1, $2, $3)
 		ON CONFLICT ON CONSTRAINT uq_event_response
 		DO UPDATE SET response = $3, respondedat = CURRENT_TIMESTAMP

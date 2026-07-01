@@ -28,17 +28,17 @@ func NewGroupRepo(db *sql.DB) *GroupRepo {
 func (r *GroupRepo) CreateGroup(title, description string, creatorID int64, memberIDs []int64) (int64, error) {
 	var groupID int64
 	err := r.db.QueryRow(`
-		INSERT INTO groups (creatorid, leaderid, title, description)
+		INSERT INTO social_groups (creatorid, leaderid, title, description)
 		VALUES ($1, $1, $2, $3)
 		RETURNING id
-	`, creatorID, title, description).Scan(&groupID)
+`, creatorID, title, description).Scan(&groupID)
 	if err != nil {
 		return 0, err
 	}
 
 	// Insère le créateur comme membre
 	if _, err = r.db.Exec(`
-		INSERT INTO group_members (groupid, userid, invitedby, status)
+		INSERT INTO social_group_members (groupid, userid, invitedby, status)
 		VALUES ($1, $2, $2, 'member')
 		ON CONFLICT DO NOTHING
 	`, groupID, creatorID); err != nil {
@@ -51,7 +51,7 @@ func (r *GroupRepo) CreateGroup(title, description string, creatorID int64, memb
 			continue
 		}
 		if _, err = r.db.Exec(`
-			INSERT INTO group_members (groupid, userid, invitedby, status)
+			INSERT INTO social_group_members (groupid, userid, invitedby, status)
 			VALUES ($1, $2, $3, 'member')
 			ON CONFLICT DO NOTHING
 		`, groupID, uid, creatorID); err != nil {
@@ -64,15 +64,15 @@ func (r *GroupRepo) CreateGroup(title, description string, creatorID int64, memb
 
 func (r *GroupRepo) GetGroupTitle(groupID int64) (string, error) {
 	var title string
-	err := r.db.QueryRow(`SELECT title FROM groups WHERE id = $1`, groupID).Scan(&title)
+	err := r.db.QueryRow(`SELECT title FROM social_groups WHERE id = $1`, groupID).Scan(&title)
 	return title, err
 }
 
 func (r *GroupRepo) GetUserGroups(userID int64) ([]GroupInfo, error) {
 	rows, err := r.db.Query(`
 		SELECT g.id, g.title, g.creatorid
-		FROM groups g
-		JOIN group_members gm ON gm.groupid = g.id
+		FROM social_groups g
+		JOIN social_group_members gm ON gm.groupid = g.id
 		WHERE gm.userid = $1 AND gm.status = 'member'
 		ORDER BY g.createdat DESC
 	`, userID)
@@ -111,7 +111,7 @@ func (r *GroupRepo) GetUserGroups(userID int64) ([]GroupInfo, error) {
 
 func (r *GroupRepo) GetGroupMemberIDs(groupID int64) ([]int64, error) {
 	rows, err := r.db.Query(`
-		SELECT userid FROM group_members
+		SELECT userid FROM social_group_members
 		WHERE groupid = $1 AND status = 'member'
 	`, groupID)
 	if err != nil {
@@ -132,7 +132,7 @@ func (r *GroupRepo) GetGroupMemberIDs(groupID int64) ([]int64, error) {
 
 func (r *GroupRepo) LeaveGroup(groupID, userID int64) error {
 	_, err := r.db.Exec(`
-		DELETE FROM group_members
+		DELETE FROM social_group_members
 		WHERE groupid = $1 AND userid = $2
 	`, groupID, userID)
 	return err
@@ -141,7 +141,7 @@ func (r *GroupRepo) LeaveGroup(groupID, userID int64) error {
 func (r *GroupRepo) IsGroupMember(groupID, userID int64) (bool, error) {
 	var count int
 	err := r.db.QueryRow(`
-		SELECT COUNT(*) FROM group_members
+		SELECT COUNT(*) FROM social_group_members
 		WHERE groupid = $1 AND userid = $2 AND status = 'member'
 	`, groupID, userID).Scan(&count)
 	return count > 0, err
@@ -151,10 +151,10 @@ func (r *GroupRepo) GetGroupPosts(groupID, viewerID int64) ([]model.GroupPost, e
 	rows, err := r.db.Query(`
 		SELECT gp.id, gp.title, gp.content, gp.createdat,
 		       COALESCE(u.pseudo, ''), COALESCE(u.avatar, ''),
-		       COALESCE((SELECT COUNT(*) FROM group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'like'), 0),
-		       COALESCE((SELECT COUNT(*) FROM group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'dislike'), 0),
-		       COALESCE((SELECT l."type" FROM group_post_likes l WHERE l.group_post_id = gp.id AND l.user_id = $2), '')
-		FROM group_posts gp
+		       COALESCE((SELECT COUNT(*) FROM social_group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'like'), 0),
+		       COALESCE((SELECT COUNT(*) FROM social_group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'dislike'), 0),
+		       COALESCE((SELECT l."type" FROM social_group_post_likes l WHERE l.group_post_id = gp.id AND l.user_id = $2), '')
+		FROM social_group_posts gp
 		JOIN users u ON gp.authorid = u.id
 		WHERE gp.groupid = $1
 		ORDER BY gp.createdat DESC
@@ -178,28 +178,28 @@ func (r *GroupRepo) GetGroupPosts(groupID, viewerID int64) ([]model.GroupPost, e
 }
 
 func (r *GroupRepo) AddGroupLike(groupPostID, userID int64, likeType string) error {
-	_, err := r.db.Exec(`DELETE FROM group_post_likes WHERE group_post_id = $1 AND user_id = $2`, groupPostID, userID)
+	_, err := r.db.Exec(`DELETE FROM social_group_post_likes WHERE group_post_id = $1 AND user_id = $2`, groupPostID, userID)
 	if err != nil {
 		return err
 	}
-	_, err = r.db.Exec(`INSERT INTO group_post_likes (group_post_id, user_id, "type") VALUES ($1, $2, $3)`, groupPostID, userID, likeType)
+	_, err = r.db.Exec(`INSERT INTO social_group_post_likes (group_post_id, user_id, "type") VALUES ($1, $2, $3)`, groupPostID, userID, likeType)
 	return err
 }
 
 func (r *GroupRepo) RemoveGroupLike(groupPostID, userID int64) error {
-	_, err := r.db.Exec(`DELETE FROM group_post_likes WHERE group_post_id = $1 AND user_id = $2`, groupPostID, userID)
+	_, err := r.db.Exec(`DELETE FROM social_group_post_likes WHERE group_post_id = $1 AND user_id = $2`, groupPostID, userID)
 	return err
 }
 
 func (r *GroupRepo) GetGroupPostAuthorID(groupPostID int64) (int64, error) {
 	var authorID int64
-	err := r.db.QueryRow(`SELECT authorid FROM group_posts WHERE id = $1`, groupPostID).Scan(&authorID)
+	err := r.db.QueryRow(`SELECT authorid FROM social_group_posts WHERE id = $1`, groupPostID).Scan(&authorID)
 	return authorID, err
 }
 
 func (r *GroupRepo) GetGroupLikeCounts(groupPostID int64) (likes int, dislikes int, err error) {
 	rows, err := r.db.Query(`
-		SELECT "type", COUNT(*) FROM group_post_likes
+		SELECT "type", COUNT(*) FROM social_group_post_likes
 		WHERE group_post_id = $1
 		GROUP BY "type"
 	`, groupPostID)
@@ -224,7 +224,7 @@ func (r *GroupRepo) GetGroupLikeCounts(groupPostID int64) (likes int, dislikes i
 
 func (r *GroupRepo) CreateGroupPost(groupID, authorID int64, title, content string) error {
 	_, err := r.db.Exec(`
-		INSERT INTO group_posts (groupid, authorid, title, content)
+		INSERT INTO social_group_posts (groupid, authorid, title, content)
 		VALUES ($1, $2, $3, $4)
 	`, groupID, authorID, title, content)
 	return err
@@ -236,10 +236,10 @@ func (r *GroupRepo) GetGroupPostByID(groupID, postID, viewerID int64) (model.Gro
 	err := r.db.QueryRow(`
 		SELECT gp.id, gp.title, gp.content, gp.createdat,
 		       COALESCE(u.pseudo, ''), COALESCE(u.avatar, ''),
-		       COALESCE((SELECT COUNT(*) FROM group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'like'), 0),
-		       COALESCE((SELECT COUNT(*) FROM group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'dislike'), 0),
-		       COALESCE((SELECT l."type" FROM group_post_likes l WHERE l.group_post_id = gp.id AND l.user_id = $3), '')
-		FROM group_posts gp
+		       COALESCE((SELECT COUNT(*) FROM social_group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'like'), 0),
+		       COALESCE((SELECT COUNT(*) FROM social_group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'dislike'), 0),
+		       COALESCE((SELECT l."type" FROM social_group_post_likes l WHERE l.group_post_id = gp.id AND l.user_id = $3), '')
+		FROM social_group_posts gp
 		JOIN users u ON gp.authorid = u.id
 		WHERE gp.id = $1 AND gp.groupid = $2
 	`, postID, groupID, viewerID).Scan(&p.ID, &p.Title, &p.Content, &createdAt, &p.Author.Username, &p.Author.ProfilePicture, &p.Likes, &p.Dislikes, &p.UserLike)
@@ -252,7 +252,7 @@ func (r *GroupRepo) GetGroupPostByID(groupID, postID, viewerID int64) (model.Gro
 
 func (r *GroupRepo) DeleteGroupPost(postID, authorID int64) error {
 	result, err := r.db.Exec(`
-		DELETE FROM group_posts WHERE id = $1 AND authorid = $2
+		DELETE FROM social_group_posts WHERE id = $1 AND authorid = $2
 	`, postID, authorID)
 	if err != nil {
 		return err
@@ -268,7 +268,7 @@ func (r *GroupRepo) GetGroupComments(postID int64) ([]model.GroupComment, error)
 	rows, err := r.db.Query(`
 		SELECT gc.id, gc.content, gc.createdat,
 		       u.pseudo, COALESCE(u.avatar, '')
-		FROM group_comments gc
+		FROM social_group_comments gc
 		JOIN users u ON gc.authorid = u.id
 		WHERE gc.postid = $1
 		ORDER BY gc.createdat ASC
@@ -293,7 +293,7 @@ func (r *GroupRepo) GetGroupComments(postID int64) ([]model.GroupComment, error)
 
 func (r *GroupRepo) AddGroupComment(postID, authorID int64, content string) error {
 	_, err := r.db.Exec(`
-		INSERT INTO group_comments (postid, authorid, content)
+		INSERT INTO social_group_comments (postid, authorid, content)
 		VALUES ($1, $2, $3)
 	`, postID, authorID, content)
 	return err
@@ -301,7 +301,7 @@ func (r *GroupRepo) AddGroupComment(postID, authorID int64, content string) erro
 
 func (r *GroupRepo) DeleteGroupComment(commentID, authorID int64) error {
 	result, err := r.db.Exec(`
-		DELETE FROM group_comments WHERE id = $1 AND authorid = $2
+		DELETE FROM social_group_comments WHERE id = $1 AND authorid = $2
 	`, commentID, authorID)
 	if err != nil {
 		return err
@@ -316,7 +316,7 @@ func (r *GroupRepo) DeleteGroupComment(commentID, authorID int64) error {
 
 func (r *GroupRepo) RemoveGroupMember(groupID, targetUserID, requestingUserID int64) error {
 	var creatorID int64
-	err := r.db.QueryRow(`SELECT creatorid FROM groups WHERE id = $1`, groupID).Scan(&creatorID)
+	err := r.db.QueryRow(`SELECT creatorid FROM social_groups WHERE id = $1`, groupID).Scan(&creatorID)
 	if err != nil {
 		return err
 	}
@@ -326,13 +326,13 @@ func (r *GroupRepo) RemoveGroupMember(groupID, targetUserID, requestingUserID in
 	if targetUserID == requestingUserID {
 		return fmt.Errorf("le créateur ne peut pas se retirer lui-même")
 	}
-	_, err = r.db.Exec(`DELETE FROM group_members WHERE groupid = $1 AND userid = $2`, groupID, targetUserID)
+	_, err = r.db.Exec(`DELETE FROM social_group_members WHERE groupid = $1 AND userid = $2`, groupID, targetUserID)
 	return err
 }
 
 func (r *GroupRepo) AddGroupMember(groupID, userID, invitedByID int64) error {
 	_, err := r.db.Exec(`
-		INSERT INTO group_members (groupid, userid, invitedby, status)
+		INSERT INTO social_group_members (groupid, userid, invitedby, status)
 		VALUES ($1, $2, $3, 'member')
 		ON CONFLICT DO NOTHING
 	`, groupID, userID, invitedByID)
@@ -367,10 +367,10 @@ type JoinRequest struct {
 func (r *GroupRepo) GetAllGroups(userID int64) ([]GroupInfoWithStatus, error) {
 	rows, err := r.db.Query(`
 		SELECT g.id, g.title, COALESCE(g.description, ''),
-		       (SELECT COUNT(*) FROM group_members gm2 WHERE gm2.groupid = g.id AND gm2.status = 'member'),
+		       (SELECT COUNT(*) FROM social_group_members gm2 WHERE gm2.groupid = g.id AND gm2.status = 'member'),
 		       g.creatorid,
-		       COALESCE((SELECT gm.status FROM group_members gm WHERE gm.groupid = g.id AND gm.userid = $1), 'none')
-		FROM groups g
+		       COALESCE((SELECT gm.status FROM social_group_members gm WHERE gm.groupid = g.id AND gm.userid = $1), 'none')
+		FROM social_groups g
 		ORDER BY g.createdat DESC
 	`, userID)
 	if err != nil {
@@ -403,7 +403,7 @@ func (r *GroupRepo) GetAllGroups(userID int64) ([]GroupInfoWithStatus, error) {
 
 func (r *GroupRepo) CreateJoinRequest(groupID, userID int64) error {
 	_, err := r.db.Exec(`
-		INSERT INTO group_members (groupid, userid, invitedby, status)
+		INSERT INTO social_group_members (groupid, userid, invitedby, status)
 		VALUES ($1, $2, $2, 'pending')
 		ON CONFLICT (groupid, userid) DO NOTHING
 	`, groupID, userID)
@@ -412,7 +412,7 @@ func (r *GroupRepo) CreateJoinRequest(groupID, userID int64) error {
 
 func (r *GroupRepo) CancelJoinRequest(groupID, userID int64) error {
 	_, err := r.db.Exec(`
-		DELETE FROM group_members
+		DELETE FROM social_group_members
 		WHERE groupid = $1 AND userid = $2 AND status = 'pending'
 	`, groupID, userID)
 	return err
@@ -421,7 +421,7 @@ func (r *GroupRepo) CancelJoinRequest(groupID, userID int64) error {
 func (r *GroupRepo) GetJoinRequests(groupID int64) ([]JoinRequest, error) {
 	rows, err := r.db.Query(`
 		SELECT u.id, u.firstname, u.lastname
-		FROM group_members gm
+		FROM social_group_members gm
 		JOIN users u ON u.id = gm.userid
 		WHERE gm.groupid = $1 AND gm.status = 'pending'
 		ORDER BY gm.joinedat ASC
@@ -455,7 +455,7 @@ func (r *GroupRepo) GetJoinRequests(groupID int64) ([]JoinRequest, error) {
 
 func (r *GroupRepo) ApproveJoinRequest(groupID, userID int64) error {
 	result, err := r.db.Exec(`
-		UPDATE group_members SET status = 'member'
+		UPDATE social_group_members SET status = 'member'
 		WHERE groupid = $1 AND userid = $2 AND status = 'pending'
 	`, groupID, userID)
 	if err != nil {
@@ -470,7 +470,7 @@ func (r *GroupRepo) ApproveJoinRequest(groupID, userID int64) error {
 
 func (r *GroupRepo) RejectJoinRequest(groupID, userID int64) error {
 	_, err := r.db.Exec(`
-		DELETE FROM group_members
+		DELETE FROM social_group_members
 		WHERE groupid = $1 AND userid = $2 AND status = 'pending'
 	`, groupID, userID)
 	return err
@@ -478,13 +478,13 @@ func (r *GroupRepo) RejectJoinRequest(groupID, userID int64) error {
 
 func (r *GroupRepo) GetGroupCreatorID(groupID int64) (int64, error) {
 	var creatorID int64
-	err := r.db.QueryRow(`SELECT creatorid FROM groups WHERE id = $1`, groupID).Scan(&creatorID)
+	err := r.db.QueryRow(`SELECT creatorid FROM social_groups WHERE id = $1`, groupID).Scan(&creatorID)
 	return creatorID, err
 }
 
 func (r *GroupRepo) TransferAdmin(groupID, currentAdminID, newAdminID int64) error {
 	var creatorID int64
-	if err := r.db.QueryRow(`SELECT creatorid FROM groups WHERE id = $1`, groupID).Scan(&creatorID); err != nil {
+	if err := r.db.QueryRow(`SELECT creatorid FROM social_groups WHERE id = $1`, groupID).Scan(&creatorID); err != nil {
 		return err
 	}
 	if creatorID != currentAdminID {
@@ -492,23 +492,23 @@ func (r *GroupRepo) TransferAdmin(groupID, currentAdminID, newAdminID int64) err
 	}
 	var count int
 	if err := r.db.QueryRow(`
-		SELECT COUNT(*) FROM group_members WHERE groupid = $1 AND userid = $2 AND status = 'member'
+		SELECT COUNT(*) FROM social_group_members WHERE groupid = $1 AND userid = $2 AND status = 'member'
 	`, groupID, newAdminID).Scan(&count); err != nil || count == 0 {
 		return fmt.Errorf("utilisateur non membre du groupe")
 	}
-	_, err := r.db.Exec(`UPDATE groups SET creatorid = $1, leaderid = $1 WHERE id = $2`, newAdminID, groupID)
+	_, err := r.db.Exec(`UPDATE social_groups SET creatorid = $1, leaderid = $1 WHERE id = $2`, newAdminID, groupID)
 	return err
 }
 
 func (r *GroupRepo) DeleteGroup(groupID, userID int64) error {
 	var creatorID int64
-	if err := r.db.QueryRow(`SELECT creatorid FROM groups WHERE id = $1`, groupID).Scan(&creatorID); err != nil {
+	if err := r.db.QueryRow(`SELECT creatorid FROM social_groups WHERE id = $1`, groupID).Scan(&creatorID); err != nil {
 		return err
 	}
 	if creatorID != userID {
 		return fmt.Errorf("non autorisé")
 	}
-	_, err := r.db.Exec(`DELETE FROM groups WHERE id = $1`, groupID)
+	_, err := r.db.Exec(`DELETE FROM social_groups WHERE id = $1`, groupID)
 	return err
 }
 
@@ -520,9 +520,9 @@ func (r *GroupRepo) GetGroupMembers(groupID int) ([]GroupMember, error) {
 		       u.firstname,
 		       u.lastname,
 		       CASE WHEN g.creatorid = u.id THEN true ELSE false END AS is_creator
-		FROM group_members gm
+		FROM social_group_members gm
 		JOIN users u ON u.id = gm.userid
-		JOIN groups g ON g.id = gm.groupid
+		JOIN social_groups g ON g.id = gm.groupid
 		WHERE gm.groupid = $1 AND gm.status = 'member'
 		ORDER BY is_creator DESC, u.firstname, u.lastname
 	`, groupID)
