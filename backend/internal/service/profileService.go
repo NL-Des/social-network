@@ -67,6 +67,9 @@ func (s *ProfilService) GetProfile(viewerID, profileID int) (*model.PublicProfil
 		IsAccessible: true,
 		CanEdit:      isOwner,
 	}
+	if isOwner {
+		profile.Email = user.Email
+	}
 
 	followers, err := s.ProfilRepo.GetFollowers(profileID)
 	if err != nil {

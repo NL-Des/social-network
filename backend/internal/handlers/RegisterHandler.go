@@ -76,7 +76,7 @@ func (rh *RegisterHandler) RegisterHandler(w http.ResponseWriter, r *http.Reques
 			fmt.Println("Erreur de sauvegarde de l'avatar")
 			return
 		}
-		user.ProfilePicture = savePath
+		user.ProfilePicture = "/images/profil/" + header.Filename
 	}
 
 	user.Name = r.FormValue("name")
