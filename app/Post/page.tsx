@@ -13,6 +13,7 @@ import { useSidebarUsers } from '@/lib/useSidebarUsers'
 interface ApiComment {
   id: number
   content: string
+  image: string
   author: { username: string; profilePicture: string }
   createdAt: string
 }
@@ -22,6 +23,7 @@ interface ApiPost {
   author: { username: string; profilePicture: string }
   title: string
   content: string
+  image: string
   createdAt: string
   comments: ApiComment[] | null
 }
@@ -76,6 +78,7 @@ function PostContent() {
           id:      String(data.id),
           author:  { name: data.author.username, initials: getInitials(data.author.username) },
           content: data.content,
+          image:   data.image || undefined,
         })
         setComments(
           (data.comments ?? []).map((c) => ({
@@ -83,6 +86,7 @@ function PostContent() {
             author: { name: c.author.username, initials: getInitials(c.author.username) },
             text:   c.content,
             date:   formatDate(c.createdAt),
+            image:  c.image || undefined,
           }))
         )
       })

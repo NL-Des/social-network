@@ -6,6 +6,7 @@ type Post struct {
 	Author    User      `json:"author"`
 	Title     string    `json:"title"`
 	Content   string    `json:"content"`
+	Image     string    `json:"image"`
 	Tags      []string  `json:"tags"`
 	Privacy   string    `json:"privacy"`
 	CreatedAt string    `json:"createdAt"`
@@ -20,6 +21,7 @@ type Comment struct {
 	ID        int    `json:"id"`
 	PostID    int    `json:"postId"`
 	Content   string `json:"content"`
+	Image     string `json:"image"`
 	Author    User   `json:"author"`
 	CreatedAt string `json:"createdAt"`
 	UpdatedAt string `json:"updatedAt"`

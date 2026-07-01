@@ -74,8 +74,10 @@ export default function PersonnalInformations({ user }: PersonnalInformationsPro
           {[
             { label: 'Nom', value: user.lastName },
             { label: 'Prénom', value: user.firstName },
+            { label: 'Pseudo', value: user.username },
             { label: 'Adresse mail', value: user.email },
             { label: 'Date de naissance', value: (() => { const d = user.birthDate?.split('T')[0]?.split('-'); return d?.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : '' })() },
+            { label: 'Description', value: user.description }
           ].map(({ label, value }) => (
             <div key={label} className="flex gap-2">
               <dt className="text-brand-border">{label}:</dt>

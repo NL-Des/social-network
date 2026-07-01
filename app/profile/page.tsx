@@ -19,7 +19,7 @@ function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUs
     if (!data.user.id) return
     fetch(`/api/profile/${data.user.id}/posts`)
       .then((r) => r.ok ? r.json() : [])
-      .then((raw: Array<{ id: number; title: string; content: string }>) => {
+      .then((raw: Array<{ id: number; title: string; content: string; image: string }>) => {
         setPosts(
           raw.map((p) => ({
             id: String(p.id),
@@ -29,6 +29,7 @@ function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUs
             },
             title: p.title,
             content: p.content,
+            image: p.image || undefined,
           }))
         )
       })
@@ -59,10 +60,11 @@ function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUs
           <div className="flex flex-col gap-5 h-full overflow-hidden">
             <div className="shrink-0 grid grid-cols-[auto_2fr_1fr] gap-5 items-stretch">
               <div className="flex items-center justify-center px-2">
-                <div className="w-44 h-44 rounded-full bg-gray-600 flex items-center justify-center shadow-neon ring-4 ring-brand-border/30">
-                  <span className="text-5xl font-extrabold text-white tracking-tight">
-                    {data.user.initials}
-                  </span>
+                <div className="w-44 h-44 rounded-full bg-gray-600 flex items-center justify-center shadow-neon ring-4 ring-brand-border/30 overflow-hidden">
+                  {data.user.avatar
+                    ? <img src={data.user.avatar} alt={data.user.initials} className="w-full h-full object-cover" />
+                    : <span className="text-5xl font-extrabold text-white tracking-tight">{data.user.initials}</span>
+                  }
                 </div>
               </div>
 
@@ -125,6 +127,7 @@ export default function Page() {
     username: data.user.username,
     followers: data.user.followersCount,
     initials: data.user.initials,
+    avatar: data.user.avatar || undefined,
   }
 
   return <ProfileContent data={data} headerUser={headerUser} />

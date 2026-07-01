@@ -17,6 +17,7 @@ export interface SidebarUser {
   id: string
   name: string
   initials: string
+  avatar?: string
   online: boolean
   isPrivate: boolean
 }
@@ -122,8 +123,10 @@ function RightSidebarInner({ groups: groupsProp }: RightSidebarProps) {
             const avatar = (
               <div className="relative shrink-0 flex items-center">
                 <span className={`absolute -left-3 w-2 h-2 rounded-full ${statusDotColor(user.id, onlineUsers, mergedUnread, activeConvId)}`} />
-                <div className="w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center text-white text-base font-bold">
-                  {user.initials}
+                <div className="w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center text-white text-base font-bold overflow-hidden">
+                  {user.avatar
+                    ? <img src={user.avatar} alt={user.initials} className="w-full h-full object-cover" />
+                    : user.initials}
                 </div>
               </div>
             )

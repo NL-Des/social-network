@@ -8,6 +8,7 @@ export interface Post {
   }
   title?: string
   content: string
+  image?: string
   likes?: number
   dislikes?: number
   userLike?: string
@@ -17,6 +18,7 @@ export interface Post {
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { createPost } from '@/app/Post/actions'
+import ImagePicker from './ImagePicker'
 
 interface CreatePostButtonProps {
   onSuccess?: () => void
@@ -28,6 +30,7 @@ export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) 
   const [title, setTitle] = useState('')
   const [text, setText] = useState('')
   const [privacy, setPrivacy] = useState<'public' | 'private' | 'almost-private'>('public')
+  const [image, setImage] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const formRef = useRef<HTMLDivElement>(null)
@@ -49,10 +52,13 @@ export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) 
     try {
       let result: { error?: string }
       if (groupId) {
+        const formData = new FormData()
+        formData.set('title', title.trim())
+        formData.set('content', text.trim())
+        if (image) formData.set('image', image)
         const res = await fetch(`/api/group-posts/${groupId}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: title.trim(), content: text.trim() }),
+          body: formData,
         })
         if (!res.ok) {
           const data = await res.json().catch(() => ({}))
@@ -61,7 +67,7 @@ export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) 
           result = {}
         }
       } else {
-        result = await createPost({ title, content: text, privacy })
+        result = await createPost({ title, content: text, privacy, image: image ?? undefined })
       }
       if (result.error) {
         setError(result.error)
@@ -70,6 +76,7 @@ export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) 
       setTitle('')
       setText('')
       setPrivacy('public')
+      setImage(null)
       setFormOpen(false)
       onSuccess?.()
     } catch (e) {
@@ -128,6 +135,8 @@ export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) 
               <option value="private">Privé</option>
             </select>
           </div>
+
+          <ImagePicker onChange={setImage} />
 
           {error && (
             <p className="text-red-400 text-sm text-center">{error}</p>
@@ -248,6 +257,13 @@ const postCardBody = (post: Post) => (
       <p className="font-bold text-brand-text text-base mb-2">{post.title}</p>
     )}
     <p className="text-brand-text text-lg leading-7 whitespace-pre-line">{post.content}</p>
+    {post.image && (
+      <img
+        src={post.image}
+        alt=""
+        className="mt-3 max-h-60 max-w-60 object-cover rounded-xl border border-brand-border/40"
+      />
+    )}
     {post.likes !== undefined && (
       <LikeButtons
         postId={post.id}

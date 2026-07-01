@@ -22,6 +22,7 @@ type UserListItem struct {
 	ID        int    `json:"id"`
 	Name      string `json:"name"`
 	Initials  string `json:"initials"`
+	Avatar    string `json:"avatar,omitempty"`
 	Following bool   `json:"following"`
 	IsPrivate bool   `json:"isPrivate"`
 }

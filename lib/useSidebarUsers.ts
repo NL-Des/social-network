@@ -9,12 +9,13 @@ export function useSidebarUsers() {
   useEffect(() => {
     fetch('/api/users')
       .then((res) => (res.ok ? res.json() : []))
-      .then((data: { id: number; name: string; initials: string; isPrivate: boolean }[]) =>
+      .then((data: { id: number; name: string; initials: string; avatar?: string; isPrivate: boolean }[]) =>
         setUsers(
           data.map((u) => ({
             id: String(u.id),
             name: u.name,
             initials: u.initials,
+            avatar: u.avatar?.startsWith('/') || u.avatar?.startsWith('http') ? u.avatar : undefined,
             online: false,
             isPrivate: u.isPrivate ?? false,
           }))

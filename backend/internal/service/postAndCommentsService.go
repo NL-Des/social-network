@@ -63,8 +63,8 @@ func (s *PostAndCommentsService) CreateNewPost(authorID string, postData model.P
 * Gère la fonction d'ajout de commentaire sur un post
 * Paramètres : ID du commentaire, ID du posteur
 */
-func (s *PostAndCommentsService) AddCommentOnPost(postID int, authorID string, content string) error {
-	return s.commentRepo.CreateNewComment(postID, authorID, content)
+func (s *PostAndCommentsService) AddCommentOnPost(postID int, authorID, content, image string) error {
+	return s.commentRepo.CreateNewComment(postID, authorID, content, image)
 }
 
 /*

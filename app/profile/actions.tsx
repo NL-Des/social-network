@@ -85,7 +85,7 @@ export default async function profileAction(): Promise<ProfilePageProps> {
       followersCount: data.followers?.length ?? 0,
       initials: getInitials(data.firstName, data.lastName),
       description: data.aboutMe ?? '',
-      avatar: data.avatar ?? "",
+      avatar: data.avatar?.startsWith('/') || data.avatar?.startsWith('http') ? data.avatar : undefined,
     },
     following: (data.following ?? []).map((c: any) => ({
       id: String(c.id),

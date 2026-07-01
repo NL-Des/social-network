@@ -25,5 +25,6 @@ export async function GET() {
     username: data.pseudo ?? '',
     followers: data.followers?.length ?? 0,
     initials: `${data.firstName?.[0] ?? ''}${data.lastName?.[0] ?? ''}`.toUpperCase(),
+    avatar: data.avatar?.startsWith('/') || data.avatar?.startsWith('http') ? data.avatar : undefined,
   })
 }

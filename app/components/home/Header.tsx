@@ -13,6 +13,7 @@ export interface CurrentUser {
   username: string
   followers: number
   initials: string
+  avatar?: string
 }
 
 const NAV_LINKS = [
@@ -75,8 +76,10 @@ export default function Header({ user }: { user: CurrentUser }) {
     <header className="fixed top-4 left-4 right-4 z-50 bg-brand-card border border-brand-border shadow-neon rounded-2xl px-8 h-[88px] flex items-center">
       <div className="w-full flex items-center justify-between">
         <Link href="/profile" className="group flex items-center gap-4 transition-opacity">
-          <div className="w-12 h-12 rounded-full border-2 border-brand-border bg-gray-600 flex items-center justify-center text-white font-bold text-lg shrink-0 transition-shadow group-hover:shadow-neon">
-            {user.initials}
+          <div className="w-12 h-12 rounded-full border-2 border-brand-border bg-gray-600 flex items-center justify-center text-white font-bold text-lg shrink-0 transition-shadow group-hover:shadow-neon overflow-hidden">
+            {user.avatar
+              ? <img src={user.avatar} alt={user.initials} className="w-full h-full object-cover" />
+              : user.initials}
           </div>
           <div>
             <p className="text-white font-semibold text-lg">{user.name}</p>

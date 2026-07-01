@@ -27,11 +27,11 @@ func (r *PostRepo) CreateNewPost(authorID string, postData model.Post) (int, err
 	var postID int
 
 	query := `
-        INSERT INTO posts (authorID, title, content, privacy)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO posts (authorID, title, content, privacy, image)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING id`
 
-	err := r.db.QueryRow(query, authorID, postData.Title, postData.Content, postData.Privacy).Scan(&postID)
+	err := r.db.QueryRow(query, authorID, postData.Title, postData.Content, postData.Privacy, postData.Image).Scan(&postID)
 
 	if err != nil {
 		return 0, err
@@ -96,7 +96,7 @@ func (r *PostRepo) GetPostAuthorID(postID int) (string, error) {
 */
 func (r *PostRepo) GetAllPosts(viewerID int) ([]model.Post, error) {
 	rows, err := r.db.Query(`
-	SELECT p.id, p.authorid, p.title, p.content, p.privacy, p.createdat, p.updatedat,
+	SELECT p.id, p.authorid, p.title, p.content, COALESCE(p.image, ''), p.privacy, p.createdat, p.updatedat,
 	       COALESCE(u.pseudo, ''), COALESCE(u.avatar, ''),
 	       COALESCE(array_agg(t.name) FILTER (WHERE t.name IS NOT NULL), '{}') AS tags,
 	       COALESCE((SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id AND pl."type" = 'like'), 0) AS likes,
@@ -126,7 +126,7 @@ func (r *PostRepo) GetAllPosts(viewerID int) ([]model.Post, error) {
 	for rows.Next() {
 		post := model.Post{}
 		if err := rows.Scan(
-			&post.ID, &post.AuthorID, &post.Title, &post.Content, &post.Privacy,
+			&post.ID, &post.AuthorID, &post.Title, &post.Content, &post.Image, &post.Privacy,
 			&post.CreatedAt, &post.UpdatedAt,
 			&post.Author.Username, &post.Author.ProfilePicture,
 			pq.Array(&post.Tags),
@@ -146,7 +146,7 @@ func (r *PostRepo) GetAllPosts(viewerID int) ([]model.Post, error) {
 
 func (r *PostRepo) GetPostFromID(postID int) (model.Post, error) {
 	row := r.db.QueryRow(`
-	SELECT p.ID, p.title, p.content, COALESCE(u.pseudo, ''), COALESCE(u.avatar, ''), p.privacy, p.createdat, p.updatedat
+	SELECT p.ID, p.title, p.content, COALESCE(p.image, ''), COALESCE(u.pseudo, ''), COALESCE(u.avatar, ''), p.privacy, p.createdat, p.updatedat
 	FROM posts p
 	JOIN users u ON p.authorID = u.ID
 	WHERE p.ID = $1
@@ -154,7 +154,7 @@ func (r *PostRepo) GetPostFromID(postID int) (model.Post, error) {
 
 	post := model.Post{}
 
-	err := row.Scan(&post.ID, &post.Title, &post.Content, &post.Author.Username, &post.Author.ProfilePicture, &post.Privacy, &post.CreatedAt, &post.UpdatedAt)
+	err := row.Scan(&post.ID, &post.Title, &post.Content, &post.Image, &post.Author.Username, &post.Author.ProfilePicture, &post.Privacy, &post.CreatedAt, &post.UpdatedAt)
 	if err != nil {
 		return model.Post{}, err
 	}

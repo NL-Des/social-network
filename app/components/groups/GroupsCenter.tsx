@@ -19,6 +19,7 @@ interface JoinRequest {
   user_id: number
   name: string
   initials: string
+  avatar?: string
 }
 
 type Tab = 'mes-groupes' | 'decouvrir' | 'demandes'
@@ -218,8 +219,10 @@ function DemandesTab({ allGroups, userId, onStatusChange, onApproved }: Demandes
                   <div className="flex flex-col gap-2">
                     {reqs.map((req) => (
                       <div key={req.user_id} className="flex items-center gap-3 bg-white/3 border border-brand-border/15 rounded-xl px-3 py-2">
-                        <div className={`w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold shrink-0 ${avatarClass(req.user_id)}`}>
-                          {req.initials || '?'}
+                        <div className={`w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden ${req.avatar?.startsWith('/') || req.avatar?.startsWith('http') ? '' : avatarClass(req.user_id)}`}>
+                          {req.avatar?.startsWith('/') || req.avatar?.startsWith('http')
+                            ? <img src={req.avatar} alt={req.initials} className="w-full h-full object-cover" />
+                            : req.initials || '?'}
                         </div>
                         <span className="text-white text-xs flex-1 truncate">{req.name}</span>
                         <button

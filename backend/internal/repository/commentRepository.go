@@ -21,11 +21,11 @@ func NewCommentRepo(db *sql.DB) *CommentRepo{
 * Paramètres : ID du post, ID de l'auteur contenu du commentaire
 
 */
-func (r *CommentRepo) CreateNewComment(postID int, authorID, content string) error {
+func (r *CommentRepo) CreateNewComment(postID int, authorID, content, image string) error {
 	_, err := r.db.Exec(
-		`INSERT INTO comments (postID, authorID, content)
-		VALUES ($1, $2, $3)
-		`, postID, authorID, content)
+		`INSERT INTO comments (postID, authorID, content, image)
+		VALUES ($1, $2, $3, $4)
+		`, postID, authorID, content, image)
 
 	return err
 }
@@ -85,7 +85,7 @@ func (r *CommentRepo) GetCommentAuthorID(commentID int) (string, error) {
 */
 func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error) {
 	rows, err := r.db.Query(
-		`SELECT c.ID, c.content, c.createdat, c.updatedat, COALESCE(u.pseudo, ''), COALESCE(u.avatar, '')
+		`SELECT c.ID, c.content, COALESCE(c.image, ''), c.createdat, c.updatedat, COALESCE(u.pseudo, ''), COALESCE(u.avatar, '')
 		FROM comments c
 		JOIN users u ON c.authorID = u.ID
 		WHERE c.postID = $1
@@ -98,7 +98,7 @@ func (r *CommentRepo) GetCommentsFromPostID(postID int) ([]model.Comment, error)
 	var comments = []model.Comment{}
 	for rows.Next() {
 		comment := model.Comment{}
-		if err := rows.Scan(&comment.ID, &comment.Content, &comment.CreatedAt, &comment.UpdatedAt, &comment.Author.Username, &comment.Author.ProfilePicture); err != nil {
+		if err := rows.Scan(&comment.ID, &comment.Content, &comment.Image, &comment.CreatedAt, &comment.UpdatedAt, &comment.Author.Username, &comment.Author.ProfilePicture); err != nil {
 			return nil, err
 		}
 		

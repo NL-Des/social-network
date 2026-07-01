@@ -18,6 +18,7 @@ interface ApiGroupPost {
   author: { username: string; profilePicture: string }
   title: string
   content: string
+  image: string
   createdAt: string
   likes: number
   dislikes: number
@@ -116,6 +117,7 @@ function InsideGroupContent() {
             author:   { name: p.author.username, initials: getInitials(p.author.username) },
             title:    p.title,
             content:  p.content,
+            image:    p.image || undefined,
             likes:    p.likes,
             dislikes: p.dislikes,
             userLike: p.userLike,
@@ -223,6 +225,14 @@ function InsideGroupContent() {
                   <p className="text-brand-text text-base leading-7 whitespace-pre-line">
                     {selectedPost.content}
                   </p>
+
+                  {selectedPost.image && (
+                    <img
+                      src={selectedPost.image}
+                      alt=""
+                      className="max-h-60 max-w-60 object-cover rounded-xl border border-brand-border/40"
+                    />
+                  )}
 
                   {deleteError && <p className="text-red-400 text-sm">{deleteError}</p>}
                 </div>

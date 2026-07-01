@@ -13,6 +13,7 @@ export interface CreatePostInput {
   content: string;
   privacy: "public" | "private" | "almost-private";
   tags?: string[];
+  image?: File;
 }
 
 export interface EditPostInput extends CreatePostInput {
@@ -22,6 +23,7 @@ export interface EditPostInput extends CreatePostInput {
 export interface AddCommentInput {
   postID: number;
   content: string;
+  image?: File;
 }
 
 export interface EditCommentInput {
@@ -61,20 +63,47 @@ async function fetchPost(
   return {};
 }
 
+async function fetchPostForm(formData: FormData): Promise<ActionResult> {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get("session_token");
+
+  if (!sessionToken) {
+    return { error: "Non authentifié" };
+  }
+
+  const response = await fetch("http://localhost:5090/posts", {
+    method: "POST",
+    headers: {
+      Cookie: `session_token=${sessionToken.value}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    return { error: message || `Erreur ${response.status}` };
+  }
+
+  return {};
+}
+
 // ─── Actions ──────────────────────────────────────────────────────────────────
 
 export async function createPost(
   input: CreatePostInput,
 ): Promise<ActionResult> {
-  return fetchPost({
-    mode: "newpost",
-    title: input.title,
-    content: input.content,
-    privacy: input.privacy,
-    ...(input.tags && input.tags.length > 0
-      ? { tags: input.tags.join(" ") }
-      : {}),
-  });
+  const formData = new FormData();
+  formData.set("mode", "newpost");
+  formData.set("title", input.title);
+  formData.set("content", input.content);
+  formData.set("privacy", input.privacy);
+  if (input.tags && input.tags.length > 0) {
+    formData.set("tags", input.tags.join(" "));
+  }
+  if (input.image) {
+    formData.set("image", input.image);
+  }
+  return fetchPostForm(formData);
 }
 
 export async function editPost(input: EditPostInput): Promise<ActionResult> {
@@ -93,11 +122,14 @@ export async function editPost(input: EditPostInput): Promise<ActionResult> {
 export async function addComment(
   input: AddCommentInput,
 ): Promise<ActionResult> {
-  return fetchPost({
-    mode: "newcomment",
-    postID: String(input.postID),
-    content: input.content,
-  });
+  const formData = new FormData();
+  formData.set("mode", "newcomment");
+  formData.set("postID", String(input.postID));
+  formData.set("content", input.content);
+  if (input.image) {
+    formData.set("image", input.image);
+  }
+  return fetchPostForm(formData);
 }
 
 export async function editComment(

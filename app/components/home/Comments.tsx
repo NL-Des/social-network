@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import { addComment } from '@/app/Post/actions'
+import ImagePicker from './ImagePicker'
 
 export interface Post {
   id: string
   author: { name: string; initials: string }
   content: string
+  image?: string
 }
 
 export interface Comment {
@@ -14,6 +16,7 @@ export interface Comment {
   author: { name: string; initials: string }
   text: string
   date: string
+  image?: string
 }
 
 interface CommentsProps {
@@ -24,6 +27,7 @@ interface CommentsProps {
 
 export default function Comments({ post, comments, currentUser }: CommentsProps) {
   const [draft, setDraft] = useState('')
+  const [image, setImage] = useState<File | null>(null)
   const [localComments, setLocalComments] = useState<Comment[]>(comments)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,14 +41,17 @@ export default function Comments({ post, comments, currentUser }: CommentsProps)
       author: currentUser ?? { name: 'Moi', initials: 'ME' },
       text,
       date:   new Date().toLocaleDateString('fr-FR'),
+      image:  image ? URL.createObjectURL(image) : undefined,
     }
 
     setLocalComments((prev) => [...prev, optimistic])
     setDraft('')
+    const sentImage = image
+    setImage(null)
     setSending(true)
     setError(null)
 
-    const result = await addComment({ postID: Number(post.id), content: text })
+    const result = await addComment({ postID: Number(post.id), content: text, image: sentImage ?? undefined })
 
     setSending(false)
     if (result.error) {
@@ -65,6 +72,13 @@ export default function Comments({ post, comments, currentUser }: CommentsProps)
           <h3 className="font-retro text-purple-400 text-base">{post.author.name}</h3>
         </div>
         <p className="text-brand-text text-lg leading-7 whitespace-pre-line">{post.content}</p>
+        {post.image && (
+          <img
+            src={post.image}
+            alt=""
+            className="mt-3 max-h-60 max-w-60 object-cover rounded-xl border border-brand-border/40"
+          />
+        )}
       </div>
 
       {/* Commentaires + zone de saisie */}
@@ -83,6 +97,13 @@ export default function Comments({ post, comments, currentUser }: CommentsProps)
                   <span className="text-brand-text/50 ml-2 font-normal">{c.date}</span>
                 </p>
                 <p className="text-brand-text text-base leading-relaxed">{c.text}</p>
+                {c.image && (
+                  <img
+                    src={c.image}
+                    alt=""
+                    className="mt-1 max-h-60 w-full object-cover rounded-lg border border-brand-border/40"
+                  />
+                )}
               </div>
             </div>
           ))}
@@ -93,6 +114,7 @@ export default function Comments({ post, comments, currentUser }: CommentsProps)
           {error && (
             <p className="text-red-400 text-sm text-center">{error}</p>
           )}
+          <ImagePicker onChange={setImage} />
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}

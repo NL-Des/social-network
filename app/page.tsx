@@ -14,6 +14,7 @@ interface ApiPost {
   author: { username: string; profilePicture: string }
   title: string
   content: string
+  image: string
   tags: string[]
   privacy: string
   createdAt: string
@@ -83,6 +84,7 @@ export default function HomePage() {
             author:   { name: p.author.username, initials: getInitials(p.author.username) },
             title:    p.title,
             content:  p.content,
+            image:    p.image || undefined,
             likes:    p.likes,
             dislikes: p.dislikes,
             userLike: p.userLike,
@@ -112,13 +114,13 @@ export default function HomePage() {
       <Header user={user} />
 
       <div className="pt-[104px] flex-1 overflow-hidden px-4 pb-4">
-        <div className="h-full grid grid-cols-[312px_1fr_264px] gap-4 pt-4">
+        <div className="h-full grid grid-cols-[312px_1fr_264px] grid-rows-[1fr] gap-4 pt-4">
 
-          <div className="h-full">
+          <div className="h-full min-h-0">
             <SearchFilter filters={mockFilters} />
           </div>
 
-          <div className="flex flex-col h-full overflow-hidden">
+          <div className="flex flex-col h-full min-h-0 overflow-hidden">
             <div className="overflow-y-auto flex flex-col gap-4 flex-1">
               {posts.map((post) => (
                 <PostCard key={post.id} post={post} />
@@ -127,7 +129,7 @@ export default function HomePage() {
             <CreatePostButton onSuccess={fetchPosts} />
           </div>
 
-          <div className="h-full">
+          <div className="h-full min-h-0">
             <RightSidebar />
           </div>
 

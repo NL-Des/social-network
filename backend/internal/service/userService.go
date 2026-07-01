@@ -4,6 +4,7 @@ import (
 	"errors"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/repository"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -39,14 +40,21 @@ func (s *UserService) Register(userData model.RegisterUser) error {
 		}
 	}
 
-	// 3. hash du mot de passe
+	// 3. Vérification de la date et mise en forme pour la BDD.
+	date, err := time.Parse("02/01/2006", user.Birthday)
+	if err != nil {
+		return errors.New("date invalide, veuillez entrer le format suivant : jour/mois/année")
+	}
+	user.Birthday = date.Format("2006-01-02")
+
+	// 4. hash du mot de passe
 	hashedPassword, err := s.hashPassword(user.Password)
 	if err != nil {
 		return err
 	}
 	user.Password = hashedPassword
 
-	// 4. sauvegarde en db
+	// 5. sauvegarde en db
 	return s.userRepo.SaveUser(user)
 }
 

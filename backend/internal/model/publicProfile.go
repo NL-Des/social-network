@@ -5,6 +5,7 @@ type PublicProfile struct {
 	Pseudo       string `json:"pseudo"`
 	FirstName    string `json:"firstName"`
 	LastName     string `json:"lastName"`
+	Email        string `json:"email,omitempty"`
 	DateOfBirth  string `json:"dateOfBirth"`
 	AboutMe      string `json:"aboutMe"`
 	Avatar       string `json:"avatar"`
@@ -34,4 +35,5 @@ type AllPosts struct {
 	ID      int    `json:"id"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
+	Image   string `json:"image"`
 }

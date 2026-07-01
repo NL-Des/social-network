@@ -38,8 +38,8 @@ func (s *GroupService) GetGroupPosts(groupID, viewerID int64) ([]model.GroupPost
 	return s.repo.GetGroupPosts(groupID, viewerID)
 }
 
-func (s *GroupService) CreateGroupPost(groupID, authorID int64, title, content string) error {
-	return s.repo.CreateGroupPost(groupID, authorID, title, content)
+func (s *GroupService) CreateGroupPost(groupID, authorID int64, title, content, image string) error {
+	return s.repo.CreateGroupPost(groupID, authorID, title, content, image)
 }
 
 func (s *GroupService) GetGroupPostByID(groupID, postID, viewerID int64) (model.GroupPost, error) {
@@ -70,8 +70,8 @@ func (s *GroupService) GetGroupComments(postID int64) ([]model.GroupComment, err
 	return s.repo.GetGroupComments(postID)
 }
 
-func (s *GroupService) AddGroupComment(postID, authorID int64, content string) error {
-	return s.repo.AddGroupComment(postID, authorID, content)
+func (s *GroupService) AddGroupComment(postID, authorID int64, content, image string) error {
+	return s.repo.AddGroupComment(postID, authorID, content, image)
 }
 
 func (s *GroupService) DeleteGroupComment(commentID, authorID int64) error {
