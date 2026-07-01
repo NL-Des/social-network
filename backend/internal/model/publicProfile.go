@@ -35,4 +35,5 @@ type AllPosts struct {
 	ID      int    `json:"id"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
+	Image   string `json:"image"`
 }

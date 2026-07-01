@@ -14,6 +14,7 @@ interface ApiPost {
   author: { username: string; profilePicture: string }
   title: string
   content: string
+  image: string
   tags: string[]
   privacy: string
   createdAt: string
@@ -83,6 +84,7 @@ export default function HomePage() {
             author:   { name: p.author.username, initials: getInitials(p.author.username) },
             title:    p.title,
             content:  p.content,
+            image:    p.image || undefined,
             likes:    p.likes,
             dislikes: p.dislikes,
             userLike: p.userLike,

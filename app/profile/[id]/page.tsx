@@ -194,7 +194,7 @@ function PublicProfileContent({
   useEffect(() => {
     fetch(`/api/profile/${id}/posts`)
       .then((r) => r.ok ? r.json() : [])
-      .then((raw: Array<{ id: number; title: string; content: string }>) => {
+      .then((raw: Array<{ id: number; title: string; content: string; image: string }>) => {
         setPosts(
           raw.map((p) => ({
             id: String(p.id),
@@ -204,6 +204,7 @@ function PublicProfileContent({
             },
             title: p.title,
             content: p.content,
+            image: p.image || undefined,
           }))
         );
       })

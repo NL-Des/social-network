@@ -19,7 +19,7 @@ function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUs
     if (!data.user.id) return
     fetch(`/api/profile/${data.user.id}/posts`)
       .then((r) => r.ok ? r.json() : [])
-      .then((raw: Array<{ id: number; title: string; content: string }>) => {
+      .then((raw: Array<{ id: number; title: string; content: string; image: string }>) => {
         setPosts(
           raw.map((p) => ({
             id: String(p.id),
@@ -29,6 +29,7 @@ function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUs
             },
             title: p.title,
             content: p.content,
+            image: p.image || undefined,
           }))
         )
       })

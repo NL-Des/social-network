@@ -143,20 +143,17 @@ func (h *GroupHandler) HandleGroupPosts(w http.ResponseWriter, r *http.Request) 
 		json.NewEncoder(w).Encode(posts)
 
 	case http.MethodPost:
-		var body struct {
-			Title   string `json:"title"`
-			Content string `json:"content"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		const maxMemory = 2 << 20
+		if err := r.ParseMultipartForm(maxMemory); err != nil && err != http.ErrNotMultipart {
 			http.Error(w, "payload invalide", http.StatusBadRequest)
 			return
 		}
-		content := strings.TrimSpace(body.Content)
+		content := strings.TrimSpace(r.FormValue("content"))
 		if content == "" {
 			http.Error(w, "contenu requis", http.StatusBadRequest)
 			return
 		}
-		title := strings.TrimSpace(body.Title)
+		title := strings.TrimSpace(r.FormValue("title"))
 		if title == "" {
 			runes := []rune(content)
 			if len(runes) > 60 {
@@ -165,7 +162,12 @@ func (h *GroupHandler) HandleGroupPosts(w http.ResponseWriter, r *http.Request) 
 				title = content
 			}
 		}
-		if err := h.GroupService.CreateGroupPost(groupID, int64(userID), title, content); err != nil {
+		image, err := saveUploadedImage(r, "image", "posts", userID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := h.GroupService.CreateGroupPost(groupID, int64(userID), title, content, image); err != nil {
 			http.Error(w, "erreur serveur", http.StatusInternalServerError)
 			return
 		}
@@ -261,19 +263,22 @@ func (h *GroupHandler) HandleGroupPostComments(w http.ResponseWriter, r *http.Re
 		json.NewEncoder(w).Encode(comments)
 
 	case http.MethodPost:
-		var body struct {
-			Content string `json:"content"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		const maxMemory = 2 << 20
+		if err := r.ParseMultipartForm(maxMemory); err != nil && err != http.ErrNotMultipart {
 			http.Error(w, "payload invalide", http.StatusBadRequest)
 			return
 		}
-		content := strings.TrimSpace(body.Content)
+		content := strings.TrimSpace(r.FormValue("content"))
 		if content == "" {
 			http.Error(w, "contenu requis", http.StatusBadRequest)
 			return
 		}
-		if err := h.GroupService.AddGroupComment(postID, int64(userID), content); err != nil {
+		image, err := saveUploadedImage(r, "image", "comments", userID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := h.GroupService.AddGroupComment(postID, int64(userID), content, image); err != nil {
 			http.Error(w, "erreur serveur", http.StatusInternalServerError)
 			return
 		}

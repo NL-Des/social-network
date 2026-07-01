@@ -27,14 +27,11 @@ export async function POST(request: Request, { params }: Context) {
   if (!sessionToken) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
   try {
-    const body = await request.json()
+    const formData = await request.formData()
     const res = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/group-chat/${id}/posts/${postId}/comments`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: `session_token=${sessionToken.value}`,
-      },
-      body: JSON.stringify(body),
+      headers: { Cookie: `session_token=${sessionToken.value}` },
+      body: formData,
     })
     if (!res.ok) return NextResponse.json({ error: 'Failed' }, { status: res.status })
     return new NextResponse(null, { status: 201 })

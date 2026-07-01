@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import ImagePicker from './ImagePicker'
 
 interface GroupComment {
   id: number
   author: { username: string; profilePicture: string }
   content: string
+  image: string
   createdAt: string
 }
 
@@ -14,6 +16,7 @@ interface LocalComment {
   author: { name: string; initials: string }
   text: string
   date: string
+  image?: string
 }
 
 interface GroupCommentsProps {
@@ -29,6 +32,7 @@ function getInitials(name: string): string {
 export default function GroupComments({ groupId, postId, currentUser }: GroupCommentsProps) {
   const [comments, setComments]     = useState<LocalComment[]>([])
   const [draft, setDraft]           = useState('')
+  const [image, setImage]           = useState<File | null>(null)
   const [sending, setSending]       = useState(false)
   const [error, setError]           = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -43,6 +47,7 @@ export default function GroupComments({ groupId, postId, currentUser }: GroupCom
             author: { name: c.author.username, initials: getInitials(c.author.username) },
             text:   c.content,
             date:   new Date(c.createdAt).toLocaleDateString('fr-FR'),
+            image:  c.image || undefined,
           }))
         )
       })
@@ -58,18 +63,23 @@ export default function GroupComments({ groupId, postId, currentUser }: GroupCom
       author: { name: currentUser.username, initials: currentUser.initials },
       text,
       date:   new Date().toLocaleDateString('fr-FR'),
+      image:  image ? URL.createObjectURL(image) : undefined,
     }
 
     setComments((prev) => [...prev, optimistic])
     setDraft('')
+    const sentImage = image
+    setImage(null)
     setSending(true)
     setError(null)
 
     try {
+      const formData = new FormData()
+      formData.set('content', text)
+      if (sentImage) formData.set('image', sentImage)
       const res = await fetch(`/api/group-posts/${groupId}/${postId}/comments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: text }),
+        body: formData,
       })
       if (!res.ok) {
         setComments((prev) => prev.filter((c) => c.id !== optimistic.id))
@@ -113,7 +123,7 @@ export default function GroupComments({ groupId, postId, currentUser }: GroupCom
             <div className="w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
               {c.author.initials}
             </div>
-            <div className="flex-1 flex flex-col gap-1 min-w-0">
+            <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm">
                   <span className="font-bold text-white">{c.author.name}</span>
@@ -130,6 +140,13 @@ export default function GroupComments({ groupId, postId, currentUser }: GroupCom
                 )}
               </div>
               <p className="text-brand-text text-base leading-relaxed">{c.text}</p>
+              {c.image && (
+                <img
+                  src={c.image}
+                  alt=""
+                  className="mt-1 max-h-60 w-full object-cover rounded-lg border border-brand-border/40"
+                />
+              )}
             </div>
           </div>
         ))}
@@ -138,6 +155,7 @@ export default function GroupComments({ groupId, postId, currentUser }: GroupCom
       {/* Zone de saisie */}
       <div className="px-6 py-4 border-t border-brand-border flex flex-col gap-3 shrink-0">
         {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+        <ImagePicker onChange={setImage} />
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

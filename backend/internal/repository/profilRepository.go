@@ -102,7 +102,7 @@ func (r *ProfilRepository) GetFollowing(userID int) ([]model.Following, error) {
 // Posts
 func (r *ProfilRepository) GetPosts(userID int) ([]model.AllPosts, error) {
 	rows, err := r.db.Query(`
-        SELECT ID, title, content
+        SELECT ID, title, content, COALESCE(image, '')
         FROM posts
         WHERE authorID = $1
         ORDER BY createdat DESC
@@ -115,7 +115,7 @@ func (r *ProfilRepository) GetPosts(userID int) ([]model.AllPosts, error) {
 	posts := make([]model.AllPosts, 0)
 	for rows.Next() {
 		var p model.AllPosts
-		if err := rows.Scan(&p.ID, &p.Title, &p.Content); err != nil {
+		if err := rows.Scan(&p.ID, &p.Title, &p.Content, &p.Image); err != nil {
 			return nil, err
 		}
 		posts = append(posts, p)

@@ -149,7 +149,7 @@ func (r *GroupRepo) IsGroupMember(groupID, userID int64) (bool, error) {
 
 func (r *GroupRepo) GetGroupPosts(groupID, viewerID int64) ([]model.GroupPost, error) {
 	rows, err := r.db.Query(`
-		SELECT gp.id, gp.title, gp.content, gp.createdat,
+		SELECT gp.id, gp.title, gp.content, COALESCE(gp.image, ''), gp.createdat,
 		       COALESCE(u.pseudo, ''), COALESCE(u.avatar, ''),
 		       COALESCE((SELECT COUNT(*) FROM group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'like'), 0),
 		       COALESCE((SELECT COUNT(*) FROM group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'dislike'), 0),
@@ -168,7 +168,7 @@ func (r *GroupRepo) GetGroupPosts(groupID, viewerID int64) ([]model.GroupPost, e
 	for rows.Next() {
 		var p model.GroupPost
 		var createdAt time.Time
-		if err := rows.Scan(&p.ID, &p.Title, &p.Content, &createdAt, &p.Author.Username, &p.Author.ProfilePicture, &p.Likes, &p.Dislikes, &p.UserLike); err != nil {
+		if err := rows.Scan(&p.ID, &p.Title, &p.Content, &p.Image, &createdAt, &p.Author.Username, &p.Author.ProfilePicture, &p.Likes, &p.Dislikes, &p.UserLike); err != nil {
 			return nil, err
 		}
 		p.CreatedAt = createdAt.Format(time.RFC3339)
@@ -222,11 +222,11 @@ func (r *GroupRepo) GetGroupLikeCounts(groupPostID int64) (likes int, dislikes i
 	return likes, dislikes, rows.Err()
 }
 
-func (r *GroupRepo) CreateGroupPost(groupID, authorID int64, title, content string) error {
+func (r *GroupRepo) CreateGroupPost(groupID, authorID int64, title, content, image string) error {
 	_, err := r.db.Exec(`
-		INSERT INTO group_posts (groupid, authorid, title, content)
-		VALUES ($1, $2, $3, $4)
-	`, groupID, authorID, title, content)
+		INSERT INTO group_posts (groupid, authorid, title, content, image)
+		VALUES ($1, $2, $3, $4, $5)
+	`, groupID, authorID, title, content, image)
 	return err
 }
 
@@ -234,7 +234,7 @@ func (r *GroupRepo) GetGroupPostByID(groupID, postID, viewerID int64) (model.Gro
 	var p model.GroupPost
 	var createdAt time.Time
 	err := r.db.QueryRow(`
-		SELECT gp.id, gp.title, gp.content, gp.createdat,
+		SELECT gp.id, gp.title, gp.content, COALESCE(gp.image, ''), gp.createdat,
 		       COALESCE(u.pseudo, ''), COALESCE(u.avatar, ''),
 		       COALESCE((SELECT COUNT(*) FROM group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'like'), 0),
 		       COALESCE((SELECT COUNT(*) FROM group_post_likes l WHERE l.group_post_id = gp.id AND l."type" = 'dislike'), 0),
@@ -242,7 +242,7 @@ func (r *GroupRepo) GetGroupPostByID(groupID, postID, viewerID int64) (model.Gro
 		FROM group_posts gp
 		JOIN users u ON gp.authorid = u.id
 		WHERE gp.id = $1 AND gp.groupid = $2
-	`, postID, groupID, viewerID).Scan(&p.ID, &p.Title, &p.Content, &createdAt, &p.Author.Username, &p.Author.ProfilePicture, &p.Likes, &p.Dislikes, &p.UserLike)
+	`, postID, groupID, viewerID).Scan(&p.ID, &p.Title, &p.Content, &p.Image, &createdAt, &p.Author.Username, &p.Author.ProfilePicture, &p.Likes, &p.Dislikes, &p.UserLike)
 	if err != nil {
 		return model.GroupPost{}, err
 	}
@@ -266,7 +266,7 @@ func (r *GroupRepo) DeleteGroupPost(postID, authorID int64) error {
 
 func (r *GroupRepo) GetGroupComments(postID int64) ([]model.GroupComment, error) {
 	rows, err := r.db.Query(`
-		SELECT gc.id, gc.content, gc.createdat,
+		SELECT gc.id, gc.content, COALESCE(gc.image, ''), gc.createdat,
 		       u.pseudo, COALESCE(u.avatar, '')
 		FROM group_comments gc
 		JOIN users u ON gc.authorid = u.id
@@ -282,7 +282,7 @@ func (r *GroupRepo) GetGroupComments(postID int64) ([]model.GroupComment, error)
 	for rows.Next() {
 		var c model.GroupComment
 		var createdAt time.Time
-		if err := rows.Scan(&c.ID, &c.Content, &createdAt, &c.Author.Username, &c.Author.ProfilePicture); err != nil {
+		if err := rows.Scan(&c.ID, &c.Content, &c.Image, &createdAt, &c.Author.Username, &c.Author.ProfilePicture); err != nil {
 			return nil, err
 		}
 		c.CreatedAt = createdAt.Format(time.RFC3339)
@@ -291,11 +291,11 @@ func (r *GroupRepo) GetGroupComments(postID int64) ([]model.GroupComment, error)
 	return comments, rows.Err()
 }
 
-func (r *GroupRepo) AddGroupComment(postID, authorID int64, content string) error {
+func (r *GroupRepo) AddGroupComment(postID, authorID int64, content, image string) error {
 	_, err := r.db.Exec(`
-		INSERT INTO group_comments (postid, authorid, content)
-		VALUES ($1, $2, $3)
-	`, postID, authorID, content)
+		INSERT INTO group_comments (postid, authorid, content, image)
+		VALUES ($1, $2, $3, $4)
+	`, postID, authorID, content, image)
 	return err
 }
 

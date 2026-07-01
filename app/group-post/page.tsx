@@ -11,6 +11,7 @@ interface ApiGroupPost {
   author: { username: string; profilePicture: string }
   title: string
   content: string
+  image: string
   createdAt: string
 }
 
@@ -125,6 +126,14 @@ function GroupPostContent() {
               <p className="text-brand-text text-base leading-7 whitespace-pre-line">
                 {post.content}
               </p>
+
+              {post.image && (
+                <img
+                  src={post.image}
+                  alt=""
+                  className="max-h-60 max-w-60 object-cover rounded-xl border border-brand-border/40"
+                />
+              )}
 
               {error && <p className="text-red-400 text-sm">{error}</p>}
             </div>

@@ -31,6 +31,15 @@ func (h *PostAndCommentsHandler) PostAndCommentsHandler(w http.ResponseWriter, r
 		return
 	}
 
+	// Autorise à la fois le multipart/form-data (nécessaire pour joindre une image) et le
+	// x-www-form-urlencoded (utilisé par editpost/editcomment) : ParseMultipartForm appelle
+	// ParseForm en interne, donc r.FormValue fonctionne dans les deux cas.
+	const maxMemory = 2 << 20
+	if err := r.ParseMultipartForm(maxMemory); err != nil && err != http.ErrNotMultipart {
+		http.Error(w, "Impossible d'analyser le formulaire", http.StatusBadRequest)
+		return
+	}
+
 	mode := r.FormValue("mode")
 	title := r.FormValue("title")
 	content := r.FormValue("content")
@@ -53,7 +62,7 @@ func (h *PostAndCommentsHandler) PostAndCommentsHandler(w http.ResponseWriter, r
 
 	// Gestion des commentaires (ajout ou modification)
 	if mode == "newcomment" || mode == "editcomment" {
-		h.CommentHandler(w, r, content, mode, userID)
+		h.CommentHandler(w, r, content, mode, userID, userIDInt)
 	}
 
 	// Gestion des posts (ajout ou modification)
@@ -63,6 +72,15 @@ func (h *PostAndCommentsHandler) PostAndCommentsHandler(w http.ResponseWriter, r
 			Content: content,
 			Privacy: privacy,
 			Tags:    tagList,
+		}
+
+		if mode == "newpost" {
+			image, err := saveUploadedImage(r, "image", "posts", userIDInt)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			postData.Image = image
 		}
 
 		h.PostHandler(w, r, postData, mode, userID)
@@ -105,7 +123,7 @@ func (h *PostAndCommentsHandler) handleGetPosts(w http.ResponseWriter, r *http.R
 	json.NewEncoder(w).Encode(posts)
 }
 
-func (h *PostAndCommentsHandler) CommentHandler(w http.ResponseWriter, r *http.Request, content, mode, userID string) {
+func (h *PostAndCommentsHandler) CommentHandler(w http.ResponseWriter, r *http.Request, content, mode, userID string, userIDInt int) {
 	postID, err := strconv.Atoi(r.FormValue("postID"))
 	if err != nil {
 		http.Error(w, "Erreur de récupération de l'ID de post", http.StatusInternalServerError)
@@ -113,7 +131,12 @@ func (h *PostAndCommentsHandler) CommentHandler(w http.ResponseWriter, r *http.R
 	}
 
 	if mode == "newcomment" {
-		err := h.PostService.AddCommentOnPost(postID, userID, content)
+		image, err := saveUploadedImage(r, "image", "comments", userIDInt)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		err = h.PostService.AddCommentOnPost(postID, userID, content, image)
 		if err != nil {
 			http.Error(w, "Erreur dans l'ajout de commentaire", http.StatusInternalServerError)
 		}
