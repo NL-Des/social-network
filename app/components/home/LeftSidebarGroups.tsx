@@ -211,7 +211,7 @@ export default function LeftSidebarGroups({ groups, onSelect, onCreated }: LeftS
                   {membersOpen && (
                     <div className="ml-4 mt-1 mb-1 flex flex-col gap-0.5 bg-white/5 rounded-xl px-3 py-2">
                       {members.length === 0 ? (
-                        <p className="text-brand-text/40 text-xs py-1">Aucun membre trouvé</p>
+                        <p className="text-brand-text/40 text-xs py-1">Vous n’êtes pas membre du groupe, vous ne pouvez pas en connaître les participants.</p>
                       ) : (
                         members.map((m) => (
                           <div key={m.id} className="flex items-center gap-2 py-1">
