@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Header, { CurrentUser } from './components/home/Header'
 import { fetchMe } from '@/lib/fetchMe'
-import SearchFilter, { FilterItem } from './components/home/SearchFilter'
+import GroupsSidebar from './components/home/GroupsSidebar'
 import PostCard, { Post, CreatePostButton } from './components/home/PostCard'
 import RightSidebar from './components/home/RightSidebar'
 import { useWebSocket } from '@/lib/useWebSocket'
@@ -22,12 +22,6 @@ interface ApiPost {
   dislikes: number
   userLike: string
 }
-
-const mockFilters: FilterItem[] = [
-  { label: 'Groupe', count: 3 },
-  { label: 'Notifications', count: 5 },
-  { label: 'Tag', count: 12 },
-]
 
 function getInitials(username: string): string {
   const parts = username.split(/[._-]/)
@@ -115,7 +109,7 @@ export default function HomePage() {
         <div className="h-full grid grid-cols-[312px_1fr_264px] grid-rows-[1fr] gap-4 pt-4">
 
           <div className="h-full min-h-0">
-            <SearchFilter filters={mockFilters} />
+            <GroupsSidebar />
           </div>
 
           <div className="flex flex-col h-full min-h-0 overflow-hidden">
