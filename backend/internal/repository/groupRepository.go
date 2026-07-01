@@ -362,6 +362,7 @@ type JoinRequest struct {
 	UserID   int64  `json:"user_id"`
 	Name     string `json:"name"`
 	Initials string `json:"initials"`
+	Avatar   string `json:"avatar,omitempty"`
 }
 
 func (r *GroupRepo) GetAllGroups(userID int64) ([]GroupInfoWithStatus, error) {
@@ -420,7 +421,7 @@ func (r *GroupRepo) CancelJoinRequest(groupID, userID int64) error {
 
 func (r *GroupRepo) GetJoinRequests(groupID int64) ([]JoinRequest, error) {
 	rows, err := r.db.Query(`
-		SELECT u.id, u.firstname, u.lastname
+		SELECT u.id, u.firstname, u.lastname, COALESCE(u.avatar, '')
 		FROM group_members gm
 		JOIN users u ON u.id = gm.userid
 		WHERE gm.groupid = $1 AND gm.status = 'pending'
@@ -435,7 +436,7 @@ func (r *GroupRepo) GetJoinRequests(groupID int64) ([]JoinRequest, error) {
 	for rows.Next() {
 		var req JoinRequest
 		var firstname, lastname string
-		if err := rows.Scan(&req.UserID, &firstname, &lastname); err != nil {
+		if err := rows.Scan(&req.UserID, &firstname, &lastname, &req.Avatar); err != nil {
 			return nil, err
 		}
 		req.Name = firstname
