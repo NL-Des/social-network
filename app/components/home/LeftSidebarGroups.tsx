@@ -163,12 +163,14 @@ export default function LeftSidebarGroups({ groups, onSelect, onCreated }: LeftS
       <aside className="h-full flex flex-col bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 gap-4">
         <h2 className="font-bold text-[#49C7FF] text-sm shrink-0">Liste des groupes</h2>
 
+        {/* Barre de recherche désactivée (non obligatoire)
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Rechercher..."
           className="shrink-0 bg-white/5 border border-brand-border/30 rounded-xl px-4 py-2 text-brand-text text-xs placeholder:text-brand-text/40 focus:outline-none focus:border-brand-border transition-all"
         />
+        */}
 
         <div className="flex-1 overflow-y-auto flex flex-col gap-1">
           {filtered.length === 0 ? (

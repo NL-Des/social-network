@@ -256,12 +256,14 @@ export default function LeftSidebar({
           </button>
         </div>
 
+        {/* Barre de recherche désactivée (non obligatoire)
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Rechercher..."
           className="flex-shrink-0 bg-white/5 border border-brand-border/40 rounded-xl px-4 py-2 text-brand-text text-sm placeholder:text-brand-text/40 focus:outline-none focus:border-brand-border transition-all"
         />
+        */}
 
         <div className="flex-1 overflow-y-auto flex flex-col gap-1">
           {/* Séparateur groupes */}

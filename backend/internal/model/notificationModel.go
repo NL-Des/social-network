@@ -13,6 +13,9 @@ const (
 	NotifBannedFromGroup      NotifKind = "notif_banned_from_group"
 	NotifPostLike             NotifKind = "post_like"
 	NotifUnfollow             NotifKind = "unfollow"
+	NotifNewMessage           NotifKind = "notif_new_message"
+	NotifGroupMemberJoined    NotifKind = "notif_group_member_joined"
+	NotifGroupEventCreated    NotifKind = "notif_group_event_created"
 )
 
 type NotificationPayload struct {
@@ -21,6 +24,7 @@ type NotificationPayload struct {
 	GroupID   int64  `json:"group_id,omitempty"`
 	GroupName string `json:"group_name,omitempty"`
 	PostTitle string `json:"post_title,omitempty"`
+	EventTitle string `json:"event_title,omitempty"`
 	CreatedAt string `json:"created_at,omitempty"`
 }
 

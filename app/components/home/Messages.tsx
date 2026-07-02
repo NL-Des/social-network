@@ -48,6 +48,8 @@ export default function Messages({ conversation, initialMessages, groups = [], i
   const [draft, setDraft]         = useState('')
   const [showInvite, setShowInvite] = useState(false)
   const [inviting, setInviting]   = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
+  const lastSentIdRef              = useRef<string | null>(null)
 
   async function handleInvite(groupId: string) {
     setInviting(true)
@@ -74,18 +76,28 @@ export default function Messages({ conversation, initialMessages, groups = [], i
   }, [initialMessages])
 
   const handleWsMessage = useCallback((data: unknown) => {
-    const msg = data as { type: string; data: { sender_id: number; body: string; sent_at: string } }
-    if (msg.type === 'private_message' && String(msg.data.sender_id) === conversation.id) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id:         Date.now().toString(),
-          from:       'them',
-          senderName: conversation.name,
-          text:       msg.data.body,
-          date:       new Date(msg.data.sent_at).toLocaleDateString('fr-FR'),
-        },
-      ])
+    const msg = data as { type: string; data: { sender_id: number; body: string; sent_at: string } | string }
+    if (msg.type === 'private_message' && typeof msg.data === 'object') {
+      const payload = msg.data
+      if (String(payload.sender_id) === conversation.id) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id:         Date.now().toString(),
+            from:       'them',
+            senderName: conversation.name,
+            text:       payload.body,
+            date:       new Date(payload.sent_at).toLocaleDateString('fr-FR'),
+          },
+        ])
+      }
+    }
+    if (msg.type === 'private_message_error') {
+      if (lastSentIdRef.current) {
+        setMessages((prev) => prev.filter((m) => m.id !== lastSentIdRef.current))
+        lastSentIdRef.current = null
+      }
+      setSendError(typeof msg.data === 'string' ? msg.data : 'Erreur lors de l\'envoi du message.')
     }
   }, [conversation.id, conversation.name])
 
@@ -98,10 +110,13 @@ export default function Messages({ conversation, initialMessages, groups = [], i
   function handleSend() {
     const text = draft.trim()
     if (!text) return
+    setSendError(null)
+    const id = Date.now().toString()
+    lastSentIdRef.current = id
     setMessages((prev) => [
       ...prev,
       {
-        id:         Date.now().toString(),
+        id,
         from:       'me',
         senderName: 'Moi',
         text,
@@ -172,6 +187,9 @@ export default function Messages({ conversation, initialMessages, groups = [], i
 
       {/* Zone de saisie */}
       <div className="px-6 py-4 border-t border-brand-border flex flex-col gap-3 shrink-0">
+        {sendError && (
+          <p className="text-red-400 text-sm text-center">{sendError}</p>
+        )}
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

@@ -69,7 +69,7 @@ function CreateGroupButton({ onCreated, onEnter }: CreateGroupButtonProps) {
       </button>
 
       {formOpen && (
-        <div className="absolute bottom-[calc(100%+12px)] left-0 right-0 bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-4">
+        <div className="absolute z-30 bottom-[calc(100%+12px)] left-0 right-0 bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-4">
           <h3 className="font-bold text-[#49C7FF] text-base text-center">
             Création du nouveau Groupe
           </h3>

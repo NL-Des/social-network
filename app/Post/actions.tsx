@@ -14,6 +14,7 @@ export interface CreatePostInput {
   privacy: "public" | "private" | "almost-private";
   tags?: string[];
   image?: File;
+  allowedViewerIds?: number[];
 }
 
 export interface EditPostInput extends CreatePostInput {
@@ -99,6 +100,9 @@ export async function createPost(
   formData.set("privacy", input.privacy);
   if (input.tags && input.tags.length > 0) {
     formData.set("tags", input.tags.join(" "));
+  }
+  if (input.privacy === "private" && input.allowedViewerIds && input.allowedViewerIds.length > 0) {
+    formData.set("allowedViewerIds", input.allowedViewerIds.join(" "));
   }
   if (input.image) {
     formData.set("image", input.image);

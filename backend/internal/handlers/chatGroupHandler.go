@@ -60,6 +60,12 @@ func (h *ChatGroupHandler) HandleChatGroups(w http.ResponseWriter, r *http.Reque
 			http.Error(w, "erreur serveur", http.StatusInternalServerError)
 			return
 		}
+		if memberIDs, err := h.Service.GetMemberIDs(id); err == nil {
+			event := ws.MessageWs{Type: "group_member_added", Data: map[string]int64{"group_id": id}}
+			for _, mid := range memberIDs {
+				h.Hub.BroadcastToUser(mid, event)
+			}
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(map[string]int64{"id": id})

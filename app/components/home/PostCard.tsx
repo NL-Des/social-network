@@ -25,6 +25,11 @@ interface CreatePostButtonProps {
   groupId?: string
 }
 
+interface FollowerOption {
+  id: number
+  username: string
+}
+
 export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) {
   const [formOpen, setFormOpen] = useState(false)
   const [title, setTitle] = useState('')
@@ -33,6 +38,8 @@ export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) 
   const [image, setImage] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [followers, setFollowers] = useState<FollowerOption[]>([])
+  const [selectedViewers, setSelectedViewers] = useState<number[]>([])
   const formRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -44,6 +51,18 @@ export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) 
     if (formOpen) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [formOpen])
+
+  useEffect(() => {
+    if (privacy !== 'private') return
+    fetch('/api/me/profile')
+      .then((res) => res.ok ? res.json() : null)
+      .then((data: { followers?: FollowerOption[] } | null) => setFollowers(data?.followers ?? []))
+      .catch(() => {})
+  }, [privacy])
+
+  function toggleViewer(id: number) {
+    setSelectedViewers((prev) => prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id])
+  }
 
   async function handleSubmit() {
     if (!text.trim()) return
@@ -67,7 +86,7 @@ export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) 
           result = {}
         }
       } else {
-        result = await createPost({ title, content: text, privacy, image: image ?? undefined })
+        result = await createPost({ title, content: text, privacy, image: image ?? undefined, allowedViewerIds: selectedViewers })
       }
       if (result.error) {
         setError(result.error)
@@ -76,6 +95,7 @@ export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) 
       setTitle('')
       setText('')
       setPrivacy('public')
+      setSelectedViewers([])
       setImage(null)
       setFormOpen(false)
       onSuccess?.()
@@ -98,7 +118,7 @@ export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) 
       </button>
 
       {formOpen && (
-        <div className="absolute bottom-[calc(100%+12px)] left-0 right-0 bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-4">
+        <div className="absolute z-30 bottom-[calc(100%+12px)] left-0 right-0 bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-4">
           <h3 className="font-bold text-[#49C7FF] text-base text-center">
             Créer un nouveau Post
           </h3>
@@ -135,6 +155,28 @@ export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) 
               <option value="private">Privé</option>
             </select>
           </div>
+
+          {privacy === 'private' && (
+            <div className="flex flex-col gap-1">
+              <label className="text-brand-border text-sm">Visible par :</label>
+              {followers.length === 0 ? (
+                <p className="text-brand-text/40 text-xs">Aucun follower à sélectionner.</p>
+              ) : (
+                <div className="flex flex-col gap-1 max-h-32 overflow-y-auto pr-1">
+                  {followers.map((f) => (
+                    <label key={f.id} className="flex items-center gap-2 text-brand-text text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedViewers.includes(f.id)}
+                        onChange={() => toggleViewer(f.id)}
+                      />
+                      {f.username}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <ImagePicker onChange={setImage} />
 

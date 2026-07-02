@@ -17,6 +17,7 @@ interface LeftSidebarGroupListOfUsersProps {
   groupId: string
   currentUserId: string
   creatorId: string | null
+  isMember?: boolean | null
 }
 
 interface InvitableUser {
@@ -379,8 +380,21 @@ function LeaveGroupButton({ groupId }: { groupId: string }) {
   )
 }
 
-export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe', groupId, currentUserId, creatorId }: LeftSidebarGroupListOfUsersProps) {
+export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe', groupId, currentUserId, creatorId, isMember = true }: LeftSidebarGroupListOfUsersProps) {
   const isCreator = creatorId !== null && currentUserId === creatorId
+
+  if (isMember === false) {
+    return (
+      <aside className="h-full bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col overflow-hidden">
+        <section className="flex-1 overflow-y-auto">
+          <h2 className="font-bold text-[#49C7FF] text-base mb-5">Utilisateurs du Groupe</h2>
+          <p className="text-brand-text/60 text-sm">
+            Vous n&apos;êtes pas membre du groupe, vous ne pouvez pas en connaître les participants.
+          </p>
+        </section>
+      </aside>
+    )
+  }
 
   return (
     <aside className="h-full bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col overflow-hidden">

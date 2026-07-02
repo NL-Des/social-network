@@ -86,13 +86,13 @@ function PrivateProfileView({
   }
 
   return (
-    <div className="bg-background h-screen flex flex-col overflow-hidden">
+    <div className="bg-background min-h-screen md:h-screen flex flex-col md:overflow-hidden">
       <Header user={headerUser} />
 
-      <div className="pt-[104px] flex-1 overflow-hidden px-4 pb-4">
-        <div className="grid grid-cols-[1fr_264px] gap-5 pt-4 h-full">
-          <div className="flex flex-col gap-5 h-full">
-            <div className="shrink-0 grid grid-cols-[auto_1fr] gap-5 items-stretch">
+      <div className="pt-[104px] flex-1 overflow-y-auto md:overflow-hidden px-4 pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_264px] gap-5 pt-4 md:h-full">
+          <div className="flex flex-col gap-5 md:h-full">
+            <div className="shrink-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-5 items-stretch">
 
               {/* Avatar */}
               <div className="flex items-center justify-center px-2">
@@ -160,7 +160,7 @@ function PrivateProfileView({
             </div>
           </div>
 
-          <div className="h-full">
+          <div className="md:h-full">
             <RightSidebar />
           </div>
         </div>
@@ -224,15 +224,15 @@ function PublicProfileContent({
   }
 
   return (
-    <div className="bg-background h-screen flex flex-col overflow-hidden">
+    <div className="bg-background min-h-screen md:h-screen flex flex-col md:overflow-hidden">
       <Header user={headerUser} />
 
-      <div className="pt-[104px] flex-1 overflow-hidden px-4 pb-4">
-        <div className="grid grid-cols-[1fr_264px] gap-5 pt-4 h-full">
-          <div className="flex flex-col gap-5 h-full overflow-hidden">
+      <div className="pt-[104px] flex-1 overflow-y-auto md:overflow-hidden px-4 pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_264px] gap-5 pt-4 md:h-full">
+          <div className="flex flex-col gap-5 md:h-full md:overflow-hidden">
 
             {/* Ligne haute : avatar + infos */}
-            <div className="shrink-0 grid grid-cols-[auto_1fr] gap-5 items-stretch">
+            <div className="shrink-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-5 items-stretch">
               {/* Avatar */}
               <div className="flex items-center justify-center px-2">
                 <div className="w-44 h-44 rounded-full bg-gray-600 flex items-center justify-center shadow-neon ring-4 ring-brand-border/30 overflow-hidden">
@@ -323,7 +323,7 @@ function PublicProfileContent({
             </div>
 
             {/* Ligne basse : suivi(e)s + abonnés + posts */}
-            <div className="flex-1 grid grid-cols-3 gap-5 min-h-0">
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-5 md:min-h-0">
               <div className="bg-brand-card border border-brand-border rounded-2xl p-5 overflow-y-auto">
                 <h2 className="font-retro text-brand-border text-base mb-4 text-center">
                   Suivi(e)s
@@ -364,7 +364,7 @@ function PublicProfileContent({
             </div>
           </div>
 
-          <div className="h-full">
+          <div className="md:h-full">
             <RightSidebar />
           </div>
         </div>

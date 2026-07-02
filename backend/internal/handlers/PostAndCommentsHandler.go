@@ -52,6 +52,17 @@ func (h *PostAndCommentsHandler) PostAndCommentsHandler(w http.ResponseWriter, r
 		tagList = strings.Fields(tags)
 	}
 
+	// Récupération des IDs autorisés pour un post privé (séparés par un espace)
+	allowedViewerIDsRaw := r.FormValue("allowedViewerIds")
+	var allowedViewerIDs []int
+	if len(allowedViewerIDsRaw) != 0 {
+		for _, idStr := range strings.Fields(allowedViewerIDsRaw) {
+			if id, err := strconv.Atoi(idStr); err == nil {
+				allowedViewerIDs = append(allowedViewerIDs, id)
+			}
+		}
+	}
+
 	// Récupération des données de l'utilisateur connecté via le contexte (injecté par authMiddleware)
 	userIDInt, ok := r.Context().Value("userID").(int)
 	if !ok {
@@ -68,10 +79,11 @@ func (h *PostAndCommentsHandler) PostAndCommentsHandler(w http.ResponseWriter, r
 	// Gestion des posts (ajout ou modification)
 	if mode == "editpost" || mode == "newpost" {
 		postData := model.Post{
-			Title:   title,
-			Content: content,
-			Privacy: privacy,
-			Tags:    tagList,
+			Title:            title,
+			Content:          content,
+			Privacy:          privacy,
+			Tags:             tagList,
+			AllowedViewerIDs: allowedViewerIDs,
 		}
 
 		if mode == "newpost" {

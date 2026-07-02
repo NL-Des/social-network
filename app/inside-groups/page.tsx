@@ -48,6 +48,7 @@ function InsideGroupContent() {
   const [members, setMembers]       = useState<Conversation[]>([])
   const [sidebarUsers, setSidebarUsers] = useState<SidebarUser[]>([])
   const [creatorId, setCreatorId]   = useState<string | null>(null)
+  const [isMember, setIsMember]     = useState<boolean | null>(null)
   const [loading, setLoading]       = useState(true)
   const [activeId, setActiveId]     = useState<string | null>(null)
   const [selectedPost, setSelectedPost] = useState<ApiGroupPost | null>(null)
@@ -87,7 +88,11 @@ function InsideGroupContent() {
   useEffect(() => {
     if (!groupId) return
     fetch(`/api/group-chat/${groupId}/members`)
-      .then((res) => res.ok ? res.json() : [])
+      .then((res) => {
+        if (res.status === 403) { setIsMember(false); return [] }
+        setIsMember(true)
+        return res.ok ? res.json() : []
+      })
       .then((data: ApiGroupMember[]) => {
         const convs: Conversation[] = (data ?? []).map((m) => ({
           id: String(m.id),
@@ -186,6 +191,7 @@ function InsideGroupContent() {
               groupId={groupId}
               currentUserId={user.id}
               creatorId={creatorId}
+              isMember={isMember}
             />
           </div>
 

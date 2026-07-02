@@ -403,6 +403,7 @@ func (h *GroupHandler) HandleInviteResponse(w http.ResponseWriter, r *http.Reque
 				h.Hub.BroadcastToUser(mid, event)
 			}
 		}
+		go h.sendGroupMemberJoinedNotif(groupID, int64(userID))
 		w.WriteHeader(http.StatusNoContent)
 
 	case http.MethodDelete:
@@ -551,6 +552,35 @@ func (h *GroupHandler) sendGroupAddedNotif(groupID, actorID, targetID int64) {
 		GroupName: title,
 	}); err != nil {
 		log.Printf("sendGroupAddedNotif: %v", err)
+	}
+}
+
+// sendGroupMemberJoinedNotif notifie les membres existants (hors le nouvel arrivant) qu'un membre a rejoint le groupe.
+func (h *GroupHandler) sendGroupMemberJoinedNotif(groupID, newMemberID int64) {
+	newMember, err := h.UserService.GetProfile(int(newMemberID))
+	if err != nil {
+		return
+	}
+	title, err := h.GroupService.GetGroupTitle(groupID)
+	if err != nil {
+		return
+	}
+	memberIDs, err := h.GroupService.GetGroupMemberIDs(groupID)
+	if err != nil {
+		return
+	}
+	for _, mid := range memberIDs {
+		if mid == newMemberID {
+			continue
+		}
+		if err := h.NotifService.Notify(mid, model.NotifGroupMemberJoined, model.NotificationPayload{
+			ActorID:   newMemberID,
+			ActorName: newMember.Username,
+			GroupID:   groupID,
+			GroupName: title,
+		}); err != nil {
+			log.Printf("sendGroupMemberJoinedNotif: %v", err)
+		}
 	}
 }
 
@@ -732,6 +762,7 @@ func (h *GroupHandler) HandleJoinRequestAction(w http.ResponseWriter, r *http.Re
 			return
 		}
 		go h.sendJoinRequestAcceptedNotif(groupID, int64(userID), targetID)
+		go h.sendGroupMemberJoinedNotif(groupID, targetID)
 		if memberIDs, err := h.GroupService.GetGroupMemberIDs(groupID); err == nil {
 			event := ws.MessageWs{Type: "group_member_added", Data: map[string]int64{"group_id": groupID}}
 			for _, mid := range memberIDs {

@@ -16,6 +16,9 @@ export type NotifKind =
   | 'notif_banned_from_group'
   | 'post_like'
   | 'unfollow'
+  | 'notif_new_message'
+  | 'notif_group_member_joined'
+  | 'notif_group_event_created'
 
 export interface BackendNotification {
   id: number
@@ -27,6 +30,7 @@ export interface BackendNotification {
     group_id?: number
     group_name?: string
     post_title?: string
+    event_title?: string
     created_at?: string
   }
   read: boolean
@@ -39,6 +43,7 @@ function formatNotif(n: BackendNotification): { symbol: string; color: string; m
   const actor = n.payload.actor_name || 'Quelqu\'un'
   const group = n.payload.group_name || 'un groupe'
   const post  = n.payload.post_title  || 'une publication'
+  const event = n.payload.event_title || 'un événement'
 
   switch (n.kind) {
     case 'follow':
@@ -61,6 +66,12 @@ function formatNotif(n: BackendNotification): { symbol: string; color: string; m
       return { symbol: '👍', color: 'bg-blue-500', message: `${actor} a aimé votre publication.` }
     case 'unfollow':
       return { symbol: '−', color: 'bg-orange-500', message: `${actor} s'est désabonné(e) de votre profil.` }
+    case 'notif_new_message':
+      return { symbol: '✉', color: 'bg-cyan-600', message: `${actor} vous a envoyé un message.` }
+    case 'notif_group_member_joined':
+      return { symbol: '+', color: 'bg-green-600', message: `${actor} a rejoint « ${group} ».` }
+    case 'notif_group_event_created':
+      return { symbol: '📅', color: 'bg-purple-500', message: `${actor} a créé l'événement « ${event} » dans « ${group} ».` }
     default:
       return { symbol: '•', color: 'bg-gray-600', message: 'Nouvelle notification.' }
   }

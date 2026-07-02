@@ -380,6 +380,7 @@ export default function GroupsCenter({
         {/* Découvrir */}
         {activeTab === 'decouvrir' && (
           <>
+            {/* Barre de recherche désactivée (non obligatoire)
             <div className="mb-4">
               <input
                 value={search}
@@ -388,6 +389,7 @@ export default function GroupsCenter({
                 className="w-full bg-white/5 border border-brand-border/30 rounded-xl px-4 py-2.5 text-brand-text text-sm placeholder:text-brand-text/40 focus:outline-none focus:border-brand-border transition-all"
               />
             </div>
+            */}
             {filteredDiscover.length === 0 ? (
               <p className="text-brand-text/50 text-sm text-center py-10">
                 {search ? 'Aucun résultat.' : 'Aucun groupe à découvrir.'}

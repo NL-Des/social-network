@@ -37,6 +37,18 @@ func (r *PostRepo) CreateNewPost(authorID string, postData model.Post) (int, err
 		return 0, err
 	}
 
+	if postData.Privacy == "private" {
+		for _, viewerID := range postData.AllowedViewerIDs {
+			if _, err := r.db.Exec(`
+				INSERT INTO post_allowed_viewers (post_id, user_id)
+				VALUES ($1, $2)
+				ON CONFLICT DO NOTHING
+			`, postID, viewerID); err != nil {
+				return 0, err
+			}
+		}
+	}
+
 	return postID, nil
 }
 
@@ -112,6 +124,10 @@ func (r *PostRepo) GetAllPosts(viewerID int) ([]model.Post, error) {
 	    OR (p.privacy = 'almost-private' AND EXISTS (
 	        SELECT 1 FROM followers f
 	        WHERE f.followerid = $1 AND f.followingid = p.authorid AND f.status = 'accepted'
+	    ))
+	    OR (p.privacy = 'private' AND EXISTS (
+	        SELECT 1 FROM post_allowed_viewers pv
+	        WHERE pv.post_id = p.id AND pv.user_id = $1
 	    ))
 	GROUP BY p.id, p.authorid, u.pseudo, u.avatar
 

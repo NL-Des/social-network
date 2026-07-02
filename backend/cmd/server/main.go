@@ -50,12 +50,12 @@ func main() {
 	sessionService   := service.NewSessionService(sessionRepo)
 	profilService    := service.NewProfilService(profilRepo)
 	followService    := service.NewFollowService(followRepo)
-	messageService   := service.NewMessageService(messageRepo)
+	messageService   := service.NewMessageService(messageRepo, followRepo)
 	groupService     := service.NewGroupService(groupRepo)
 	chatGroupService := service.NewChatGroupService(chatGroupRepo)
 	postService      := service.NewPostAndCommentsService(postRepo, tagRepo, commentRepo)
 	notifService     := service.NewNotificationService(notifRepo, hub)
-	eventService     := service.NewEventService(eventRepo, groupRepo)
+	eventService     := service.NewEventService(eventRepo, groupRepo, notifService)
 
 	// ── Handlers ──────────────────────────────────────────────────────────────
 	auth := middleware.NewAuthMiddleware(sessionService)
@@ -76,7 +76,7 @@ func main() {
 		Post:      handlers.NewPostAndCommentsHandler(userService, sessionService, postService, notifService, hub),
 		Notif:     handlers.NewNotificationHandler(notifService),
 		Event:     handlers.NewEventHandler(eventService),
-		PmHandler: privateMessage.NewPrivateMessageHandler(hub, messageService),
+		PmHandler: privateMessage.NewPrivateMessageHandler(hub, messageService, userService, notifService),
 		GcHandler: groupChat.NewGroupChatHandler(hub, chatGroupService),
 	})
 
