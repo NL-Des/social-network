@@ -365,7 +365,7 @@ func (h *GroupHandler) HandleGroupMembers(w http.ResponseWriter, r *http.Request
 			http.Error(w, "user_id invalide", http.StatusBadRequest)
 			return
 		}
-		// Seul le créateur peut inviter ; l'invité doit ensuite accepter (statut 'invited').
+		// Tout membre du groupe peut inviter ; l'invité doit ensuite accepter (statut 'invited').
 		if err := h.GroupService.InviteUserToGroup(groupID, body.UserID, int64(userID)); err != nil {
 			http.Error(w, err.Error(), http.StatusForbidden)
 			return

@@ -479,13 +479,6 @@ func (r *GroupRepo) RejectJoinRequest(groupID, userID int64) error {
 }
 
 func (r *GroupRepo) InviteUserToGroup(groupID, targetUserID, inviterID int64) error {
-	var creatorID int64
-	if err := r.db.QueryRow(`SELECT creatorid FROM social_groups WHERE id = $1`, groupID).Scan(&creatorID); err != nil {
-		return err
-	}
-	if creatorID != inviterID {
-		return fmt.Errorf("non autorisé")
-	}
 	_, err := r.db.Exec(`
 		INSERT INTO social_group_members (groupid, userid, invitedby, status)
 		VALUES ($1, $2, $3, 'invited')

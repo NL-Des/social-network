@@ -25,7 +25,7 @@ interface InvitableUser {
   initials: string
 }
 
-function AdminButton({ users, groupName, groupId, currentUserId }: { users: SidebarUser[]; groupName: string; groupId: string; currentUserId: string }) {
+function AdminButton({ users, groupName, groupId }: { users: SidebarUser[]; groupName: string; groupId: string }) {
   const router = useRouter()
   const [formOpen, setFormOpen]       = useState(false)
   const [selectedAdmin, setSelectedAdmin] = useState<string>('')
@@ -33,10 +33,6 @@ function AdminButton({ users, groupName, groupId, currentUserId }: { users: Side
   const [loading, setLoading]         = useState(false)
   const [error, setError]             = useState<string | null>(null)
   const [success, setSuccess]         = useState<string | null>(null)
-  const [inviteOpen, setInviteOpen]     = useState(false)
-  const [invitableUsers, setInvitableUsers] = useState<InvitableUser[]>([])
-  const [selectedInvite, setSelectedInvite]   = useState<string>('')
-  const [inviting, setInviting]         = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -48,43 +44,6 @@ function AdminButton({ users, groupName, groupId, currentUserId }: { users: Side
     if (formOpen) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [formOpen])
-
-  useEffect(() => {
-    if (!inviteOpen) return
-    fetch('/api/users')
-      .then((res) => res.ok ? res.json() : [])
-      .then((data: InvitableUser[]) => {
-        const memberIds = new Set(users.map((u) => u.id))
-        setInvitableUsers((data ?? []).filter((u) => String(u.id) !== currentUserId && !memberIds.has(String(u.id))))
-      })
-      .catch(() => {})
-  }, [inviteOpen, users, currentUserId])
-
-  async function handleInvite() {
-    if (!selectedInvite) { setError('Sélectionnez un utilisateur.'); return }
-    setInviting(true)
-    setError(null)
-    setSuccess(null)
-    try {
-      const res = await fetch(`/api/group-chat/${groupId}/members`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: parseInt(selectedInvite) }),
-      })
-      if (res.ok) {
-        setSuccess('Invitation envoyée.')
-        setInvitableUsers((prev) => prev.filter((u) => String(u.id) !== selectedInvite))
-        setSelectedInvite('')
-      } else {
-        const data = await res.json().catch(() => ({}))
-        setError(data.error ?? 'Erreur lors de l\'invitation.')
-      }
-    } catch {
-      setError('Erreur réseau.')
-    } finally {
-      setInviting(false)
-    }
-  }
 
   async function handleDeleteGroup() {
     if (!confirm(`Supprimer définitivement le groupe "${groupName}" ?`)) return
@@ -189,38 +148,6 @@ function AdminButton({ users, groupName, groupId, currentUserId }: { users: Side
             </button>
           </div>
 
-          {/* Inviter un utilisateur */}
-          <div className="flex flex-col gap-1">
-            <button
-              onClick={() => setInviteOpen((o) => !o)}
-              className="flex items-center justify-between w-full text-brand-border text-sm px-1"
-            >
-              <span>Inviter un utilisateur</span>
-              <span style={{ display: 'inline-block', transform: inviteOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} className="transition-transform duration-200">▾</span>
-            </button>
-            {inviteOpen && (
-              <div className="flex flex-col gap-2 mt-1">
-                <select
-                  value={selectedInvite}
-                  onChange={(e) => setSelectedInvite(e.target.value)}
-                  className="bg-white/5 border border-brand-border/40 rounded-xl px-3 py-2 text-brand-text text-sm focus:outline-none focus:border-brand-border transition-all"
-                >
-                  <option value="">— Choisir un utilisateur —</option>
-                  {invitableUsers.map((u) => (
-                    <option key={u.id} value={u.id}>{u.name}</option>
-                  ))}
-                </select>
-                <button
-                  onClick={handleInvite}
-                  disabled={inviting || !selectedInvite}
-                  className="w-full py-2 px-4 rounded-lg border border-brand-border text-brand-text text-sm shadow-neon hover:scale-105 transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
-                >
-                  {inviting ? '...' : 'Envoyer l\'invitation'}
-                </button>
-              </div>
-            )}
-          </div>
-
           {/* Liste des membres — éjection */}
           <div className="flex flex-col gap-1">
             <button
@@ -262,6 +189,105 @@ function AdminButton({ users, groupName, groupId, currentUserId }: { users: Side
           >
             Supprimer le groupe
           </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function InviteUserButton({ groupId, users, currentUserId }: { groupId: string; users: SidebarUser[]; currentUserId: string }) {
+  const [formOpen, setFormOpen]             = useState(false)
+  const [invitableUsers, setInvitableUsers] = useState<InvitableUser[]>([])
+  const [selectedInvite, setSelectedInvite] = useState<string>('')
+  const [inviting, setInviting]             = useState(false)
+  const [error, setError]                   = useState<string | null>(null)
+  const [success, setSuccess]               = useState<string | null>(null)
+  const formRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (formRef.current && !formRef.current.contains(e.target as Node)) {
+        setFormOpen(false)
+      }
+    }
+    if (formOpen) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [formOpen])
+
+  useEffect(() => {
+    if (!formOpen) return
+    fetch('/api/users')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: InvitableUser[]) => {
+        const memberIds = new Set(users.map((u) => u.id))
+        setInvitableUsers((data ?? []).filter((u) => String(u.id) !== currentUserId && !memberIds.has(String(u.id))))
+      })
+      .catch(() => {})
+  }, [formOpen, users, currentUserId])
+
+  async function handleInvite() {
+    if (!selectedInvite) { setError('Sélectionnez un utilisateur.'); return }
+    setInviting(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      const res = await fetch(`/api/group-chat/${groupId}/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: parseInt(selectedInvite) }),
+      })
+      if (res.ok) {
+        setSuccess('Invitation envoyée.')
+        setInvitableUsers((prev) => prev.filter((u) => String(u.id) !== selectedInvite))
+        setSelectedInvite('')
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error ?? 'Erreur lors de l\'invitation.')
+      }
+    } catch {
+      setError('Erreur réseau.')
+    } finally {
+      setInviting(false)
+    }
+  }
+
+  return (
+    <div ref={formRef} className="relative pt-3 shrink-0">
+      <button
+        onClick={() => { setFormOpen((o) => !o); setError(null); setSuccess(null) }}
+        className={`w-full py-2 px-4 rounded-lg border border-brand-border text-brand-text text-base shadow-neon hover:scale-105 transition-all duration-200 active:scale-95 ${
+          formOpen ? 'shadow-[0_0_12px_rgba(73,199,255,0.6)]' : ''
+        }`}
+      >
+        Inviter un membre
+      </button>
+
+      {formOpen && (
+        <div className="absolute bottom-[calc(100%+12px)] left-0 right-0 bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-4 z-10">
+          <h3 className="font-bold text-[#49C7FF] text-base text-center">Inviter un utilisateur</h3>
+
+          {error   && <p className="text-red-400 text-xs text-center">{error}</p>}
+          {success && <p className="text-green-400 text-xs text-center">{success}</p>}
+
+          <div className="flex flex-col gap-2">
+            <select
+              value={selectedInvite}
+              onChange={(e) => setSelectedInvite(e.target.value)}
+              className="bg-white/5 border border-brand-border/40 rounded-xl px-3 py-2 text-brand-text text-sm focus:outline-none focus:border-brand-border transition-all"
+            >
+              <option value="">— Choisir un utilisateur —</option>
+              {invitableUsers.map((u) => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={handleInvite}
+              disabled={inviting || !selectedInvite}
+              className="w-full py-2 px-4 rounded-lg border border-brand-border text-brand-text text-sm shadow-neon hover:scale-105 transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              {inviting ? '...' : 'Envoyer l\'invitation'}
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -386,9 +412,13 @@ export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe
           users={users.filter((u) => u.id !== currentUserId)}
           groupName={groupName}
           groupId={groupId}
-          currentUserId={currentUserId}
         />
       )}
+      <InviteUserButton
+        groupId={groupId}
+        users={users.filter((u) => u.id !== currentUserId)}
+        currentUserId={currentUserId}
+      />
       <LeaveGroupButton groupId={groupId} />
     </aside>
   )
