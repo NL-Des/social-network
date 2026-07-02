@@ -60,11 +60,7 @@ export default function HeaderGroup({ user, groupName }: HeaderGroupProps) {
           </div>
         </Link>
 
-        <span className="absolute left-1/2 -translate-x-1/2 text-white font-bold text-xl hidden lg:block">
-          {groupName}
-        </span>
-
-        <div className="flex items-center gap-2 md:gap-3 shrink-0">
+        <div className="flex items-center gap-2 md:gap-3 shrink-0 ml-auto">
           <nav className="hidden md:flex items-center gap-3">
             {NAV_LINKS.map((link) => (
               <Link

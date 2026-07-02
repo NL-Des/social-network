@@ -105,13 +105,13 @@ function PostContent() {
 
   return (
     <div className="bg-background min-h-screen md:h-screen flex flex-col md:overflow-hidden">
-      <HeaderPost user={user} postTitle={postTitle} />
+      <HeaderPost user={user} />
 
       <div className="pt-26 flex-1 overflow-y-auto md:overflow-hidden px-4 pb-4">
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr_264px] grid-rows-1 gap-4 pt-4 md:h-full">
 
           <div className="md:h-full">
-            <LeftSidebarPostListOfUsers users={sidebarUsers} />
+            <LeftSidebarPostListOfUsers users={sidebarUsers} postTitle={postTitle} />
           </div>
 
           <div className="md:h-full">
