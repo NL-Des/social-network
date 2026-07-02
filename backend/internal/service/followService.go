@@ -36,3 +36,7 @@ func (s *FollowService) AcceptFollowRequest(followerID, followingID int) error {
 func (s *FollowService) RejectFollowRequest(followerID, followingID int) error {
 	return s.FollowRepo.RejectFollowRequest(followerID, followingID)
 }
+
+func (s *FollowService) RemoveFollower(followerID, userID int) error {
+	return s.FollowRepo.RemoveFollower(followerID, userID)
+}

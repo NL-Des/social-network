@@ -109,3 +109,11 @@ func (r *FollowRepository) Unfollow(followerID, followingID int) error {
 	`, followerID, followingID)
 	return err
 }
+
+func (r *FollowRepository) RemoveFollower(followerID, userID int) error {
+	_, err := r.db.Exec(`
+        DELETE FROM followers
+        WHERE followerID = $1 AND followingID = $2
+    `, followerID, userID)
+	return err
+}

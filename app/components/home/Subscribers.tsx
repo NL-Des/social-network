@@ -25,7 +25,14 @@ export default function Subscribers({ followers }: SubscribersProps) {
           <ContactRow
             key={c.id}
             contact={c}
-            onRemove={() => setList((prev) => prev.filter((x) => x.id !== c.id))}
+            onRemove={async () => {
+              const response = await fetch(`/api/users/${c.id}/follower`, {
+                method: 'DELETE',
+              })
+              if (response.ok) {
+                setList((prev) => prev.filter((x) => x.id !== c.id))
+              }
+            }}
           />
         ))}
       </div>

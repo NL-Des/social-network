@@ -14,7 +14,7 @@ export function ContactRow({
   return (
     <div className="flex items-center gap-3 py-2">
       <Link
-        href={`/users/${contact.id}`}
+        href={`/profile/${contact.id}`}
         className="flex items-center gap-3 flex-1 min-w-0 rounded-xl px-1 -mx-1 hover:bg-white/5 transition-colors"
       >
         <div className="w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
@@ -54,7 +54,14 @@ export default function Followers({ following }: FollowersProps) {
           <ContactRow
             key={c.id}
             contact={c}
-            onRemove={() => setList((prev) => prev.filter((x) => x.id !== c.id))}
+            onRemove={async () => {
+              const response = await fetch(`/api/users/${c.id}/follow`, {
+                method: 'DELETE',
+              })
+              if (response.ok) {
+                setList((prev) => prev.filter((x) => x.id !== c.id))
+              }
+            }}
           />
         ))}
       </div>
