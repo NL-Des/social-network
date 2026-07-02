@@ -178,13 +178,13 @@ function InsideGroupContent() {
   if (!user) return null
 
   return (
-    <div className="bg-background h-screen flex flex-col overflow-hidden">
+    <div className="bg-background min-h-screen md:h-screen flex flex-col md:overflow-hidden">
       <HeaderGroup user={user} groupName="Groupe" />
 
-      <div className="pt-26 flex-1 overflow-hidden px-4 pb-4">
-        <div className="h-full grid grid-cols-[280px_1fr_264px] gap-4 pt-4">
+      <div className="pt-26 flex-1 overflow-y-auto md:overflow-hidden px-4 pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-[280px_1fr_264px] gap-4 pt-4 md:h-full">
 
-          <div className="h-full">
+          <div className="md:h-full">
             <LeftSidebarGroupListOfUsers
               users={sidebarUsers}
               groupName="Groupe"
@@ -196,10 +196,10 @@ function InsideGroupContent() {
           </div>
 
           {/* Colonne centrale */}
-          <div className="flex flex-col h-full overflow-hidden">
+          <div className="flex flex-col md:h-full md:overflow-hidden">
             {selectedPost ? (
               /* ── Détail du post + commentaires ── */
-              <div className="flex flex-col gap-4 h-full overflow-hidden">
+              <div className="flex flex-col gap-4 md:h-full md:overflow-hidden">
                 <button
                   onClick={() => { setSelectedPost(null); setDeleteError(null) }}
                   className="text-brand-text text-sm hover:text-white transition-colors text-left shrink-0"
@@ -276,7 +276,7 @@ function InsideGroupContent() {
             )}
           </div>
 
-          <div className="h-full">
+          <div className="md:h-full">
             <RightSidebarGroupListOfConversations
               conversations={members}
               activeId={activeId}

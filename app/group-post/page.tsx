@@ -80,10 +80,10 @@ function GroupPostContent() {
   if (!user) return null
 
   return (
-    <div className="bg-background h-screen flex flex-col overflow-hidden">
+    <div className="bg-background min-h-screen md:h-screen flex flex-col md:overflow-hidden">
       <HeaderGroup user={user} groupName={post?.title ?? 'Post'} />
 
-      <div className="pt-[104px] flex-1 overflow-hidden px-4 pb-4 flex justify-center">
+      <div className="pt-[104px] flex-1 overflow-y-auto md:overflow-hidden px-4 pb-4 flex justify-center">
         <div className="w-full max-w-2xl pt-4 flex flex-col gap-4">
 
           <button

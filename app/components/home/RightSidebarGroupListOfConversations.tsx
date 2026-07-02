@@ -237,7 +237,7 @@ export default function RightSidebarGroupListOfConversations({
   )
 
   return (
-    <aside className="h-full flex flex-col bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 gap-4 overflow-hidden">
+    <aside className="h-auto md:h-full flex flex-col bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 gap-4 md:overflow-hidden">
       <h2 className="font-bold text-[#49C7FF] text-base shrink-0">Conversations avec les membres du Groupe</h2>
 
       <input

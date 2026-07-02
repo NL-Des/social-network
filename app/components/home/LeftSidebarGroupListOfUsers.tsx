@@ -385,7 +385,7 @@ export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe
 
   if (isMember === false) {
     return (
-      <aside className="h-full bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col overflow-hidden">
+      <aside className="h-auto md:h-full bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col overflow-hidden">
         <section className="flex-1 overflow-y-auto">
           <h2 className="font-bold text-[#49C7FF] text-base mb-5">Utilisateurs du Groupe</h2>
           <p className="text-brand-text/60 text-sm">
@@ -397,7 +397,7 @@ export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe
   }
 
   return (
-    <aside className="h-full bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col overflow-hidden">
+    <aside className="h-auto md:h-full bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col overflow-hidden">
       <section className="flex-1 overflow-y-auto">
         <h2 className="font-bold text-[#49C7FF] text-base mb-5">Utilisateurs du Groupe</h2>
         <div className="flex flex-col gap-3">

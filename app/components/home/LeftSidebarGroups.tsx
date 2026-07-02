@@ -160,7 +160,7 @@ export default function LeftSidebarGroups({ groups, onSelect, onCreated }: LeftS
         />
       )}
 
-      <aside className="h-full flex flex-col bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 gap-4">
+      <aside className="h-auto md:h-full flex flex-col bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 gap-4">
         <h2 className="font-bold text-[#49C7FF] text-sm shrink-0">Liste des groupes</h2>
 
         {/* Barre de recherche désactivée (non obligatoire)

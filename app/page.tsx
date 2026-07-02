@@ -104,17 +104,17 @@ export default function HomePage() {
   if (!user) return null
 
   return (
-    <div className="bg-background h-screen flex flex-col overflow-hidden">
+    <div className="bg-background min-h-screen md:h-screen flex flex-col md:overflow-hidden">
       <Header user={user} />
 
-      <div className="pt-[104px] flex-1 overflow-hidden px-4 pb-4">
-        <div className="h-full grid grid-cols-[312px_1fr_264px] grid-rows-[1fr] gap-4 pt-4">
+      <div className="pt-[104px] flex-1 overflow-y-auto md:overflow-hidden px-4 pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-[312px_1fr_264px] grid-rows-1 md:grid-rows-[1fr] gap-4 pt-4 md:h-full">
 
-          <div className="h-full min-h-0">
+          <div className="md:h-full md:min-h-0">
             <GroupsSidebar />
           </div>
 
-          <div className="flex flex-col h-full min-h-0 overflow-hidden">
+          <div className="flex flex-col md:h-full md:min-h-0 md:overflow-hidden">
             <div className="overflow-y-auto flex flex-col gap-4 flex-1">
               {posts.map((post) => (
                 <PostCard key={post.id} post={post} />
@@ -123,7 +123,7 @@ export default function HomePage() {
             <CreatePostButton onSuccess={fetchPosts} />
           </div>
 
-          <div className="h-full min-h-0">
+          <div className="md:h-full md:min-h-0">
             <RightSidebar />
           </div>
 

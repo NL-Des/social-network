@@ -243,7 +243,7 @@ export default function LeftSidebar({
         />
       )}
 
-      <aside className="h-full flex flex-col bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 gap-4">
+      <aside className="h-[50vh] md:h-full flex flex-col bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 gap-4">
 
         <div className="flex items-center justify-between flex-shrink-0">
           <h2 className="font-bold text-[#49C7FF] text-base">Conversations</h2>

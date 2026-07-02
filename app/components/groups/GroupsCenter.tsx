@@ -316,7 +316,7 @@ export default function GroupsCenter({
   ]
 
   return (
-    <div className="h-full bg-brand-card border border-brand-border rounded-2xl flex flex-col overflow-hidden">
+    <div className="md:h-full bg-brand-card border border-brand-border rounded-2xl flex flex-col overflow-hidden">
       {/* Tabs */}
       <div className="flex border-b border-brand-border/20 px-4 pt-4 shrink-0 gap-1">
         {tabs.map((tab) => (
@@ -362,7 +362,7 @@ export default function GroupsCenter({
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {myGroups.map((g) => (
                   <GroupCard
                     key={g.id}
@@ -395,7 +395,7 @@ export default function GroupsCenter({
                 {search ? 'Aucun résultat.' : 'Aucun groupe à découvrir.'}
               </p>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {filteredDiscover.map((g) => (
                   <GroupCard
                     key={g.id}

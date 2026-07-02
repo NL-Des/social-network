@@ -90,7 +90,7 @@ export default function GroupMessages({ group, currentUserId, initialMessages, u
   }
 
   return (
-    <div className="h-full bg-brand-card border border-brand-border rounded-2xl flex flex-col overflow-hidden">
+    <div className="h-[70vh] md:h-full bg-brand-card border border-brand-border rounded-2xl flex flex-col overflow-hidden">
 
       <div className="flex items-center gap-4 px-6 py-4 border-b border-brand-border shrink-0">
         <div className="w-10 h-10 rounded-full bg-purple-700 flex items-center justify-center text-white text-sm font-bold shrink-0">

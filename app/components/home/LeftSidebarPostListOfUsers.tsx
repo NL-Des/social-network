@@ -15,7 +15,7 @@ interface LeftSidebarPostListOfUsersProps {
 
 export default function LeftSidebarPostListOfUsers({ users }: LeftSidebarPostListOfUsersProps) {
   return (
-    <aside className="h-full overflow-y-auto bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-6">
+    <aside className="h-auto md:h-full overflow-y-auto bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-6">
       <section>
         <h2 className="font-bold text-[#49C7FF] text-base mb-5">Participants à la discussion</h2>
         <div className="flex flex-col gap-3">

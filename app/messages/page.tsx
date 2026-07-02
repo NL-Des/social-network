@@ -229,13 +229,13 @@ function MessagesContent() {
   }
 
   return (
-    <div className="bg-background h-screen flex flex-col overflow-hidden">
+    <div className="bg-background min-h-screen md:h-screen flex flex-col md:overflow-hidden">
       <Header user={user} />
 
-      <div className="pt-26 flex-1 overflow-hidden px-4 pb-4">
-        <div className="h-full grid grid-cols-[280px_1fr_264px] grid-rows-1 gap-4 pt-4">
+      <div className="pt-26 flex-1 overflow-y-auto md:overflow-hidden px-4 pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-[280px_1fr_264px] grid-rows-1 gap-4 pt-4 md:h-full">
 
-          <div className="h-full">
+          <div className="md:h-full">
             <LeftSidebar
               conversations={conversations}
               activeId={activeId}
@@ -252,7 +252,7 @@ function MessagesContent() {
             />
           </div>
 
-          <div className="h-full">
+          <div className="md:h-full">
             {activeGroup ? (
               <GroupMessages
                 key={activeGroup.id}
@@ -270,13 +270,13 @@ function MessagesContent() {
                 isOnline={onlineUsers.has(activeConversation.id)}
               />
             ) : (
-              <div className="h-full bg-brand-card border border-brand-border rounded-2xl flex items-center justify-center">
+              <div className="h-[70vh] md:h-full bg-brand-card border border-brand-border rounded-2xl flex items-center justify-center">
                 <p className="text-brand-text/50 text-sm">Sélectionnez une conversation</p>
               </div>
             )}
           </div>
 
-          <div className="h-full">
+          <div className="md:h-full">
             <RightSidebar />
           </div>
 

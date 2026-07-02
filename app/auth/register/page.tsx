@@ -37,10 +37,10 @@ export default function RegisterPage() {
       <form
         action={formAction}
         encType="multipart/form-data"
-        className="bg-brand-card w-full max-w-6xl p-10 rounded-2xl border-1 border-brand-border shadow-neon py-20"
+        className="bg-brand-card w-full max-w-6xl p-5 md:p-10 rounded-2xl border-1 border-brand-border shadow-neon py-20"
       >
-        <div className="grid grid-cols-3  gap-10">
-          <div className="col-span-2 grid grid-cols-2 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
+          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-10">
             <InputStd
               type="text"
               placeholder="Nom"
@@ -67,7 +67,7 @@ export default function RegisterPage() {
             />
           </div>
 
-          <label className="relative border-1 border-brand-border shadow-neon rounded-full aspect-square w-52 h-52 flex items-center justify-center overflow-hidden">
+          <label className="relative border-1 border-brand-border shadow-neon rounded-full aspect-square w-32 h-32 md:w-52 md:h-52 mx-auto md:mx-0 flex items-center justify-center overflow-hidden">
             {' '}
             {preview ? (
               <>
@@ -123,9 +123,9 @@ export default function RegisterPage() {
           <textarea
             placeholder="Description"
             name="description"
-            className="  col-span-3 row-span-5 h-full border-1 border-brand-border shadow-neon p-5 rounded-2xl text-brand-text"
+            className="  col-span-1 md:col-span-3 row-span-5 h-full border-1 border-brand-border shadow-neon p-5 rounded-2xl text-brand-text"
           ></textarea>
-          <div className="col-span-3 flex flex-col items-center gap-4">
+          <div className="col-span-1 md:col-span-3 flex flex-col items-center gap-4">
             {state?.error && (
               <p className="text-red-500 font-semibold">{state.error}</p>
             )}

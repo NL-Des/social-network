@@ -128,7 +128,7 @@ export default function Messages({ conversation, initialMessages, groups = [], i
   }
 
   return (
-    <div className="h-full bg-brand-card border border-brand-border rounded-2xl flex flex-col overflow-hidden">
+    <div className="h-[70vh] md:h-full bg-brand-card border border-brand-border rounded-2xl flex flex-col overflow-hidden">
 
       {/* Header */}
       <div className="flex items-center gap-4 px-6 py-4 border-b border-brand-border shrink-0">

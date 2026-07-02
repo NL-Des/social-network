@@ -90,13 +90,13 @@ export default function GroupesPage() {
   if (!user) return null
 
   return (
-    <div className="bg-background h-screen flex flex-col overflow-hidden">
+    <div className="bg-background min-h-screen md:h-screen flex flex-col md:overflow-hidden">
       <Header user={user} />
 
-      <div className="pt-[104px] flex-1 overflow-hidden px-4 pb-4">
-        <div className="h-full grid grid-cols-[280px_1fr_264px] gap-4 pt-4">
+      <div className="pt-[104px] flex-1 overflow-y-auto md:overflow-hidden px-4 pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-[280px_1fr_264px] gap-4 pt-4 md:h-full">
 
-          <div className="h-full">
+          <div className="md:h-full">
             <LeftSidebarGroups
               groups={allGroupItems}
               onSelect={(id) => {
@@ -118,7 +118,7 @@ export default function GroupesPage() {
             pendingCount={pendingCount}
           />
 
-          <div className="h-full">
+          <div className="md:h-full">
             <GroupsRightSidebar
               suggestedGroups={suggestedGroups}
               onJoin={(id, status) => handleStatusChange(id, status)}

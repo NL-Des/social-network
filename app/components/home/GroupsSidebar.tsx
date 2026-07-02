@@ -9,7 +9,7 @@ export default function GroupsSidebar() {
   const [groupsOpen, setGroupsOpen] = useState(true)
 
   return (
-    <aside className="h-full overflow-y-auto bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-5">
+    <aside className="h-auto md:h-full overflow-y-auto bg-brand-card border border-brand-border shadow-neon rounded-2xl p-5 flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <h2 className="font-bold text-[#49C7FF] text-base">Mes Groupes</h2>
         <button
