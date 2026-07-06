@@ -14,14 +14,37 @@ import (
 )
 
 type GroupHandler struct {
-	GroupService *service.GroupService
-	UserService  *service.UserService
-	NotifService *service.NotificationService
-	Hub          *ws.Hub
+	GroupService     *service.GroupService
+	ChatGroupService *service.ChatGroupService
+	UserService      *service.UserService
+	NotifService     *service.NotificationService
+	Hub              *ws.Hub
 }
 
-func NewGroupHandler(gs *service.GroupService, us *service.UserService, ns *service.NotificationService, hub *ws.Hub) *GroupHandler {
-	return &GroupHandler{GroupService: gs, UserService: us, NotifService: ns, Hub: hub}
+func NewGroupHandler(gs *service.GroupService, cgs *service.ChatGroupService, us *service.UserService, ns *service.NotificationService, hub *ws.Hub) *GroupHandler {
+	return &GroupHandler{GroupService: gs, ChatGroupService: cgs, UserService: us, NotifService: ns, Hub: hub}
+}
+
+// addToChatGroup ajoute userID au chat de groupe associé à groupID, s'il existe.
+func (h *GroupHandler) addToChatGroup(groupID, userID int64) {
+	chatGroupID, err := h.GroupService.GetChatGroupID(groupID)
+	if err != nil || chatGroupID == 0 {
+		return
+	}
+	if err := h.ChatGroupService.AddChatGroupMember(chatGroupID, userID); err != nil {
+		log.Printf("addToChatGroup: %v", err)
+	}
+}
+
+// removeFromChatGroup retire userID du chat de groupe associé à groupID, s'il existe.
+func (h *GroupHandler) removeFromChatGroup(groupID, userID int64) {
+	chatGroupID, err := h.GroupService.GetChatGroupID(groupID)
+	if err != nil || chatGroupID == 0 {
+		return
+	}
+	if err := h.ChatGroupService.LeaveChatGroup(chatGroupID, userID); err != nil {
+		log.Printf("removeFromChatGroup: %v", err)
+	}
 }
 
 // HandleGroups gère GET /group-chat (liste) et POST /group-chat (création)
@@ -67,6 +90,11 @@ func (h *GroupHandler) HandleGroups(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "erreur serveur", http.StatusInternalServerError)
 			return
 		}
+		if chatGroupID, err := h.ChatGroupService.CreateChatGroup(title, int64(userID), body.MemberIDs); err != nil {
+			log.Printf("HandleGroups: création du chat de groupe échouée: %v", err)
+		} else if err := h.GroupService.SetChatGroupID(groupID, chatGroupID); err != nil {
+			log.Printf("HandleGroups: liaison du chat de groupe échouée: %v", err)
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(map[string]int64{"id": groupID})
@@ -109,6 +137,7 @@ func (h *GroupHandler) HandleLeaveGroup(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "erreur serveur", http.StatusInternalServerError)
 		return
 	}
+	h.removeFromChatGroup(groupID, int64(userID))
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -378,6 +407,36 @@ func (h *GroupHandler) HandleGroupMembers(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// HandleGroupChatID gère GET /group-chat/{id}/chat-id (id du chat de groupe associé)
+func (h *GroupHandler) HandleGroupChatID(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
+	if err != nil {
+		http.Error(w, "id de groupe invalide", http.StatusBadRequest)
+		return
+	}
+	isMember, err := h.GroupService.IsGroupMember(groupID, int64(userID))
+	if err != nil || !isMember {
+		http.Error(w, "accès non autorisé", http.StatusForbidden)
+		return
+	}
+	chatGroupID, err := h.GroupService.GetChatGroupID(groupID)
+	if err != nil {
+		http.Error(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]int64{"chat_group_id": chatGroupID})
+}
+
 // HandleInviteResponse gère PUT (accepter) et DELETE (refuser) /group-chat/{id}/invite
 func (h *GroupHandler) HandleInviteResponse(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
@@ -397,6 +456,7 @@ func (h *GroupHandler) HandleInviteResponse(w http.ResponseWriter, r *http.Reque
 			http.Error(w, err.Error(), http.StatusForbidden)
 			return
 		}
+		h.addToChatGroup(groupID, int64(userID))
 		if memberIDs, err := h.GroupService.GetGroupMemberIDs(groupID); err == nil {
 			event := ws.MessageWs{Type: "group_member_added", Data: map[string]int64{"group_id": groupID}}
 			for _, mid := range memberIDs {
@@ -533,6 +593,7 @@ func (h *GroupHandler) HandleRemoveMember(w http.ResponseWriter, r *http.Request
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
+	h.removeFromChatGroup(groupID, targetID)
 	go h.sendGroupRemovedNotif(groupID, int64(requesterID), targetID)
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -600,9 +661,15 @@ func (h *GroupHandler) HandleDeleteGroup(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "id invalide", http.StatusBadRequest)
 		return
 	}
+	chatGroupID, _ := h.GroupService.GetChatGroupID(groupID)
 	if err := h.GroupService.DeleteGroup(groupID, int64(userID)); err != nil {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
+	}
+	if chatGroupID != 0 {
+		if err := h.ChatGroupService.DeleteChatGroup(chatGroupID); err != nil {
+			log.Printf("HandleDeleteGroup: suppression du chat de groupe échouée: %v", err)
+		}
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -761,6 +828,7 @@ func (h *GroupHandler) HandleJoinRequestAction(w http.ResponseWriter, r *http.Re
 			http.Error(w, "erreur serveur", http.StatusInternalServerError)
 			return
 		}
+		h.addToChatGroup(groupID, targetID)
 		go h.sendJoinRequestAcceptedNotif(groupID, int64(userID), targetID)
 		go h.sendGroupMemberJoinedNotif(groupID, targetID)
 		if memberIDs, err := h.GroupService.GetGroupMemberIDs(groupID); err == nil {

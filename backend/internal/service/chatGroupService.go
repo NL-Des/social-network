@@ -58,3 +58,7 @@ func (s *ChatGroupService) LeaveChatGroup(chatGroupID, userID int64) error {
 func (s *ChatGroupService) RemoveChatGroupMember(chatGroupID, targetID, requesterID int64) error {
 	return s.repo.RemoveChatGroupMember(chatGroupID, targetID, requesterID)
 }
+
+func (s *ChatGroupService) DeleteChatGroup(chatGroupID int64) error {
+	return s.repo.DeleteChatGroup(chatGroupID)
+}

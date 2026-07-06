@@ -94,6 +94,14 @@ func (s *GroupService) GetGroupTitle(groupID int64) (string, error) {
 	return s.repo.GetGroupTitle(groupID)
 }
 
+func (s *GroupService) SetChatGroupID(groupID, chatGroupID int64) error {
+	return s.repo.SetChatGroupID(groupID, chatGroupID)
+}
+
+func (s *GroupService) GetChatGroupID(groupID int64) (int64, error) {
+	return s.repo.GetChatGroupID(groupID)
+}
+
 func (s *GroupService) GetAllGroups(userID int64) ([]repository.GroupInfoWithStatus, error) {
 	return s.repo.GetAllGroups(userID)
 }

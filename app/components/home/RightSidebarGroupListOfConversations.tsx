@@ -243,7 +243,7 @@ export default function RightSidebarGroupListOfConversations({
       <input
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Taper vôtre recherche"
+        placeholder="Tapez votre texte"
         className="shrink-0 bg-white/5 border border-brand-border/40 rounded-xl px-4 py-2 text-brand-text text-sm placeholder:text-brand-text/40 focus:outline-none focus:border-brand-border transition-all"
       />
 

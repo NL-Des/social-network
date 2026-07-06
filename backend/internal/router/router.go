@@ -87,6 +87,7 @@ func NewRouter(d Deps) http.Handler {
 	r.Handle("/group-chat/{id}/delete", d.Auth.RequireAuth(d.Group.HandleDeleteGroup)).Methods("DELETE")
 	r.Handle("/group-chat/{id}/transfer-admin", d.Auth.RequireAuth(d.Group.HandleTransferAdmin)).Methods("PUT")
 	r.Handle("/group-chat/{id}/members", d.Auth.RequireAuth(d.Group.HandleGroupMembers)).Methods("GET", "POST")
+	r.Handle("/group-chat/{id}/chat-id", d.Auth.RequireAuth(d.Group.HandleGroupChatID)).Methods("GET")
 	r.Handle("/group-chat/{id}/invite", d.Auth.RequireAuth(d.Group.HandleInviteResponse)).Methods("PUT", "DELETE")
 	r.Handle("/group-chat/{id}/members/{userId}", d.Auth.RequireAuth(d.Group.HandleRemoveMember)).Methods("DELETE")
 	r.Handle("/group-chat/{id}/join", d.Auth.RequireAuth(d.Group.HandleJoinRequest)).Methods("POST", "DELETE")

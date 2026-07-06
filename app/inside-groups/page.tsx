@@ -9,6 +9,7 @@ import LeftSidebarGroupListOfUsers, { SidebarUser } from '@/app/components/home/
 import RightSidebarGroupListOfConversations, { Conversation } from '@/app/components/home/RightSidebarGroupListOfConversations'
 import PostCard, { Post, CreatePostButton } from '@/app/components/home/PostCard'
 import GroupComments from '@/app/components/home/GroupComments'
+import GroupMessages, { GroupMessage } from '@/app/components/home/GroupMessages'
 import { useWebSocket } from '@/lib/useWebSocket'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -30,6 +31,14 @@ interface ApiGroupMember {
   name: string
   initials: string
   isCreator: boolean
+}
+
+interface ApiGroupMessage {
+  id: number
+  group_id: number
+  sender_id: number
+  body: string
+  sent_at: string
 }
 
 function getInitials(name: string): string {
@@ -55,6 +64,9 @@ function InsideGroupContent() {
   const [deleting, setDeleting]     = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [wsUrl, setWsUrl]           = useState<string | null>(null)
+  const [activeTab, setActiveTab]   = useState<'posts' | 'discussion'>('posts')
+  const [chatGroupId, setChatGroupId] = useState<string | null>(null)
+  const [groupMessages, setGroupMessages] = useState<GroupMessage[]>([])
 
   useEffect(() => {
     fetchMe()
@@ -113,6 +125,34 @@ function InsideGroupContent() {
       })
       .catch(() => {})
   }, [groupId])
+
+  useEffect(() => {
+    if (!groupId) return
+    fetch(`/api/group-chat/${groupId}/chat-id`)
+      .then((res) => res.ok ? res.json() : null)
+      .then((data: { chat_group_id?: number } | null) => {
+        setChatGroupId(data?.chat_group_id ? String(data.chat_group_id) : null)
+      })
+      .catch(() => {})
+  }, [groupId])
+
+  useEffect(() => {
+    if (!chatGroupId || !user) return
+    fetch(`/api/chat-groups/${chatGroupId}/messages`)
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: ApiGroupMessage[]) => {
+        setGroupMessages((data ?? []).map((m) => ({
+          id:         String(m.id),
+          senderName: String(m.sender_id) === user.id
+            ? 'Moi'
+            : (sidebarUsers.find((u) => u.id === String(m.sender_id))?.name ?? String(m.sender_id)),
+          senderId:   String(m.sender_id),
+          text:       m.body,
+          date:       new Date(m.sent_at).toLocaleDateString('fr-FR'),
+        })))
+      })
+      .catch(() => {})
+  }, [chatGroupId, user, sidebarUsers])
 
   const fetchPosts = useCallback(() => {
     if (!groupId) return
@@ -197,6 +237,30 @@ function InsideGroupContent() {
 
           {/* Colonne centrale */}
           <div className="flex flex-col md:h-full md:overflow-hidden">
+            {!selectedPost && (
+              <div className="flex gap-2 mb-4 shrink-0">
+                <button
+                  onClick={() => setActiveTab('posts')}
+                  className={`px-5 py-2 rounded-xl text-sm border transition-all ${
+                    activeTab === 'posts'
+                      ? 'border-brand-border text-white shadow-neon'
+                      : 'border-brand-border/30 text-brand-text/60 hover:text-white'
+                  }`}
+                >
+                  Posts
+                </button>
+                <button
+                  onClick={() => setActiveTab('discussion')}
+                  className={`px-5 py-2 rounded-xl text-sm border transition-all ${
+                    activeTab === 'discussion'
+                      ? 'border-brand-border text-white shadow-neon'
+                      : 'border-brand-border/30 text-brand-text/60 hover:text-white'
+                  }`}
+                >
+                  Discussion
+                </button>
+              </div>
+            )}
             {selectedPost ? (
               /* ── Détail du post + commentaires ── */
               <div className="flex flex-col gap-4 md:h-full md:overflow-hidden">
@@ -259,6 +323,20 @@ function InsideGroupContent() {
                   currentUser={{ name: user.name, username: user.username, initials: user.initials }}
                 />
               </div>
+            ) : activeTab === 'discussion' ? (
+              /* ── Chat de groupe ── */
+              chatGroupId ? (
+                <GroupMessages
+                  group={{ id: chatGroupId, title: 'Groupe', initials: getInitials('Groupe') }}
+                  currentUserId={user.id}
+                  initialMessages={groupMessages}
+                  usersMap={Object.fromEntries(sidebarUsers.map((u) => [u.id, u.name]))}
+                />
+              ) : (
+                <div className="h-[70vh] md:h-full bg-brand-card border border-brand-border rounded-2xl flex items-center justify-center">
+                  <p className="text-brand-text/50 text-sm">Discussion indisponible pour ce groupe</p>
+                </div>
+              )
             ) : (
               /* ── Liste des posts ── */
               <>

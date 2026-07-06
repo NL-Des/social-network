@@ -196,7 +196,7 @@ export default function Messages({ conversation, initialMessages, groups = [], i
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
           }}
-          placeholder="Taper vôtre texte"
+          placeholder="Tapez votre texte"
           rows={4}
           className="w-full bg-white/5 border border-brand-border/40 rounded-xl px-4 py-3 text-brand-text text-base placeholder:text-brand-text/40 focus:outline-none focus:border-brand-border focus:shadow-[0_0_8px_rgba(73,199,255,0.25)] transition-all resize-none"
         />

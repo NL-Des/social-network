@@ -62,6 +62,20 @@ func (r *GroupRepo) CreateGroup(title, description string, creatorID int64, memb
 	return groupID, nil
 }
 
+func (r *GroupRepo) SetChatGroupID(groupID, chatGroupID int64) error {
+	_, err := r.db.Exec(`UPDATE social_groups SET chat_group_id = $1 WHERE id = $2`, chatGroupID, groupID)
+	return err
+}
+
+func (r *GroupRepo) GetChatGroupID(groupID int64) (int64, error) {
+	var chatGroupID sql.NullInt64
+	err := r.db.QueryRow(`SELECT chat_group_id FROM social_groups WHERE id = $1`, groupID).Scan(&chatGroupID)
+	if err != nil {
+		return 0, err
+	}
+	return chatGroupID.Int64, nil
+}
+
 func (r *GroupRepo) GetGroupTitle(groupID int64) (string, error) {
 	var title string
 	err := r.db.QueryRow(`SELECT title FROM social_groups WHERE id = $1`, groupID).Scan(&title)

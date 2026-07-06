@@ -71,7 +71,7 @@ func main() {
 		Profil:    handlers.NewProfilHandler(profilService),
 		Follow:    handlers.NewFollowHandler(followService, userService, notifService),
 		Message:   handlers.NewMessageHandler(messageService),
-		Group:     handlers.NewGroupHandler(groupService, userService, notifService, hub),
+		Group:     handlers.NewGroupHandler(groupService, chatGroupService, userService, notifService, hub),
 		ChatGroup: handlers.NewChatGroupHandler(chatGroupService, userService, notifService, hub),
 		Post:      handlers.NewPostAndCommentsHandler(userService, sessionService, postService, notifService, hub),
 		Notif:     handlers.NewNotificationHandler(notifService),
