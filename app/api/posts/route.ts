@@ -1,31 +1,7 @@
-import { cookies } from 'next/headers'
-import { NextResponse, NextRequest } from 'next/server'
-
-const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:5090'
+import { NextRequest } from 'next/server'
+import { backendProxy } from '@/lib/backendProxy'
 
 export async function GET(request: NextRequest) {
-  const cookieStore = await cookies()
-  const sessionToken = cookieStore.get('session_token')
-
-  if (!sessionToken) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-  }
-
   const id = request.nextUrl.searchParams.get('id')
-  const url = id ? `${BACKEND}/posts?id=${id}` : `${BACKEND}/posts`
-
-  try {
-    const response = await fetch(url, {
-      headers: { Cookie: `session_token=${sessionToken.value}` },
-    })
-
-    if (!response.ok) {
-      return NextResponse.json({ error: 'Failed to fetch posts' }, { status: response.status })
-    }
-
-    const data = await response.json()
-    return NextResponse.json(data)
-  } catch {
-    return NextResponse.json({ error: 'Service unavailable' }, { status: 503 })
-  }
+  return backendProxy(id ? `/posts?id=${id}` : '/posts')
 }
