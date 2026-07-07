@@ -123,7 +123,7 @@ export default function Page() {
 
   const headerUser: CurrentUser = {
     id: String(data.user.id ?? ''),
-    name: `${data.user.firstName} ${data.user.lastName?.[0] ?? ''}.`,
+    name: `${data.user.firstName} ${data.user.lastName ?? ''}`.trim(),
     username: data.user.username,
     followers: data.user.followersCount,
     initials: data.user.initials,

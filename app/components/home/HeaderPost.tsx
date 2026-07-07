@@ -53,10 +53,10 @@ export default function HeaderPost({ user }: HeaderPostProps) {
             {user.initials}
           </div>
           <div className="hidden sm:block min-w-0">
-            <p className="text-white font-semibold text-lg truncate">{user.name}</p>
             <p className="text-brand-text text-base truncate">
               @{user.username} {user.followers} abonnés
             </p>
+            <p className="text-white font-semibold text-lg truncate">@{user.name}</p>
           </div>
         </Link>
 

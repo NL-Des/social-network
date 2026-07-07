@@ -44,6 +44,13 @@ export default function Followers({ following }: FollowersProps) {
     setList(following)
   }, [following])
 
+  async function handleUnfollow(id: string) {
+    const res = await fetch(`/api/users/${id}/follow`, { method: 'DELETE' })
+    if (res.ok) {
+      setList((prev) => prev.filter((x) => x.id !== id))
+    }
+  }
+
   return (
     <div className="bg-brand-card border border-brand-border rounded-2xl p-5 h-full overflow-hidden flex flex-col">
       <h2 className="font-bold text-[#49C7FF] text-base mb-4 text-center shrink-0">
@@ -54,7 +61,7 @@ export default function Followers({ following }: FollowersProps) {
           <ContactRow
             key={c.id}
             contact={c}
-            onRemove={() => setList((prev) => prev.filter((x) => x.id !== c.id))}
+            onRemove={() => handleUnfollow(c.id)}
           />
         ))}
       </div>

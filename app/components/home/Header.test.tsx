@@ -23,7 +23,7 @@ const user: CurrentUser = {
 describe('Header', () => {
   it("affiche le nom de l'utilisateur", () => {
     render(<Header user={user} />)
-    expect(screen.getByText('John Doe')).toBeInTheDocument()
+    expect(screen.getByText(/John Doe/)).toBeInTheDocument()
   })
 
   it("affiche le username avec @", () => {

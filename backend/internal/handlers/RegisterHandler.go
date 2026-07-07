@@ -57,7 +57,8 @@ func (rh *RegisterHandler) RegisterHandler(w http.ResponseWriter, r *http.Reques
 	if file != nil {
 		// r.FormFile() ouvre un flux de lecture vers le fichier uploadé temporaire. Si pas fermé le flux reste ouvert jusqu'a la fin du programme
 		defer file.Close()
-
+	}
+	if file != nil && header.Filename != "" && header.Filename != "undefined" {
 		// Lire le contenu du fichier
 		fileBytes, err := io.ReadAll(file)
 		if err != nil {

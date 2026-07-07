@@ -16,6 +16,7 @@ export type NotifKind =
   | 'notif_banned_from_group'
   | 'post_like'
   | 'unfollow'
+  | 'notif_removed_follower'
   | 'notif_new_message'
   | 'notif_group_member_joined'
   | 'notif_group_event_created'
@@ -66,6 +67,8 @@ function formatNotif(n: BackendNotification): { symbol: string; color: string; m
       return { symbol: '👍', color: 'bg-blue-500', message: `${actor} a aimé votre publication.` }
     case 'unfollow':
       return { symbol: '−', color: 'bg-orange-500', message: `${actor} s'est désabonné(e) de votre profil.` }
+    case 'notif_removed_follower':
+      return { symbol: '−', color: 'bg-orange-500', message: `Vous avez été retiré(e) de la liste des abonnés de ${actor}.` }
     case 'notif_new_message':
       return { symbol: '✉', color: 'bg-cyan-600', message: `${actor} vous a envoyé un message.` }
     case 'notif_group_member_joined':

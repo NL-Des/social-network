@@ -15,6 +15,13 @@ export default function Subscribers({ followers }: SubscribersProps) {
     setList(followers)
   }, [followers])
 
+  async function handleRemoveFollower(id: string) {
+    const res = await fetch(`/api/me/followers/${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setList((prev) => prev.filter((x) => x.id !== id))
+    }
+  }
+
   return (
     <div className="bg-brand-card border border-brand-border rounded-2xl p-5 h-full overflow-hidden flex flex-col">
       <h2 className="font-bold text-[#49C7FF] text-base mb-4 text-center shrink-0">
@@ -25,7 +32,7 @@ export default function Subscribers({ followers }: SubscribersProps) {
           <ContactRow
             key={c.id}
             contact={c}
-            onRemove={() => setList((prev) => prev.filter((x) => x.id !== c.id))}
+            onRemove={() => handleRemoveFollower(c.id)}
           />
         ))}
       </div>

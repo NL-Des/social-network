@@ -104,6 +104,42 @@ func (h *FollowHandler) Unfollow(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// DELETE /me/followers/{id}
+func (h *FollowHandler) RemoveFollower(w http.ResponseWriter, r *http.Request) {
+	viewerID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	followerID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "invalid user id", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.FollowService.Unfollow(followerID, viewerID); err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	go func() {
+		owner, err := h.UserService.GetProfile(viewerID)
+		if err != nil {
+			return
+		}
+		if err := h.NotifService.Notify(int64(followerID), model.NotifRemovedFollower, model.NotificationPayload{
+			ActorID:   int64(viewerID),
+			ActorName: owner.Username,
+		}); err != nil {
+			log.Printf("remove follower notif: %v", err)
+		}
+	}()
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // GET /users/{id}/follow/status
 func (h *FollowHandler) GetFollowStatus(w http.ResponseWriter, r *http.Request) {
 	viewerID, ok := r.Context().Value("userID").(int)

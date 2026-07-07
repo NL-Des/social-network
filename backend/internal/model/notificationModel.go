@@ -13,6 +13,7 @@ const (
 	NotifBannedFromGroup      NotifKind = "notif_banned_from_group"
 	NotifPostLike             NotifKind = "post_like"
 	NotifUnfollow             NotifKind = "unfollow"
+	NotifRemovedFollower      NotifKind = "notif_removed_follower"
 	NotifNewMessage           NotifKind = "notif_new_message"
 	NotifGroupMemberJoined    NotifKind = "notif_group_member_joined"
 	NotifGroupEventCreated    NotifKind = "notif_group_event_created"

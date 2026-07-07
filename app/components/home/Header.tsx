@@ -1,103 +1,120 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import NotificationList from './notification'
-import { useWebSocket } from '@/lib/useWebSocket'
-import { logoutAction } from '@/app/auth/logout/actions'
+import Link from 'next/link';
+import {usePathname} from 'next/navigation';
+import {useCallback, useEffect, useRef, useState} from 'react';
+import NotificationList from './notification';
+import {useWebSocket} from '@/lib/useWebSocket';
+import {logoutAction} from '@/app/auth/logout/actions';
 
 export interface CurrentUser {
-  id: string
-  name: string
-  username: string
-  followers: number
-  initials: string
-  avatar?: string
+  id: string;
+  name: string;
+  username: string;
+  followers: number;
+  initials: string;
+  avatar?: string;
 }
 
 const NAV_LINKS = [
-  { label: 'Accueil',  href: '/'         },
-  { label: 'Groupes',  href: '/groupes'  },
-  { label: 'Messages', href: '/messages' },
-]
+  {label: 'Accueil', href: '/'},
+  {label: 'Groupes', href: '/groupes'},
+  {label: 'Messages', href: '/messages'}
+];
 
-export default function Header({ user }: { user: CurrentUser }) {
-  const pathname = usePathname()
-  const [notifOpen, setNotifOpen]   = useState(false)
-  const [wsUrl, setWsUrl]           = useState<string | null>(null)
-  const [badge, setBadge]           = useState(0)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const notifRef = useRef<HTMLDivElement>(null)
-  const mobileMenuRef = useRef<HTMLDivElement>(null)
+export default function Header({user}: {user: CurrentUser}) {
+  const pathname = usePathname();
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [wsUrl, setWsUrl] = useState<string | null>(null);
+  const [badge, setBadge] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   // Récupère le token WS une seule fois
   useEffect(() => {
     fetch('/api/ws-token')
-      .then((res) => res.ok ? res.json() : null)
-      .then((data) => { if (data?.token) setWsUrl(`ws://localhost:5090/ws?token=${data.token}`) })
-      .catch(() => {})
-  }, [])
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.token) setWsUrl(`ws://localhost:5090/ws?token=${data.token}`);
+      })
+      .catch(() => {});
+  }, []);
 
   // Compte initial des notifs non lues
   useEffect(() => {
     fetch('/api/notifications')
-      .then((res) => res.ok ? res.json() : [])
-      .then((data: { read: boolean }[]) => {
-        setBadge(Array.isArray(data) ? data.filter((n) => !n.read).length : 0)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: {read: boolean}[]) => {
+        setBadge(Array.isArray(data) ? data.filter((n) => !n.read).length : 0);
       })
-      .catch(() => {})
-  }, [])
+      .catch(() => {});
+  }, []);
 
   // WS persistant : incrémente le badge quand une notif arrive (panel fermé ou ouvert)
   const handleWsMessage = useCallback((data: unknown) => {
-    const msg = data as { type?: string }
+    const msg = data as {type?: string};
     if (msg.type === 'notification') {
-      setBadge((prev) => prev + 1)
+      setBadge((prev) => prev + 1);
     }
-  }, [])
-  useWebSocket(wsUrl, handleWsMessage)
+  }, []);
+  useWebSocket(wsUrl, handleWsMessage);
 
   // Ferme le panneau si on clique en dehors
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
-        setNotifOpen(false)
+        setNotifOpen(false);
       }
     }
-    if (notifOpen) document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [notifOpen])
+    if (notifOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [notifOpen]);
 
   // Reset badge quand le panel s'ouvre (l'utilisateur lit ses notifs)
   useEffect(() => {
-    if (notifOpen) setBadge(0)
-  }, [notifOpen])
+    if (notifOpen) setBadge(0);
+  }, [notifOpen]);
 
   // Ferme le menu burger si on clique en dehors
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
-        setMobileMenuOpen(false)
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(e.target as Node)
+      ) {
+        setMobileMenuOpen(false);
       }
     }
-    if (mobileMenuOpen) document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [mobileMenuOpen])
+    if (mobileMenuOpen)
+      document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [mobileMenuOpen]);
 
   return (
     <header className="fixed top-4 left-4 right-4 z-50 bg-brand-card border border-brand-border shadow-neon rounded-2xl px-4 md:px-8 h-[88px] flex items-center">
       <div className="w-full flex items-center justify-between gap-3 min-w-0">
-        <Link href="/profile" className="group flex items-center gap-2 md:gap-4 transition-opacity shrink-0">
+        <Link
+          href="/profile"
+          className="group flex items-center gap-2 md:gap-4 transition-opacity shrink-0"
+        >
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-brand-border bg-gray-600 flex items-center justify-center text-white font-bold text-lg shrink-0 transition-shadow group-hover:shadow-neon overflow-hidden">
-            {user.avatar
-              ? <img src={user.avatar} alt={user.initials} className="w-full h-full object-cover" />
-              : user.initials}
+            {user.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.initials}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              user.initials
+            )}
           </div>
           <div className="hidden sm:block min-w-0">
-            <p className="text-white font-semibold text-lg truncate">{user.name}</p>
-            <p className="text-brand-text text-base truncate">
-              @{user.username} {user.followers} abonnés
+            <p className="text-brand-text font-semibold text-lgtruncate">
+              {user.username}
+            </p>
+            <p className="text-white  text-base  ">
+              @{user.name} {user.followers} abonnés
             </p>
           </div>
         </Link>
@@ -109,7 +126,10 @@ export default function Header({ user }: { user: CurrentUser }) {
                 key={link.href}
                 href={link.href}
                 className={`text-white hover:text-brand-text transition-colors text-lg px-5 py-2 rounded-lg whitespace-nowrap ${
-                  !notifOpen && (pathname === link.href || (link.href === '/groupes' && pathname.startsWith('/inside-groups')))
+                  !notifOpen &&
+                  (pathname === link.href ||
+                    (link.href === '/groupes' &&
+                      pathname.startsWith('/inside-groups')))
                     ? 'border border-brand-border shadow-[0_0_12px_rgba(73,199,255,0.6)]'
                     : ''
                 }`}
@@ -124,7 +144,9 @@ export default function Header({ user }: { user: CurrentUser }) {
             <button
               onClick={() => setNotifOpen((o) => !o)}
               className={`relative text-white hover:text-brand-text transition-colors text-sm md:text-lg px-2.5 md:px-5 py-2 rounded-lg whitespace-nowrap ${
-                notifOpen ? 'border border-brand-border shadow-[0_0_12px_rgba(73,199,255,0.6)]' : ''
+                notifOpen
+                  ? 'border border-brand-border shadow-[0_0_12px_rgba(73,199,255,0.6)]'
+                  : ''
               }`}
             >
               Notifications
@@ -153,7 +175,9 @@ export default function Header({ user }: { user: CurrentUser }) {
               onClick={() => setMobileMenuOpen((o) => !o)}
               aria-label="Menu"
               className={`text-white text-xl px-3 py-2 rounded-lg ${
-                mobileMenuOpen ? 'border border-brand-border shadow-[0_0_12px_rgba(73,199,255,0.6)]' : ''
+                mobileMenuOpen
+                  ? 'border border-brand-border shadow-[0_0_12px_rgba(73,199,255,0.6)]'
+                  : ''
               }`}
             >
               {mobileMenuOpen ? '✕' : '☰'}
@@ -167,7 +191,9 @@ export default function Header({ user }: { user: CurrentUser }) {
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
                     className={`text-white hover:text-brand-text transition-colors text-base px-3 py-2 rounded-lg ${
-                      pathname === link.href || (link.href === '/groupes' && pathname.startsWith('/inside-groups'))
+                      pathname === link.href ||
+                      (link.href === '/groupes' &&
+                        pathname.startsWith('/inside-groups'))
                         ? 'border border-brand-border shadow-[0_0_12px_rgba(73,199,255,0.6)]'
                         : ''
                     }`}
@@ -176,7 +202,10 @@ export default function Header({ user }: { user: CurrentUser }) {
                   </Link>
                 ))}
                 <button
-                  onClick={() => { setMobileMenuOpen(false); logoutAction() }}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    logoutAction();
+                  }}
                   className="text-red-400 hover:text-red-300 transition-colors text-base px-3 py-2 rounded-lg text-left"
                 >
                   Déconnexion
@@ -187,5 +216,5 @@ export default function Header({ user }: { user: CurrentUser }) {
         </div>
       </div>
     </header>
-  )
+  );
 }

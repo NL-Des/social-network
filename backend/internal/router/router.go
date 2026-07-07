@@ -18,23 +18,23 @@ import (
 )
 
 type Deps struct {
-	Auth         *middleware.AuthMiddleware
-	Session      *service.SessionService
-	Hub          *ws.Hub
-	Login        *handlers.LoginHandler
-	Register     *handlers.RegisterHandler
-	Logout       *handlers.LogoutHandler
-	Users        *handlers.UsersHandler
-	Profil       *handlers.ProfilHandler
-	Follow       *handlers.FollowHandler
-	Message      *handlers.MessageHandler
-	Group        *handlers.GroupHandler
-	ChatGroup    *handlers.ChatGroupHandler
-	Post         *handlers.PostAndCommentsHandler
-	Notif        *handlers.NotificationHandler
-	Event        *handlers.EventHandler
-	PmHandler    *privateMessage.PrivateMessageHandler
-	GcHandler    *groupChat.GroupChatHandler
+	Auth      *middleware.AuthMiddleware
+	Session   *service.SessionService
+	Hub       *ws.Hub
+	Login     *handlers.LoginHandler
+	Register  *handlers.RegisterHandler
+	Logout    *handlers.LogoutHandler
+	Users     *handlers.UsersHandler
+	Profil    *handlers.ProfilHandler
+	Follow    *handlers.FollowHandler
+	Message   *handlers.MessageHandler
+	Group     *handlers.GroupHandler
+	ChatGroup *handlers.ChatGroupHandler
+	Post      *handlers.PostAndCommentsHandler
+	Notif     *handlers.NotificationHandler
+	Event     *handlers.EventHandler
+	PmHandler *privateMessage.PrivateMessageHandler
+	GcHandler *groupChat.GroupChatHandler
 }
 
 func NewRouter(d Deps) http.Handler {
@@ -64,6 +64,7 @@ func NewRouter(d Deps) http.Handler {
 	r.Handle("/users/{id}/follow/accept", d.Auth.RequireAuth(http.HandlerFunc(d.Follow.AcceptFollowRequest))).Methods("PATCH")
 	r.Handle("/users/{id}/follow/reject", d.Auth.RequireAuth(http.HandlerFunc(d.Follow.RejectFollowRequest))).Methods("DELETE")
 	r.Handle("/me/follow/requests", d.Auth.RequireAuth(http.HandlerFunc(d.Follow.GetPendingRequests))).Methods("GET")
+	r.Handle("/me/followers/{id}", d.Auth.RequireAuth(http.HandlerFunc(d.Follow.RemoveFollower))).Methods("DELETE")
 
 	// ── Messages privés ──────────────────────────────────────────────────────
 	r.Handle("/conversations", d.Auth.RequireAuth(d.Message.HandleConversations)).Methods("GET")

@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -403,10 +402,7 @@ export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe
         <div className="flex flex-col gap-3">
           {users.map((user) => (
             <div key={user.id} className="flex items-center gap-3 rounded-xl px-2 py-1 -mx-2">
-              <Link
-                href={`/users/${user.id}`}
-                className="flex items-center gap-3 flex-1 hover:bg-white/5 rounded-xl transition-colors"
-              >
+              <div className="flex items-center gap-3 flex-1">
                 <div className="relative shrink-0 flex items-center">
                   {user.online && (
                     <span className="absolute -left-3 w-2 h-2 bg-green-500 rounded-full" />
@@ -416,7 +412,7 @@ export default function LeftSidebarGroupListOfUsers({ users, groupName = 'Groupe
                   </div>
                 </div>
                 <p className="text-white text-lg">{user.name}</p>
-              </Link>
+              </div>
             </div>
           ))}
         </div>
