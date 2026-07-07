@@ -158,6 +158,11 @@ func (r *ProfilRepository) UpdateProfile(userID int, firstName, lastName, pseudo
 	return err
 }
 
+func (r *ProfilRepository) UpdateAvatar(userID int, avatarPath string) error {
+	_, err := r.db.Exec(`UPDATE users SET avatar = $1 WHERE id = $2`, avatarPath, userID)
+	return err
+}
+
 func (r *ProfilRepository) GetFollowStatus(followerID, followingID int) (string, error) {
 	var status string
 	err := r.db.QueryRow(`

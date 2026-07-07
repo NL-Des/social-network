@@ -142,3 +142,36 @@ func (h *ProfilHandler) UpdateMyProfile(w http.ResponseWriter, r *http.Request) 
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// PUT /me/profile/avatar
+func (h *ProfilHandler) UpdateAvatar(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	const maxMemory = 2 << 20
+	if err := r.ParseMultipartForm(maxMemory); err != nil {
+		http.Error(w, "Impossible d'analyser le formulaire", http.StatusBadRequest)
+		return
+	}
+
+	avatarPath, err := saveUploadedImage(r, "avatar", "profil", userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if avatarPath == "" {
+		http.Error(w, "aucune image fournie", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.ProfilService.UpdateAvatar(userID, avatarPath); err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"avatar": avatarPath})
+}

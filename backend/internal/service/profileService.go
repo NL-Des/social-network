@@ -115,3 +115,7 @@ func (s *ProfilService) GetUserPosts(userID int) ([]model.AllPosts, error) {
 func (s *ProfilService) UpdateProfile(userID int, firstName, lastName, pseudo, aboutMe string) error {
 	return s.ProfilRepo.UpdateProfile(userID, firstName, lastName, pseudo, aboutMe)
 }
+
+func (s *ProfilService) UpdateAvatar(userID int, avatarPath string) error {
+	return s.ProfilRepo.UpdateAvatar(userID, avatarPath)
+}

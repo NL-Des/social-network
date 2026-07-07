@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Header, { CurrentUser } from '@/app/components/home/Header'
 import RightSidebar from '@/app/components/home/RightSidebar'
 import PersonnalInformations from '@/app/components/home/PersonnalInformations'
@@ -11,9 +11,45 @@ import PostCard, { Post } from '@/app/components/home/PostCard'
 import profileAction from './actions'
 import type { ProfilePageProps } from './actions'
 
-function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUser: CurrentUser }) {
+function ProfileContent({
+  data,
+  headerUser,
+  onAvatarChange,
+}: {
+  data: ProfilePageProps
+  headerUser: CurrentUser
+  onAvatarChange: (url: string) => void
+}) {
   const [visibility, setVisibility] = useState<'private' | 'public'>(data.visibility ?? 'public')
   const [posts, setPosts] = useState<Post[]>([])
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    setAvatarUploading(true)
+    setAvatarError(null)
+    try {
+      const formData = new FormData()
+      formData.set('avatar', file)
+      const res = await fetch('/api/me/profile/avatar', { method: 'PUT', body: formData })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        setAvatarError(body.error ?? "Erreur lors de l'envoi de l'image.")
+        return
+      }
+      const { avatar } = await res.json()
+      onAvatarChange(avatar)
+    } catch {
+      setAvatarError('Erreur réseau.')
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
 
   useEffect(() => {
     if (!data.user.id) return
@@ -59,13 +95,30 @@ function ProfileContent({ data, headerUser }: { data: ProfilePageProps; headerUs
 
           <div className="flex flex-col gap-5 md:h-full md:overflow-hidden">
             <div className="shrink-0 grid grid-cols-1 sm:grid-cols-[auto_1fr] md:grid-cols-[auto_2fr_1fr] gap-5 items-stretch">
-              <div className="flex items-center justify-center px-2">
-                <div className="w-44 h-44 rounded-full bg-gray-600 flex items-center justify-center shadow-neon ring-4 ring-brand-border/30 overflow-hidden">
+              <div className="flex flex-col items-center gap-2 px-2">
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={avatarUploading}
+                  className="group relative w-44 h-44 rounded-full bg-gray-600 flex items-center justify-center shadow-neon ring-4 ring-brand-border/30 overflow-hidden cursor-pointer disabled:cursor-wait"
+                  aria-label="Changer la photo de profil"
+                >
                   {data.user.avatar
                     ? <img src={data.user.avatar} alt={data.user.initials} className="w-full h-full object-cover" />
                     : <span className="text-5xl font-extrabold text-white tracking-tight">{data.user.initials}</span>
                   }
-                </div>
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity text-2xl">
+                    {avatarUploading ? '…' : '📷'}
+                  </span>
+                </button>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+                {avatarError && <p className="text-red-400 text-xs text-center">{avatarError}</p>}
               </div>
 
               <PersonnalInformations user={data.user} />
@@ -130,5 +183,13 @@ export default function Page() {
     avatar: data.user.avatar || undefined,
   }
 
-  return <ProfileContent data={data} headerUser={headerUser} />
+  return (
+    <ProfileContent
+      data={data}
+      headerUser={headerUser}
+      onAvatarChange={(url) =>
+        setData((prev) => prev ? { ...prev, user: { ...prev.user, avatar: url } } : prev)
+      }
+    />
+  )
 }

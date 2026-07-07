@@ -55,6 +55,7 @@ func NewRouter(d Deps) http.Handler {
 	r.Handle("/users/{id}/posts", d.Auth.RequireAuth(http.HandlerFunc(d.Profil.GetUserPosts))).Methods("GET")
 	r.Handle("/me/profile", d.Auth.RequireAuth(http.HandlerFunc(d.Profil.GetMyProfile))).Methods("GET")
 	r.Handle("/me/profile", d.Auth.RequireAuth(http.HandlerFunc(d.Profil.UpdateMyProfile))).Methods("PUT")
+	r.Handle("/me/profile/avatar", d.Auth.RequireAuth(http.HandlerFunc(d.Profil.UpdateAvatar))).Methods("PUT")
 	r.Handle("/me/profile/visibility", d.Auth.RequireAuth(http.HandlerFunc(d.Profil.UpdateVisibility))).Methods("PATCH")
 
 	// ── Follow ───────────────────────────────────────────────────────────────
