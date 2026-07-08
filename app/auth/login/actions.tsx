@@ -11,7 +11,7 @@ export default async function loginAction(_prevState: LoginState, formData: Form
 
   let response: Response
   try {
-    response = await fetch('http://localhost:5090/auth/login', {
+    response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),

@@ -5,7 +5,6 @@ node_modules/
 dist/
 CLAUDE.md
 claude.md
-public/images/profil
+public/images/
 .claude/worktrees/
 tsconfig.tsbuildinfo
-

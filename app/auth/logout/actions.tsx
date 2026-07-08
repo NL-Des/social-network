@@ -8,7 +8,7 @@ export async function logoutAction() {
   const sessionToken = cookieStore.get('session_token')
 
   if (sessionToken) {
-    await fetch('http://localhost:5090/auth/logout', {
+    await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/auth/logout`, {
       method: 'POST',
       headers: { Cookie: `session_token=${sessionToken.value}` },
     })

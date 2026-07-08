@@ -10,7 +10,7 @@ export default async function registerAction(
   prevState: any,
   formData: FormData
 ) {
-  const reponse = await fetch('http://localhost:5090/auth/register', {
+  const reponse = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/auth/register`, {
     method: 'POST',
     body: formData
   });
