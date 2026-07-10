@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useWebSocket, WsStatus } from '@/lib/useWebSocket'
+import EmojiPicker from './EmojiPicker'
 
 export interface Message {
   id: string
@@ -190,6 +191,7 @@ export default function Messages({ conversation, initialMessages, groups = [], i
         {sendError && (
           <p className="text-red-400 text-sm text-center">{sendError}</p>
         )}
+        <EmojiPicker onSelect={(emoji) => setDraft((prev) => prev + emoji)} />
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

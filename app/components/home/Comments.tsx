@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { addComment } from '@/app/Post/actions'
 import ImagePicker from './ImagePicker'
+import EmojiPicker from './EmojiPicker'
 import { resolveImageUrl } from '@/lib/utils'
 
 export interface Post {
@@ -115,7 +116,10 @@ export default function Comments({ post, comments, currentUser }: CommentsProps)
           {error && (
             <p className="text-red-400 text-sm text-center">{error}</p>
           )}
-          <ImagePicker onChange={setImage} />
+          <div className="flex gap-2">
+            <ImagePicker onChange={setImage} />
+            <EmojiPicker onSelect={(emoji) => setDraft((prev) => prev + emoji)} />
+          </div>
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}

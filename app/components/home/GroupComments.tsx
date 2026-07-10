@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import ImagePicker from './ImagePicker'
+import EmojiPicker from './EmojiPicker'
 import { resolveImageUrl } from '@/lib/utils'
 
 interface GroupComment {
@@ -156,7 +157,10 @@ export default function GroupComments({ groupId, postId, currentUser }: GroupCom
       {/* Zone de saisie */}
       <div className="px-6 py-4 border-t border-brand-border flex flex-col gap-3 shrink-0">
         {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-        <ImagePicker onChange={setImage} />
+        <div className="flex gap-2">
+          <ImagePicker onChange={setImage} />
+          <EmojiPicker onSelect={(emoji) => setDraft((prev) => prev + emoji)} />
+        </div>
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

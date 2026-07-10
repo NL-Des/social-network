@@ -21,6 +21,7 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { createPost } from '@/app/Post/actions'
 import ImagePicker from './ImagePicker'
+import EmojiPicker from './EmojiPicker'
 
 interface CreatePostButtonProps {
   onSuccess?: () => void
@@ -143,6 +144,7 @@ export function CreatePostButton({ onSuccess, groupId }: CreatePostButtonProps) 
               rows={6}
               className="bg-white/5 border border-brand-border/40 rounded-xl px-4 py-2 text-brand-text text-sm placeholder:text-brand-text/40 focus:outline-none focus:border-brand-border transition-all resize-none"
             />
+            <EmojiPicker onSelect={(emoji) => setText((prev) => prev + emoji)} />
           </div>
 
           <div className="flex flex-col gap-1">
