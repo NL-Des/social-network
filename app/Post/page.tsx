@@ -119,7 +119,7 @@ function PostContent() {
               <Comments
                 post={post}
                 comments={comments}
-                currentUser={{ name: user.name, initials: user.initials }}
+                currentUser={{ name: user.username, initials: user.initials }}
               />
             ) : (
               <div className="flex items-center justify-center h-full">

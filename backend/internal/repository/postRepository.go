@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"html/template"
 	"social-network/backend/internal/model"
 	"strings"
 	"time"
@@ -23,7 +22,7 @@ func NewPostRepo(db *sql.DB) *PostRepo {
 * Paramètres : ID du posteur, titre (optionnel) et contenu du post, niveau de confidentialité
 */
 func (r *PostRepo) CreateNewPost(authorID string, postData model.Post) (int, error) {
-	postData.Title = template.HTMLEscapeString(strings.TrimSpace(postData.Title))
+	postData.Title = strings.TrimSpace(postData.Title)
 	var postID int
 
 	query := `
@@ -57,7 +56,7 @@ func (r *PostRepo) CreateNewPost(authorID string, postData model.Post) (int, err
 * Paramètres : ID du poste, titre et contenu, niveau de confidentialité
 */
 func (r *PostRepo) UpdateExistingPost(postData model.Post) error {
-	postData.Title = template.HTMLEscapeString(strings.TrimSpace(postData.Title))
+	postData.Title = strings.TrimSpace(postData.Title)
 	updateTime := time.Now()
 
 	_, err := r.db.Exec(
