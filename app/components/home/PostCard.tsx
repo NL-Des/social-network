@@ -1,5 +1,7 @@
 'use client'
 
+import { resolveImageUrl } from '@/lib/utils'
+
 export interface Post {
   id: string
   author: {
@@ -301,7 +303,7 @@ const postCardBody = (post: Post) => (
     <p className="text-brand-text text-lg leading-7 whitespace-pre-line">{post.content}</p>
     {post.image && (
       <img
-        src={post.image}
+        src={resolveImageUrl(post.image)}
         alt=""
         className="mt-3 max-h-60 max-w-60 object-cover rounded-xl border border-brand-border/40"
       />

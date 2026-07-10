@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import ImagePicker from './ImagePicker'
+import { resolveImageUrl } from '@/lib/utils'
 
 interface GroupComment {
   id: number
@@ -142,7 +143,7 @@ export default function GroupComments({ groupId, postId, currentUser }: GroupCom
               <p className="text-brand-text text-base leading-relaxed">{c.text}</p>
               {c.image && (
                 <img
-                  src={c.image}
+                  src={resolveImageUrl(c.image)}
                   alt=""
                   className="mt-1 max-h-60 w-full object-cover rounded-lg border border-brand-border/40"
                 />

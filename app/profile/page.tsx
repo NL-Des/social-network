@@ -10,6 +10,7 @@ import Subscribers from '@/app/components/home/Subscribers'
 import PostCard, { Post } from '@/app/components/home/PostCard'
 import profileAction from './actions'
 import type { ProfilePageProps } from './actions'
+import { resolveImageUrl } from '@/lib/utils'
 
 function ProfileContent({
   data,
@@ -104,7 +105,7 @@ function ProfileContent({
                   aria-label="Changer la photo de profil"
                 >
                   {data.user.avatar
-                    ? <img src={data.user.avatar} alt={data.user.initials} className="w-full h-full object-cover" />
+                    ? <img src={resolveImageUrl(data.user.avatar)} alt={data.user.initials} className="w-full h-full object-cover" />
                     : <span className="text-5xl font-extrabold text-white tracking-tight">{data.user.initials}</span>
                   }
                   <span className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity text-2xl">

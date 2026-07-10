@@ -11,6 +11,7 @@ import PostCard, { Post, CreatePostButton } from '@/app/components/home/PostCard
 import GroupComments from '@/app/components/home/GroupComments'
 import GroupMessages, { GroupMessage } from '@/app/components/home/GroupMessages'
 import { useWebSocket } from '@/lib/useWebSocket'
+import { resolveImageUrl } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -307,7 +308,7 @@ function InsideGroupContent() {
 
                   {selectedPost.image && (
                     <img
-                      src={selectedPost.image}
+                      src={resolveImageUrl(selectedPost.image)}
                       alt=""
                       className="max-h-60 max-w-60 object-cover rounded-xl border border-brand-border/40"
                     />

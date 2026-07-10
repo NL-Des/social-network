@@ -7,6 +7,7 @@ import { fetchMe } from "@/lib/fetchMe";
 import RightSidebar from "@/app/components/home/RightSidebar";
 import PostCard, { Post } from "@/app/components/home/PostCard";
 import type { ProfilePageProps, Contact } from "@/app/profile/actions";
+import { resolveImageUrl } from "@/lib/utils";
 
 function getInitials(firstName: string, lastName: string): string {
   return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
@@ -99,7 +100,7 @@ function PrivateProfileView({
                 <div className="w-44 h-44 rounded-full bg-gray-600 flex items-center justify-center shadow-neon ring-4 ring-brand-border/30 overflow-hidden">
                   {data.user.avatar ? (
                     <img
-                      src={data.user.avatar}
+                      src={resolveImageUrl(data.user.avatar)}
                       alt={data.user.username}
                       className="w-full h-full object-cover"
                     />
@@ -238,7 +239,7 @@ function PublicProfileContent({
                 <div className="w-44 h-44 rounded-full bg-gray-600 flex items-center justify-center shadow-neon ring-4 ring-brand-border/30 overflow-hidden">
                   {data.user.avatar ? (
                     <img
-                      src={data.user.avatar}
+                      src={resolveImageUrl(data.user.avatar)}
                       alt={data.user.username}
                       className="w-full h-full object-cover"
                     />

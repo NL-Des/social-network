@@ -6,6 +6,7 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 import NotificationList from './notification';
 import {useWebSocket} from '@/lib/useWebSocket';
 import {logoutAction} from '@/app/auth/logout/actions';
+import {resolveImageUrl} from '@/lib/utils';
 
 export interface CurrentUser {
   id: string;
@@ -101,7 +102,7 @@ export default function Header({user}: {user: CurrentUser}) {
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-brand-border bg-gray-600 flex items-center justify-center text-white font-bold text-lg shrink-0 transition-shadow group-hover:shadow-neon overflow-hidden">
             {user.avatar ? (
               <img
-                src={user.avatar}
+                src={resolveImageUrl(user.avatar)}
                 alt={user.initials}
                 className="w-full h-full object-cover"
               />

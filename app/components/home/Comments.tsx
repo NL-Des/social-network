@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { addComment } from '@/app/Post/actions'
 import ImagePicker from './ImagePicker'
+import { resolveImageUrl } from '@/lib/utils'
 
 export interface Post {
   id: string
@@ -74,7 +75,7 @@ export default function Comments({ post, comments, currentUser }: CommentsProps)
         <p className="text-brand-text text-lg leading-7 whitespace-pre-line">{post.content}</p>
         {post.image && (
           <img
-            src={post.image}
+            src={resolveImageUrl(post.image)}
             alt=""
             className="mt-3 max-h-60 max-w-60 object-cover rounded-xl border border-brand-border/40"
           />
@@ -99,7 +100,7 @@ export default function Comments({ post, comments, currentUser }: CommentsProps)
                 <p className="text-brand-text text-base leading-relaxed">{c.text}</p>
                 {c.image && (
                   <img
-                    src={c.image}
+                    src={resolveImageUrl(c.image)}
                     alt=""
                     className="mt-1 max-h-60 w-full object-cover rounded-lg border border-brand-border/40"
                   />

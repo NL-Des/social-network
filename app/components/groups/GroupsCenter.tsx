@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useRef } from 'react'
+import { resolveImageUrl } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -221,7 +222,7 @@ function DemandesTab({ allGroups, userId, onStatusChange, onApproved }: Demandes
                       <div key={req.user_id} className="flex items-center gap-3 bg-white/3 border border-brand-border/15 rounded-xl px-3 py-2">
                         <div className={`w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden ${req.avatar?.startsWith('/') || req.avatar?.startsWith('http') ? '' : avatarClass(req.user_id)}`}>
                           {req.avatar?.startsWith('/') || req.avatar?.startsWith('http')
-                            ? <img src={req.avatar} alt={req.initials} className="w-full h-full object-cover" />
+                            ? <img src={resolveImageUrl(req.avatar)} alt={req.initials} className="w-full h-full object-cover" />
                             : req.initials || '?'}
                         </div>
                         <span className="text-white text-xs flex-1 truncate">{req.name}</span>

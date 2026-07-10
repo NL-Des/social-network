@@ -4,6 +4,7 @@ import (
 	"errors"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/repository"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -72,11 +73,22 @@ func (s *UserService) validateUserData(user model.RegisterUser) (model.RegisterU
 	}
 
 	validUser := user
+	validUser.Username = strings.TrimSpace(user.Username)
 
-	if user.Username == "" {
-		username := user.FirstName + "." + user.Name
-		validUser.Username = username
+	if validUser.Username == "" {
+		validUser.Username = strings.TrimSpace(user.FirstName + "." + user.Name)
 	}
+
+	// Doit rester cohérent avec la contrainte SQL users_pseudo_check
+	// (length(trim(pseudo)) >= 3 AND length(pseudo) <= 30).
+	runes := []rune(validUser.Username)
+	if len(runes) < 3 {
+		return model.RegisterUser{}, errors.New("le pseudo doit contenir au moins 3 caractères")
+	}
+	if len(runes) > 30 {
+		validUser.Username = string(runes[:30])
+	}
+
 	return validUser, nil
 }
 

@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
 import { useSidebarUsers } from '@/lib/useSidebarUsers'
 import { useGroups } from '@/lib/useGroups'
+import { resolveImageUrl } from '@/lib/utils'
 
 export interface Group {
   id: string
@@ -93,7 +94,7 @@ function RightSidebarInner({ groups: groupsProp }: RightSidebarProps) {
                 <span className={`absolute -left-3 w-2 h-2 rounded-full ${statusDotColor(user.id, onlineUsers, mergedUnread, activeConvId)}`} />
                 <div className="w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center text-white text-base font-bold overflow-hidden">
                   {user.avatar
-                    ? <img src={user.avatar} alt={user.initials} className="w-full h-full object-cover" />
+                    ? <img src={resolveImageUrl(user.avatar)} alt={user.initials} className="w-full h-full object-cover" />
                     : user.initials}
                 </div>
               </div>

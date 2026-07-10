@@ -114,6 +114,12 @@ func NewRouter(d Deps) http.Handler {
 	// ── Divers ───────────────────────────────────────────────────────────────
 	r.Handle("/test", d.Auth.RequireAuth(handlers.TestAuthHandler)).Methods("GET")
 
+	// ── Fichiers statiques (avatars, images de posts/commentaires) ──────────
+	// Servi par le backend (relit le disque à chaque requête) plutôt que par
+	// le dossier public/ de Next.js, qui fige la liste des fichiers au démarrage
+	// et ne voit donc jamais les images uploadées après coup.
+	r.PathPrefix("/images/").Handler(imagesHandler())
+
 	// ── WS message routing ───────────────────────────────────────────────────
 	d.Hub.OnMessage = func(c *ws.Client, raw []byte) {
 		var envelope struct {
@@ -141,6 +147,14 @@ func NewRouter(d Deps) http.Handler {
 
 	fmt.Println("Démarrage sur http://localhost:5090")
 	return r
+}
+
+func imagesHandler() http.Handler {
+	fileServer := http.FileServer(http.Dir("../public/images"))
+	return http.StripPrefix("/images/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		fileServer.ServeHTTP(w, r)
+	}))
 }
 
 func wsHandler(hub *ws.Hub, sessionSvc *service.SessionService) http.HandlerFunc {

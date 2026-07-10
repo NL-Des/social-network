@@ -6,8 +6,11 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/service"
+
+	"github.com/google/uuid"
 )
 
 type RegisterHandler struct {
@@ -69,15 +72,22 @@ func (rh *RegisterHandler) RegisterHandler(w http.ResponseWriter, r *http.Reques
 
 		// Sauvegarder sur disque
 		const UploadDir = "../public/images/profil/"
-		savePath := UploadDir + header.Filename
-		// os.WriteFile ecrit dans le dossier uploads qui est a la racine du dossier ou est lancer le run
+		if err := os.MkdirAll(UploadDir, 0755); err != nil {
+			http.Error(w, "Erreur sauvegarde fichier", http.StatusInternalServerError)
+			fmt.Println("Erreur de création du dossier d'upload:", err)
+			return
+		}
+		// Nom de fichier généré (uuid) pour éviter les collisions et les caractères
+		// invalides issus du nom original envoyé par le navigateur.
+		filename := uuid.NewString() + filepath.Ext(header.Filename)
+		savePath := UploadDir + filename
 		err = os.WriteFile(savePath, fileBytes, 0644)
 		if err != nil {
 			http.Error(w, "Erreur sauvegarde fichier", http.StatusInternalServerError)
-			fmt.Println("Erreur de sauvegarde de l'avatar")
+			fmt.Println("Erreur de sauvegarde de l'avatar:", err)
 			return
 		}
-		user.ProfilePicture = "/images/profil/" + header.Filename
+		user.ProfilePicture = "/images/profil/" + filename
 	}
 
 	user.Name = r.FormValue("name")

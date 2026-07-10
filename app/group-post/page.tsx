@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import HeaderGroup from '@/app/components/home/HeaderGroup'
 import { CurrentUser } from '@/app/components/home/Header'
 import { fetchMe } from '@/lib/fetchMe'
+import { resolveImageUrl } from '@/lib/utils'
 
 interface ApiGroupPost {
   id: number
@@ -129,7 +130,7 @@ function GroupPostContent() {
 
               {post.image && (
                 <img
-                  src={post.image}
+                  src={resolveImageUrl(post.image)}
                   alt=""
                   className="max-h-60 max-w-60 object-cover rounded-xl border border-brand-border/40"
                 />
