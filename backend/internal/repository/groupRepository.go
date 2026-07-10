@@ -567,6 +567,7 @@ func (r *GroupRepo) GetGroupMembers(groupID int) ([]GroupMember, error) {
 		SELECT u.id,
 		       u.firstname,
 		       u.lastname,
+		       COALESCE(u.pseudo, ''),
 		       CASE WHEN g.creatorid = u.id THEN true ELSE false END AS is_creator
 		FROM social_group_members gm
 		JOIN users u ON u.id = gm.userid
@@ -582,19 +583,24 @@ func (r *GroupRepo) GetGroupMembers(groupID int) ([]GroupMember, error) {
 	members := make([]GroupMember, 0)
 	for rows.Next() {
 		var m GroupMember
-		var firstname, lastname string
-		if err := rows.Scan(&m.ID, &firstname, &lastname, &m.IsCreator); err != nil {
+		var firstname, lastname, pseudo string
+		if err := rows.Scan(&m.ID, &firstname, &lastname, &pseudo, &m.IsCreator); err != nil {
 			return nil, err
 		}
-		m.Name = firstname
-		if len(lastname) > 0 {
-			m.Name += " " + lastname
-		}
-		if len(firstname) > 0 {
-			m.Initials += strings.ToUpper(string([]rune(firstname)[0]))
-		}
-		if len(lastname) > 0 {
-			m.Initials += strings.ToUpper(string([]rune(lastname)[0]))
+		if len(pseudo) > 0 {
+			m.Name = pseudo
+			m.Initials = strings.ToUpper(string([]rune(pseudo)[:min(2, len([]rune(pseudo)))]))
+		} else {
+			m.Name = firstname
+			if len(lastname) > 0 {
+				m.Name += " " + lastname
+			}
+			if len(firstname) > 0 {
+				m.Initials += strings.ToUpper(string([]rune(firstname)[0]))
+			}
+			if len(lastname) > 0 {
+				m.Initials += strings.ToUpper(string([]rune(lastname)[0]))
+			}
 		}
 		members = append(members, m)
 	}

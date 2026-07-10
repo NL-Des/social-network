@@ -61,7 +61,8 @@ func (r *MessageRepo) GetConversationPartners(userID int64) ([]ConversationPartn
 		SELECT DISTINCT
 			u.id,
 			u.firstname,
-			u.lastname
+			u.lastname,
+			COALESCE(u.pseudo, '')
 		FROM messages m
 		JOIN users u ON u.id = CASE
 			WHEN m.senderid = $1 THEN m.receiverid
@@ -78,19 +79,24 @@ func (r *MessageRepo) GetConversationPartners(userID int64) ([]ConversationPartn
 	partners := make([]ConversationPartner, 0)
 	for rows.Next() {
 		var p ConversationPartner
-		var firstname, lastname string
-		if err := rows.Scan(&p.ID, &firstname, &lastname); err != nil {
+		var firstname, lastname, pseudo string
+		if err := rows.Scan(&p.ID, &firstname, &lastname, &pseudo); err != nil {
 			return nil, err
 		}
-		p.Name = firstname
-		if len(lastname) > 0 {
-			p.Name += " " + strings.ToUpper(string([]rune(lastname)[0]))
-		}
-		if len(firstname) > 0 {
-			p.Initials += strings.ToUpper(string([]rune(firstname)[0]))
-		}
-		if len(lastname) > 0 {
-			p.Initials += strings.ToUpper(string([]rune(lastname)[0]))
+		if len(pseudo) > 0 {
+			p.Name = pseudo
+			p.Initials = strings.ToUpper(string([]rune(pseudo)[:min(2, len([]rune(pseudo)))]))
+		} else {
+			p.Name = firstname
+			if len(lastname) > 0 {
+				p.Name += " " + strings.ToUpper(string([]rune(lastname)[0]))
+			}
+			if len(firstname) > 0 {
+				p.Initials += strings.ToUpper(string([]rune(firstname)[0]))
+			}
+			if len(lastname) > 0 {
+				p.Initials += strings.ToUpper(string([]rune(lastname)[0]))
+			}
 		}
 		partners = append(partners, p)
 	}

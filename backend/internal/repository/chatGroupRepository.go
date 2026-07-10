@@ -159,7 +159,7 @@ func (r *ChatGroupRepo) GetChatGroupMessages(chatGroupID int64) ([]model.GroupMe
 
 func (r *ChatGroupRepo) GetChatGroupMembers(chatGroupID int64) ([]GroupMember, error) {
 	rows, err := r.db.Query(`
-		SELECT u.id, u.firstname, u.lastname,
+		SELECT u.id, u.firstname, u.lastname, COALESCE(u.pseudo, ''),
 		       CASE WHEN cg.creatorid = u.id THEN true ELSE false END
 		FROM group_chat_members cgm
 		JOIN users u ON u.id = cgm.userid
@@ -175,19 +175,24 @@ func (r *ChatGroupRepo) GetChatGroupMembers(chatGroupID int64) ([]GroupMember, e
 	members := make([]GroupMember, 0)
 	for rows.Next() {
 		var m GroupMember
-		var fn, ln string
-		if err := rows.Scan(&m.ID, &fn, &ln, &m.IsCreator); err != nil {
+		var fn, ln, pseudo string
+		if err := rows.Scan(&m.ID, &fn, &ln, &pseudo, &m.IsCreator); err != nil {
 			return nil, err
 		}
-		m.Name = fn
-		if len(ln) > 0 {
-			m.Name += " " + ln
-		}
-		if len(fn) > 0 {
-			m.Initials += strings.ToUpper(string([]rune(fn)[0]))
-		}
-		if len(ln) > 0 {
-			m.Initials += strings.ToUpper(string([]rune(ln)[0]))
+		if len(pseudo) > 0 {
+			m.Name = pseudo
+			m.Initials = strings.ToUpper(string([]rune(pseudo)[:min(2, len([]rune(pseudo)))]))
+		} else {
+			m.Name = fn
+			if len(ln) > 0 {
+				m.Name += " " + ln
+			}
+			if len(fn) > 0 {
+				m.Initials += strings.ToUpper(string([]rune(fn)[0]))
+			}
+			if len(ln) > 0 {
+				m.Initials += strings.ToUpper(string([]rune(ln)[0]))
+			}
 		}
 		members = append(members, m)
 	}

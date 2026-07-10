@@ -200,6 +200,7 @@ func (r *UserRepo) GetAllUsers(currentUserID int) ([]model.UserListItem, error) 
 			u.id,
 			u.firstname,
 			u.lastname,
+			COALESCE(u.pseudo, ''),
 			CASE WHEN f.followerid IS NOT NULL THEN true ELSE false END AS following,
 			u.isprivate,
 			COALESCE(u.avatar, '')
@@ -219,19 +220,24 @@ func (r *UserRepo) GetAllUsers(currentUserID int) ([]model.UserListItem, error) 
 	var users []model.UserListItem
 	for rows.Next() {
 		var item model.UserListItem
-		var firstname, lastname string
-		if err := rows.Scan(&item.ID, &firstname, &lastname, &item.Following, &item.IsPrivate, &item.Avatar); err != nil {
+		var firstname, lastname, pseudo string
+		if err := rows.Scan(&item.ID, &firstname, &lastname, &pseudo, &item.Following, &item.IsPrivate, &item.Avatar); err != nil {
 			return nil, err
 		}
-		item.Name = firstname
-		if len(lastname) > 0 {
-			item.Name += " " + strings.ToUpper(string([]rune(lastname)[0]))
-		}
-		if len(firstname) > 0 {
-			item.Initials += strings.ToUpper(string([]rune(firstname)[0]))
-		}
-		if len(lastname) > 0 {
-			item.Initials += strings.ToUpper(string([]rune(lastname)[0]))
+		if len(pseudo) > 0 {
+			item.Name = pseudo
+			item.Initials = strings.ToUpper(string([]rune(pseudo)[:min(2, len([]rune(pseudo)))]))
+		} else {
+			item.Name = firstname
+			if len(lastname) > 0 {
+				item.Name += " " + strings.ToUpper(string([]rune(lastname)[0]))
+			}
+			if len(firstname) > 0 {
+				item.Initials += strings.ToUpper(string([]rune(firstname)[0]))
+			}
+			if len(lastname) > 0 {
+				item.Initials += strings.ToUpper(string([]rune(lastname)[0]))
+			}
 		}
 		users = append(users, item)
 	}
