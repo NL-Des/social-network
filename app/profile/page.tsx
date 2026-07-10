@@ -157,12 +157,21 @@ function ProfileContent({
 
 export default function Page() {
   const [data, setData] = useState<ProfilePageProps | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     profileAction()
       .then((result) => setData(result))
-      .catch(() => {})
+      .catch((err) => setError(err instanceof Error ? err.message : "Impossible de charger le profil"))
   }, [])
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-brand-text font-retro text-sm">{error}</p>
+      </div>
+    )
+  }
 
   if (!data) {
     return (

@@ -66,7 +66,7 @@ export default async function profileAction(): Promise<ProfilePageProps> {
 
   if (!sessionToken) throw new Error("Non authentifié");
 
-  const response = await fetch("http://localhost:5090/me/profile", {
+  const response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/me/profile`, {
     headers: { Cookie: `session_token=${sessionToken.value}` },
   });
 

@@ -47,7 +47,7 @@ async function fetchPost(
 
   const body = new URLSearchParams(params);
 
-  const response = await fetch("http://localhost:5090/posts", {
+  const response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/posts`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -72,7 +72,7 @@ async function fetchPostForm(formData: FormData): Promise<ActionResult> {
     return { error: "Non authentifié" };
   }
 
-  const response = await fetch("http://localhost:5090/posts", {
+  const response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/posts`, {
     method: "POST",
     headers: {
       Cookie: `session_token=${sessionToken.value}`,
