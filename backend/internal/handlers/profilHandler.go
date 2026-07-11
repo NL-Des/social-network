@@ -73,6 +73,12 @@ func (h *ProfilHandler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
 
 // GET /users/{id}/posts — retourne les posts publics d'un utilisateur
 func (h *ProfilHandler) GetUserPosts(w http.ResponseWriter, r *http.Request) {
+	viewerID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	vars := mux.Vars(r)
 	userID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -80,7 +86,7 @@ func (h *ProfilHandler) GetUserPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts, err := h.ProfilService.GetUserPosts(userID)
+	posts, err := h.ProfilService.GetUserPosts(userID, viewerID)
 	if err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return

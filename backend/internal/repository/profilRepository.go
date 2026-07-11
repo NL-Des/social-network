@@ -100,13 +100,29 @@ func (r *ProfilRepository) GetFollowing(userID int) ([]model.Following, error) {
 }
 
 // Posts
-func (r *ProfilRepository) GetPosts(userID int) ([]model.AllPosts, error) {
+func (r *ProfilRepository) GetPosts(userID int, viewerID int) ([]model.AllPosts, error) {
 	rows, err := r.db.Query(`
-        SELECT ID, title, content, COALESCE(image, '')
-        FROM posts
-        WHERE authorID = $1
-        ORDER BY createdat DESC
-    `, userID)
+    SELECT id, title, content, COALESCE(image, '')
+    FROM posts
+    WHERE authorID = $1
+    AND (
+        -- Post public : tout le monde peut voir
+        privacy = 'public'
+        -- L'auteur voit tous ses posts
+        OR authorID = $2
+        -- Post almost-private : seulement les followers de l'auteur
+        OR (privacy = 'almost-private' AND EXISTS (
+            SELECT 1 FROM followers
+            WHERE followerID = $2 AND followingID = $1 AND status = 'accepted'
+        ))
+        -- Post private : seulement les personnes choisies
+        OR (privacy = 'private' AND EXISTS (
+            SELECT 1 FROM post_allowed_viewers
+            WHERE post_id = posts.id AND user_id = $2
+        ))
+    )
+    ORDER BY createdat DESC
+`, userID, viewerID)
 	if err != nil {
 		return nil, err
 	}

@@ -85,7 +85,7 @@ func (s *ProfilService) GetProfile(viewerID, profileID int) (*model.PublicProfil
 	}
 	profile.Following = following
 
-	posts, err := s.ProfilRepo.GetPosts(profileID)
+	posts, err := s.ProfilRepo.GetPosts(profileID, viewerID)
 	if err != nil {
 		log.Printf("GetPosts(%d): %v", profileID, err)
 		posts = []model.AllPosts{}
@@ -108,8 +108,8 @@ func (s *ProfilService) UpdateVisibility(userID int, isPrivate bool) error {
 	return s.ProfilRepo.UpdateVisibility(userID, isPrivate)
 }
 
-func (s *ProfilService) GetUserPosts(userID int) ([]model.AllPosts, error) {
-	return s.ProfilRepo.GetPosts(userID)
+func (s *ProfilService) GetUserPosts(userID int, viewerID int) ([]model.AllPosts, error) {
+	return s.ProfilRepo.GetPosts(userID, viewerID)
 }
 
 func (s *ProfilService) UpdateProfile(userID int, firstName, lastName, pseudo, aboutMe string) error {
