@@ -21,7 +21,7 @@ func NewEventHandler(s *service.EventService) *EventHandler {
 func (h *EventHandler) HandleGroupEvents(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -49,7 +49,7 @@ func (h *EventHandler) HandleGroupEvents(w http.ResponseWriter, r *http.Request)
 	case http.MethodPost:
 		var req model.CreateEventRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "payload invalide", http.StatusBadRequest)
+			http.Error(w, "Données invalides", http.StatusBadRequest)
 			return
 		}
 		if req.Title == "" || req.Description == "" || req.EventDatetime == "" {
@@ -77,7 +77,7 @@ func (h *EventHandler) HandleGroupEvents(w http.ResponseWriter, r *http.Request)
 func (h *EventHandler) HandleGroupEventDetail(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	_ = userID
@@ -105,7 +105,7 @@ func (h *EventHandler) HandleGroupEventDetail(w http.ResponseWriter, r *http.Req
 func (h *EventHandler) HandleEventResponse(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -120,14 +120,14 @@ func (h *EventHandler) HandleEventResponse(w http.ResponseWriter, r *http.Reques
 		Response string `json:"response"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "payload invalide", http.StatusBadRequest)
+		http.Error(w, "Données invalides", http.StatusBadRequest)
 		return
 	}
 
 	switch body.Response {
 	case "coming", "unsure", "uninterested":
 	default:
-		http.Error(w, "réponse invalide : doit être coming, unsure ou uninterested", http.StatusBadRequest)
+		http.Error(w, "Réponse invalide, veuillez choisir : Je viens, Peut-être ou Je ne viens pas.", http.StatusBadRequest)
 		return
 	}
 

@@ -126,7 +126,7 @@ func (h *PostAndCommentsHandler) handleGetPosts(w http.ResponseWriter, r *http.R
 
 	posts, err := h.PostService.GetAllPosts(userIDInt)
 	if err != nil {
-		http.Error(w, "Erreur de récupération des posts", http.StatusInternalServerError)
+		http.Error(w, "Impossible de récupérer les posts.", http.StatusInternalServerError)
 		return
 	}
 	if posts == nil {
@@ -138,7 +138,7 @@ func (h *PostAndCommentsHandler) handleGetPosts(w http.ResponseWriter, r *http.R
 func (h *PostAndCommentsHandler) CommentHandler(w http.ResponseWriter, r *http.Request, content, mode, userID string, userIDInt int) {
 	postID, err := strconv.Atoi(r.FormValue("postID"))
 	if err != nil {
-		http.Error(w, "Erreur de récupération de l'ID de post", http.StatusInternalServerError)
+		http.Error(w, "Identifiant de post invalide", http.StatusInternalServerError)
 		return
 	}
 
@@ -150,18 +150,18 @@ func (h *PostAndCommentsHandler) CommentHandler(w http.ResponseWriter, r *http.R
 		}
 		err = h.PostService.AddCommentOnPost(postID, userID, content, image)
 		if err != nil {
-			http.Error(w, "Erreur dans l'ajout de commentaire", http.StatusInternalServerError)
+			http.Error(w, "Impossible d'ajouter ce commentaire.", http.StatusInternalServerError)
 		}
 		return
 	} else if mode == "editcomment" {
 		commentID, err := strconv.Atoi(r.FormValue("commentID"))
 		if err != nil {
-			http.Error(w, "Erreur de récupération de l'ID de commentaire", http.StatusInternalServerError)
+			http.Error(w, "Identifiant de commentaire invalide", http.StatusInternalServerError)
 			return
 		}
 		err = h.PostService.EditComment(userID, commentID, content)
 		if err != nil {
-			http.Error(w, "Erreur dans la modification du commentaire", http.StatusInternalServerError)
+			http.Error(w, "Impossible de modifier ce commentaire.", http.StatusInternalServerError)
 		}
 		return
 	}
@@ -172,23 +172,23 @@ func (h *PostAndCommentsHandler) PostHandler(w http.ResponseWriter, r *http.Requ
 		var err error
 		postData.ID, err = strconv.Atoi(r.FormValue("postID"))
 		if err != nil {
-			http.Error(w, "Erreur de récupération de l'ID de post", http.StatusInternalServerError)
+			http.Error(w, "Identifiant de post invalide", http.StatusInternalServerError)
 			return
 		}
 
 		err = h.PostService.EditPost(userID, postData)
 		if err != nil {
 			if err.Error() == "utilisateur non autorisé" {
-				http.Error(w, "Tentative d'édition d'un post par un utilisateur non autorisé", http.StatusUnauthorized)
+				http.Error(w, "Vous n'êtes pas autorisé à modifier ce post.", http.StatusUnauthorized)
 				return
 			}
-			http.Error(w, "Erreur dans la modification du post", http.StatusInternalServerError)
+			http.Error(w, "Impossible de modifier ce post.", http.StatusInternalServerError)
 			return
 		}
 	} else if mode == "newpost" {
 		err := h.PostService.CreateNewPost(userID, postData)
 		if err != nil {
-			http.Error(w, "Erreur dans la création du post", http.StatusInternalServerError)
+			http.Error(w, "Impossible de créer ce post.", http.StatusInternalServerError)
 			return
 		}
 	}
@@ -211,7 +211,7 @@ func (h *PostAndCommentsHandler) HandleLike(w http.ResponseWriter, r *http.Reque
 
 	if r.Method == http.MethodDelete {
 		if err := h.PostService.UnlikePost(postID, userIDInt); err != nil {
-			http.Error(w, "Erreur lors de la suppression du like", http.StatusInternalServerError)
+			http.Error(w, "Impossible de retirer votre réaction.", http.StatusInternalServerError)
 			return
 		}
 		go h.broadcastLikeUpdate(postID, userIDInt)
@@ -224,7 +224,7 @@ func (h *PostAndCommentsHandler) HandleLike(w http.ResponseWriter, r *http.Reque
 		Type string `json:"type"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "Body invalide", http.StatusBadRequest)
+		http.Error(w, "Données invalides", http.StatusBadRequest)
 		return
 	}
 	if body.Type != "like" && body.Type != "dislike" {
@@ -237,7 +237,7 @@ func (h *PostAndCommentsHandler) HandleLike(w http.ResponseWriter, r *http.Reque
 		if strings.Contains(errStr, "foreign key") || strings.Contains(errStr, "violates") {
 			http.Error(w, "Post introuvable", http.StatusNotFound)
 		} else {
-			http.Error(w, "Erreur lors de l'ajout du like", http.StatusInternalServerError)
+			http.Error(w, "Impossible d'enregistrer votre réaction.", http.StatusInternalServerError)
 		}
 		return
 	}

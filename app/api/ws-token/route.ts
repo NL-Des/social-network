@@ -6,7 +6,7 @@ export async function GET() {
   const sessionToken = cookieStore.get('session_token')
 
   if (!sessionToken) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
   }
 
   return NextResponse.json({ token: sessionToken.value })

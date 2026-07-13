@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"log"
 	"strings"
 	"time"
 
@@ -156,7 +157,7 @@ func (r *UserRepo) GetUserCredsbyEmail(email string) (model.LoginUser, error) {
 	}
 
 	if err != nil {
-		return model.LoginUser{}, err
+		return model.LoginUser{}, wrapDBError(err, "GetUserCredsbyEmail")
 	}
 	return user, nil
 }
@@ -271,6 +272,9 @@ func (r *UserRepo) SaveUser(user model.RegisterUser) error {
 		user.Username,
 		user.Description,
 	)
-
-	return err
+	if err != nil {
+		log.Printf("[db] SaveUser: %v", err)
+		return errors.New("Impossible de créer votre compte pour le moment, veuillez réessayer.")
+	}
+	return nil
 }

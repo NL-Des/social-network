@@ -228,7 +228,10 @@ func (r *ChatGroupRepo) DeleteChatGroup(chatGroupID int64) error {
 func (r *ChatGroupRepo) RemoveChatGroupMember(chatGroupID, targetID, requesterID int64) error {
 	var creatorID int64
 	if err := r.db.QueryRow(`SELECT creatorid FROM group_chats WHERE id = $1`, chatGroupID).Scan(&creatorID); err != nil {
-		return err
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("discussion introuvable")
+		}
+		return wrapDBError(err, "RemoveChatGroupMember")
 	}
 	if creatorID != requesterID {
 		return fmt.Errorf("non autorisé")
@@ -236,5 +239,5 @@ func (r *ChatGroupRepo) RemoveChatGroupMember(chatGroupID, targetID, requesterID
 	_, err := r.db.Exec(`
 		DELETE FROM group_chat_members WHERE chat_group_id = $1 AND userid = $2
 	`, chatGroupID, targetID)
-	return err
+	return wrapDBError(err, "RemoveChatGroupMember")
 }

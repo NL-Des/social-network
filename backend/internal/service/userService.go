@@ -44,7 +44,7 @@ func (s *UserService) Register(userData model.RegisterUser) error {
 	// 3. Vérification de la date et mise en forme pour la BDD.
 	date, err := time.Parse("02/01/2006", user.Birthday)
 	if err != nil {
-		return errors.New("date invalide, veuillez entrer le format suivant : jour/mois/année")
+		return errors.New("Veuillez entrer une date de naissance valide au format jj/mm/aaaa.")
 	}
 	user.Birthday = date.Format("2006-01-02")
 

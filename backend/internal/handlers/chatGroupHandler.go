@@ -28,7 +28,7 @@ func NewChatGroupHandler(s *service.ChatGroupService, us *service.UserService, n
 func (h *ChatGroupHandler) HandleChatGroups(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -48,7 +48,7 @@ func (h *ChatGroupHandler) HandleChatGroups(w http.ResponseWriter, r *http.Reque
 			MemberIDs []int64 `json:"member_ids"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			http.Error(w, "payload invalide", http.StatusBadRequest)
+			http.Error(w, "Données invalides", http.StatusBadRequest)
 			return
 		}
 		if strings.TrimSpace(body.Title) == "" {
@@ -83,7 +83,7 @@ func (h *ChatGroupHandler) HandleChatGroupMessages(w http.ResponseWriter, r *htt
 	}
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
@@ -109,7 +109,7 @@ func (h *ChatGroupHandler) HandleChatGroupMessages(w http.ResponseWriter, r *htt
 func (h *ChatGroupHandler) HandleChatGroupMembers(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
@@ -138,7 +138,7 @@ func (h *ChatGroupHandler) HandleChatGroupMembers(w http.ResponseWriter, r *http
 			UserID int64 `json:"user_id"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.UserID == 0 {
-			http.Error(w, "user_id invalide", http.StatusBadRequest)
+			http.Error(w, "Identifiant utilisateur invalide", http.StatusBadRequest)
 			return
 		}
 		if err := h.Service.AddChatGroupMember(id, body.UserID); err != nil {
@@ -167,7 +167,7 @@ func (h *ChatGroupHandler) HandleChatGroupMemberRemove(w http.ResponseWriter, r 
 	}
 	requesterID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
@@ -177,7 +177,7 @@ func (h *ChatGroupHandler) HandleChatGroupMemberRemove(w http.ResponseWriter, r 
 	}
 	targetID, err := strconv.ParseInt(mux.Vars(r)["userId"], 10, 64)
 	if err != nil {
-		http.Error(w, "userId invalide", http.StatusBadRequest)
+		http.Error(w, "Identifiant utilisateur invalide", http.StatusBadRequest)
 		return
 	}
 	if err := h.Service.RemoveChatGroupMember(id, targetID, int64(requesterID)); err != nil {
@@ -212,7 +212,7 @@ func (h *ChatGroupHandler) HandleLeaveChatGroup(w http.ResponseWriter, r *http.R
 	}
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)

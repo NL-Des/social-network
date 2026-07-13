@@ -332,8 +332,11 @@ func (r *GroupRepo) DeleteGroupComment(commentID, authorID int64) error {
 func (r *GroupRepo) RemoveGroupMember(groupID, targetUserID, requestingUserID int64) error {
 	var creatorID int64
 	err := r.db.QueryRow(`SELECT creatorid FROM social_groups WHERE id = $1`, groupID).Scan(&creatorID)
+	if err == sql.ErrNoRows {
+		return fmt.Errorf("groupe introuvable")
+	}
 	if err != nil {
-		return err
+		return wrapDBError(err, "RemoveGroupMember")
 	}
 	if creatorID != requestingUserID {
 		return fmt.Errorf("non autorisé")
@@ -342,7 +345,7 @@ func (r *GroupRepo) RemoveGroupMember(groupID, targetUserID, requestingUserID in
 		return fmt.Errorf("le créateur ne peut pas se retirer lui-même")
 	}
 	_, err = r.db.Exec(`DELETE FROM social_group_members WHERE groupid = $1 AND userid = $2`, groupID, targetUserID)
-	return err
+	return wrapDBError(err, "RemoveGroupMember")
 }
 
 func (r *GroupRepo) AddGroupMember(groupID, userID, invitedByID int64) error {
@@ -498,7 +501,7 @@ func (r *GroupRepo) InviteUserToGroup(groupID, targetUserID, inviterID int64) er
 		VALUES ($1, $2, $3, 'invited')
 		ON CONFLICT (groupid, userid) DO NOTHING
 	`, groupID, targetUserID, inviterID)
-	return err
+	return wrapDBError(err, "InviteUserToGroup")
 }
 
 func (r *GroupRepo) AcceptGroupInvite(groupID, userID int64) error {
@@ -533,7 +536,10 @@ func (r *GroupRepo) GetGroupCreatorID(groupID int64) (int64, error) {
 func (r *GroupRepo) TransferAdmin(groupID, currentAdminID, newAdminID int64) error {
 	var creatorID int64
 	if err := r.db.QueryRow(`SELECT creatorid FROM social_groups WHERE id = $1`, groupID).Scan(&creatorID); err != nil {
-		return err
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("groupe introuvable")
+		}
+		return wrapDBError(err, "TransferAdmin")
 	}
 	if creatorID != currentAdminID {
 		return fmt.Errorf("non autorisé")
@@ -545,19 +551,22 @@ func (r *GroupRepo) TransferAdmin(groupID, currentAdminID, newAdminID int64) err
 		return fmt.Errorf("utilisateur non membre du groupe")
 	}
 	_, err := r.db.Exec(`UPDATE social_groups SET creatorid = $1, leaderid = $1 WHERE id = $2`, newAdminID, groupID)
-	return err
+	return wrapDBError(err, "TransferAdmin")
 }
 
 func (r *GroupRepo) DeleteGroup(groupID, userID int64) error {
 	var creatorID int64
 	if err := r.db.QueryRow(`SELECT creatorid FROM social_groups WHERE id = $1`, groupID).Scan(&creatorID); err != nil {
-		return err
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("groupe introuvable")
+		}
+		return wrapDBError(err, "DeleteGroup")
 	}
 	if creatorID != userID {
 		return fmt.Errorf("non autorisé")
 	}
 	_, err := r.db.Exec(`DELETE FROM social_groups WHERE id = $1`, groupID)
-	return err
+	return wrapDBError(err, "DeleteGroup")
 }
 
 // ─── Members ─────────────────────────────────────────────────────────────────

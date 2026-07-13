@@ -6,7 +6,7 @@ export async function GET() {
   const sessionToken = cookieStore.get('session_token')
 
   if (!sessionToken) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
   }
 
   const response = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:5090'}/me/profile`, {
@@ -14,7 +14,7 @@ export async function GET() {
   })
 
   if (!response.ok) {
-    return NextResponse.json({ error: 'Failed to fetch profile' }, { status: response.status })
+    return NextResponse.json({ error: 'Impossible de charger le profil' }, { status: response.status })
   }
 
   const data = await response.json()

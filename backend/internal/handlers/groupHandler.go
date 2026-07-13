@@ -51,7 +51,7 @@ func (h *GroupHandler) removeFromChatGroup(groupID, userID int64) {
 func (h *GroupHandler) HandleGroups(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -72,7 +72,7 @@ func (h *GroupHandler) HandleGroups(w http.ResponseWriter, r *http.Request) {
 			MemberIDs   []int64 `json:"member_ids"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			http.Error(w, "payload invalide", http.StatusBadRequest)
+			http.Error(w, "Données invalides", http.StatusBadRequest)
 			return
 		}
 		title := strings.TrimSpace(body.Title)
@@ -108,7 +108,7 @@ func (h *GroupHandler) HandleGroups(w http.ResponseWriter, r *http.Request) {
 func (h *GroupHandler) HandleLeaveGroup(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	if r.Method != http.MethodDelete {
@@ -145,7 +145,7 @@ func (h *GroupHandler) HandleLeaveGroup(w http.ResponseWriter, r *http.Request) 
 func (h *GroupHandler) HandleGroupPosts(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -174,7 +174,7 @@ func (h *GroupHandler) HandleGroupPosts(w http.ResponseWriter, r *http.Request) 
 	case http.MethodPost:
 		const maxMemory = 2 << 20
 		if err := r.ParseMultipartForm(maxMemory); err != nil && err != http.ErrNotMultipart {
-			http.Error(w, "payload invalide", http.StatusBadRequest)
+			http.Error(w, "Données invalides", http.StatusBadRequest)
 			return
 		}
 		content := strings.TrimSpace(r.FormValue("content"))
@@ -211,7 +211,7 @@ func (h *GroupHandler) HandleGroupPosts(w http.ResponseWriter, r *http.Request) 
 func (h *GroupHandler) HandleGroupPostDetail(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -259,7 +259,7 @@ func (h *GroupHandler) HandleGroupPostDetail(w http.ResponseWriter, r *http.Requ
 func (h *GroupHandler) HandleGroupPostComments(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -294,7 +294,7 @@ func (h *GroupHandler) HandleGroupPostComments(w http.ResponseWriter, r *http.Re
 	case http.MethodPost:
 		const maxMemory = 2 << 20
 		if err := r.ParseMultipartForm(maxMemory); err != nil && err != http.ErrNotMultipart {
-			http.Error(w, "payload invalide", http.StatusBadRequest)
+			http.Error(w, "Données invalides", http.StatusBadRequest)
 			return
 		}
 		content := strings.TrimSpace(r.FormValue("content"))
@@ -327,7 +327,7 @@ func (h *GroupHandler) HandleGroupCommentDelete(w http.ResponseWriter, r *http.R
 
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -360,7 +360,7 @@ func (h *GroupHandler) HandleGroupCommentDelete(w http.ResponseWriter, r *http.R
 func (h *GroupHandler) HandleGroupMembers(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -391,7 +391,7 @@ func (h *GroupHandler) HandleGroupMembers(w http.ResponseWriter, r *http.Request
 			UserID int64 `json:"user_id"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.UserID == 0 {
-			http.Error(w, "user_id invalide", http.StatusBadRequest)
+			http.Error(w, "Identifiant utilisateur invalide", http.StatusBadRequest)
 			return
 		}
 		// Tout membre du groupe peut inviter ; l'invité doit ensuite accepter (statut 'invited').
@@ -415,7 +415,7 @@ func (h *GroupHandler) HandleGroupChatID(w http.ResponseWriter, r *http.Request)
 	}
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
@@ -441,7 +441,7 @@ func (h *GroupHandler) HandleGroupChatID(w http.ResponseWriter, r *http.Request)
 func (h *GroupHandler) HandleInviteResponse(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
@@ -482,7 +482,7 @@ func (h *GroupHandler) HandleInviteResponse(w http.ResponseWriter, r *http.Reque
 func (h *GroupHandler) HandleGroupPostLike(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -576,7 +576,7 @@ func (h *GroupHandler) HandleRemoveMember(w http.ResponseWriter, r *http.Request
 	}
 	requesterID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
@@ -586,7 +586,7 @@ func (h *GroupHandler) HandleRemoveMember(w http.ResponseWriter, r *http.Request
 	}
 	targetID, err := strconv.ParseInt(mux.Vars(r)["userId"], 10, 64)
 	if err != nil {
-		http.Error(w, "id utilisateur invalide", http.StatusBadRequest)
+		http.Error(w, "Identifiant utilisateur invalide", http.StatusBadRequest)
 		return
 	}
 	if err := h.GroupService.RemoveGroupMember(groupID, targetID, int64(requesterID)); err != nil {
@@ -653,7 +653,7 @@ func (h *GroupHandler) HandleDeleteGroup(w http.ResponseWriter, r *http.Request)
 	}
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
@@ -682,7 +682,7 @@ func (h *GroupHandler) HandleTransferAdmin(w http.ResponseWriter, r *http.Reques
 	}
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
@@ -694,7 +694,7 @@ func (h *GroupHandler) HandleTransferAdmin(w http.ResponseWriter, r *http.Reques
 		UserID int64 `json:"user_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.UserID == 0 {
-		http.Error(w, "user_id invalide", http.StatusBadRequest)
+		http.Error(w, "Identifiant utilisateur invalide", http.StatusBadRequest)
 		return
 	}
 	if err := h.GroupService.TransferAdmin(groupID, int64(userID), body.UserID); err != nil {
@@ -712,7 +712,7 @@ func (h *GroupHandler) HandleAllGroups(w http.ResponseWriter, r *http.Request) {
 	}
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	groups, err := h.GroupService.GetAllGroups(int64(userID))
@@ -728,7 +728,7 @@ func (h *GroupHandler) HandleAllGroups(w http.ResponseWriter, r *http.Request) {
 func (h *GroupHandler) HandleJoinRequest(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
@@ -771,7 +771,7 @@ func (h *GroupHandler) HandleJoinRequest(w http.ResponseWriter, r *http.Request)
 func (h *GroupHandler) HandleJoinRequests(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
@@ -803,7 +803,7 @@ func (h *GroupHandler) HandleJoinRequests(w http.ResponseWriter, r *http.Request
 func (h *GroupHandler) HandleJoinRequestAction(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	groupID, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
@@ -813,7 +813,7 @@ func (h *GroupHandler) HandleJoinRequestAction(w http.ResponseWriter, r *http.Re
 	}
 	targetID, err := strconv.ParseInt(mux.Vars(r)["userId"], 10, 64)
 	if err != nil {
-		http.Error(w, "id utilisateur invalide", http.StatusBadRequest)
+		http.Error(w, "Identifiant utilisateur invalide", http.StatusBadRequest)
 		return
 	}
 	creatorID, err := h.GroupService.GetGroupCreatorID(groupID)

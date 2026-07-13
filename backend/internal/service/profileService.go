@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	ErrUserNotFound = errors.New("user not found")
+	ErrUserNotFound = errors.New("Utilisateur introuvable")
 )
 
 type ProfilService struct {

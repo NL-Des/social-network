@@ -26,25 +26,25 @@ func NewFollowHandler(s *service.FollowService, us *service.UserService, ns *ser
 func (h *FollowHandler) Follow(w http.ResponseWriter, r *http.Request) {
 	viewerID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
 	vars := mux.Vars(r)
 	targetID, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, "invalid user id", http.StatusBadRequest)
+		http.Error(w, "Identifiant utilisateur invalide", http.StatusBadRequest)
 		return
 	}
 
 	if viewerID == targetID {
-		http.Error(w, "cannot follow yourself", http.StatusBadRequest)
+		http.Error(w, "Vous ne pouvez pas vous suivre vous-même.", http.StatusBadRequest)
 		return
 	}
 
 	status, err := h.FollowService.Follow(viewerID, targetID)
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Erreur serveur, veuillez réessayer.", http.StatusInternalServerError)
 		return
 	}
 
@@ -72,19 +72,19 @@ func (h *FollowHandler) Follow(w http.ResponseWriter, r *http.Request) {
 func (h *FollowHandler) Unfollow(w http.ResponseWriter, r *http.Request) {
 	viewerID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
 	vars := mux.Vars(r)
 	targetID, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, "invalid user id", http.StatusBadRequest)
+		http.Error(w, "Identifiant utilisateur invalide", http.StatusBadRequest)
 		return
 	}
 
 	if err := h.FollowService.Unfollow(viewerID, targetID); err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Erreur serveur, veuillez réessayer.", http.StatusInternalServerError)
 		return
 	}
 
@@ -108,19 +108,19 @@ func (h *FollowHandler) Unfollow(w http.ResponseWriter, r *http.Request) {
 func (h *FollowHandler) RemoveFollower(w http.ResponseWriter, r *http.Request) {
 	viewerID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
 	vars := mux.Vars(r)
 	followerID, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, "invalid user id", http.StatusBadRequest)
+		http.Error(w, "Identifiant utilisateur invalide", http.StatusBadRequest)
 		return
 	}
 
 	if err := h.FollowService.Unfollow(followerID, viewerID); err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Erreur serveur, veuillez réessayer.", http.StatusInternalServerError)
 		return
 	}
 
@@ -144,20 +144,20 @@ func (h *FollowHandler) RemoveFollower(w http.ResponseWriter, r *http.Request) {
 func (h *FollowHandler) GetFollowStatus(w http.ResponseWriter, r *http.Request) {
 	viewerID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
 	vars := mux.Vars(r)
 	targetID, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, "invalid user id", http.StatusBadRequest)
+		http.Error(w, "Identifiant utilisateur invalide", http.StatusBadRequest)
 		return
 	}
 
 	status, err := h.FollowService.GetFollowStatus(viewerID, targetID)
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Erreur serveur, veuillez réessayer.", http.StatusInternalServerError)
 		return
 	}
 
@@ -169,13 +169,13 @@ func (h *FollowHandler) GetFollowStatus(w http.ResponseWriter, r *http.Request) 
 func (h *FollowHandler) GetPendingRequests(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
 	users, err := h.FollowService.GetPendingRequests(userID)
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Erreur serveur, veuillez réessayer.", http.StatusInternalServerError)
 		return
 	}
 
@@ -187,19 +187,19 @@ func (h *FollowHandler) GetPendingRequests(w http.ResponseWriter, r *http.Reques
 func (h *FollowHandler) AcceptFollowRequest(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
 	vars := mux.Vars(r)
 	requesterID, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, "invalid user id", http.StatusBadRequest)
+		http.Error(w, "Identifiant utilisateur invalide", http.StatusBadRequest)
 		return
 	}
 
 	if err := h.FollowService.AcceptFollowRequest(requesterID, userID); err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Erreur serveur, veuillez réessayer.", http.StatusInternalServerError)
 		return
 	}
 
@@ -210,19 +210,19 @@ func (h *FollowHandler) AcceptFollowRequest(w http.ResponseWriter, r *http.Reque
 func (h *FollowHandler) RejectFollowRequest(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
 	vars := mux.Vars(r)
 	requesterID, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, "invalid user id", http.StatusBadRequest)
+		http.Error(w, "Identifiant utilisateur invalide", http.StatusBadRequest)
 		return
 	}
 
 	if err := h.FollowService.RejectFollowRequest(requesterID, userID); err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Erreur serveur, veuillez réessayer.", http.StatusInternalServerError)
 		return
 	}
 

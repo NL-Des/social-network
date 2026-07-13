@@ -17,13 +17,13 @@ func NewMeHandler(us *service.UserService) *MeHandler {
 func (h *MeHandler) HandleMe(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
 	profile, err := h.userService.GetProfile(userID)
 	if err != nil {
-		http.Error(w, "user not found", http.StatusNotFound)
+		http.Error(w, "Utilisateur introuvable", http.StatusNotFound)
 		return
 	}
 
@@ -34,13 +34,13 @@ func (h *MeHandler) HandleMe(w http.ResponseWriter, r *http.Request) {
 func (h *MeHandler) HandleProfile(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
 	profile, err := h.userService.GetProfile(userID)
 	if err != nil {
-		http.Error(w, "user not found", http.StatusNotFound)
+		http.Error(w, "Utilisateur introuvable", http.StatusNotFound)
 		return
 	}
 

@@ -22,14 +22,14 @@ func NewProfilHandler(s *service.ProfilService) *ProfilHandler {
 func (h *ProfilHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	viewerID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
 	vars := mux.Vars(r)
 	profileID, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, "invalid user id", http.StatusBadRequest)
+		http.Error(w, "Identifiant utilisateur invalide", http.StatusBadRequest)
 		return
 	}
 
@@ -39,7 +39,7 @@ func (h *ProfilHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		case service.ErrUserNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 		default:
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			http.Error(w, "Erreur serveur, veuillez réessayer.", http.StatusInternalServerError)
 		}
 		return
 	}
@@ -54,14 +54,14 @@ func (h *ProfilHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 func (h *ProfilHandler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
 	viewerID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
 	// viewerID == profileID
 	profile, err := h.ProfilService.GetProfile(viewerID, viewerID)
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Erreur serveur, veuillez réessayer.", http.StatusInternalServerError)
 		return
 	}
 
@@ -75,20 +75,20 @@ func (h *ProfilHandler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
 func (h *ProfilHandler) GetUserPosts(w http.ResponseWriter, r *http.Request) {
 	viewerID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
 	vars := mux.Vars(r)
 	userID, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, "invalid user id", http.StatusBadRequest)
+		http.Error(w, "Identifiant utilisateur invalide", http.StatusBadRequest)
 		return
 	}
 
 	posts, err := h.ProfilService.GetUserPosts(userID, viewerID)
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Erreur serveur, veuillez réessayer.", http.StatusInternalServerError)
 		return
 	}
 
@@ -101,7 +101,7 @@ func (h *ProfilHandler) GetUserPosts(w http.ResponseWriter, r *http.Request) {
 func (h *ProfilHandler) UpdateVisibility(w http.ResponseWriter, r *http.Request) {
 	viewerID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -110,12 +110,12 @@ func (h *ProfilHandler) UpdateVisibility(w http.ResponseWriter, r *http.Request)
 		IsPrivate bool `json:"isPrivate"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid body", http.StatusBadRequest)
+		http.Error(w, "Données invalides", http.StatusBadRequest)
 		return
 	}
 
 	if err := h.ProfilService.UpdateVisibility(viewerID, body.IsPrivate); err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Erreur serveur, veuillez réessayer.", http.StatusInternalServerError)
 		return
 	}
 
@@ -126,7 +126,7 @@ func (h *ProfilHandler) UpdateVisibility(w http.ResponseWriter, r *http.Request)
 func (h *ProfilHandler) UpdateMyProfile(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -137,12 +137,12 @@ func (h *ProfilHandler) UpdateMyProfile(w http.ResponseWriter, r *http.Request) 
 		AboutMe   string `json:"aboutMe"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid body", http.StatusBadRequest)
+		http.Error(w, "Données invalides", http.StatusBadRequest)
 		return
 	}
 
 	if err := h.ProfilService.UpdateProfile(userID, body.FirstName, body.LastName, body.Pseudo, body.AboutMe); err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Erreur serveur, veuillez réessayer.", http.StatusInternalServerError)
 		return
 	}
 
@@ -153,7 +153,7 @@ func (h *ProfilHandler) UpdateMyProfile(w http.ResponseWriter, r *http.Request) 
 func (h *ProfilHandler) UpdateAvatar(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -174,7 +174,7 @@ func (h *ProfilHandler) UpdateAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.ProfilService.UpdateAvatar(userID, avatarPath); err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Erreur serveur, veuillez réessayer.", http.StatusInternalServerError)
 		return
 	}
 

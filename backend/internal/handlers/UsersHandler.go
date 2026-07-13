@@ -17,7 +17,7 @@ func NewUsersHandler(us *service.UserService) *UsersHandler {
 func (h *UsersHandler) HandleUsers(w http.ResponseWriter, r *http.Request) {
 	currentUserID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 

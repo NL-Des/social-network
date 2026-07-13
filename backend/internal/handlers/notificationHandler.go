@@ -23,7 +23,7 @@ func NewNotificationHandler(s *service.NotificationService) *NotificationHandler
 func (h *NotificationHandler) HandleNotifications(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -61,7 +61,7 @@ func (h *NotificationHandler) HandleMarkAllRead(w http.ResponseWriter, r *http.R
 
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (h *NotificationHandler) HandleMarkAllRead(w http.ResponseWriter, r *http.R
 func (h *NotificationHandler) HandleDeleteAll(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 	if err := h.service.DeleteAll(int64(userID)); err != nil {
@@ -96,7 +96,7 @@ func (h *NotificationHandler) HandleDelete(w http.ResponseWriter, r *http.Reques
 
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
@@ -124,7 +124,7 @@ func (h *NotificationHandler) HandleMarkRead(w http.ResponseWriter, r *http.Requ
 
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Non authentifié", http.StatusUnauthorized)
 		return
 	}
 
