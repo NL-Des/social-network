@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/repository"
@@ -37,6 +38,21 @@ func (s *EventService) CreateEvent(groupID, creatorID int, req model.CreateEvent
 	if !isMember {
 		return nil, fmt.Errorf("accès non autorisé")
 	}
+
+	eventDate, err := time.Parse(time.RFC3339, req.EventDatetime)
+	if err != nil {
+		// Essayer un autre format si RFC3339 échoue
+		eventDate, err = time.Parse("2006-01-02T15:04", req.EventDatetime)
+		if err != nil {
+			return nil, fmt.Errorf("date invalide")
+		}
+	}
+
+	tomorrow := time.Now().Add(24 * time.Hour).Truncate(24 * time.Hour)
+	if eventDate.Before(tomorrow) {
+		return nil, fmt.Errorf("la date de l'événement doit être au minimum demain")
+	}
+
 	ev, err := s.eventRepo.CreateEvent(groupID, creatorID, req)
 	if err != nil {
 		return nil, err

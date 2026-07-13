@@ -46,6 +46,10 @@ func (s *UserService) Register(userData model.RegisterUser) error {
 	if err != nil {
 		return errors.New("Veuillez entrer une date de naissance valide au format jj/mm/aaaa.")
 	}
+	minAge := date.AddDate(13, 0, 0)
+	if minAge.After(time.Now()) {
+		return errors.New("vous devez avoir au moins 13 ans pour vous inscrire")
+	}
 	user.Birthday = date.Format("2006-01-02")
 
 	// 4. hash du mot de passe

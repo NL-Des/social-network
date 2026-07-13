@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	"social-network/backend/internal/model"
 	"social-network/backend/internal/service"
+
+	"github.com/gorilla/mux"
 )
 
 type EventHandler struct {
@@ -58,11 +59,16 @@ func (h *EventHandler) HandleGroupEvents(w http.ResponseWriter, r *http.Request)
 		}
 		ev, err := h.service.CreateEvent(groupID, userID, req)
 		if err != nil {
-			if err.Error() == "accès non autorisé" {
+			switch err.Error() {
+			case "accès non autorisé":
 				http.Error(w, "accès non autorisé", http.StatusForbidden)
-				return
+			case "date invalide":
+				http.Error(w, "date invalide", http.StatusBadRequest)
+			case "la date de l'événement doit être au minimum demain":
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			default:
+				http.Error(w, "erreur serveur", http.StatusInternalServerError)
 			}
-			http.Error(w, "erreur serveur", http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
