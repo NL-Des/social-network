@@ -34,3 +34,14 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+Tu travailles en mode dev :
+
+docker compose down # stoppe tout
+docker compose up -d # relance seulement postgres
+pnpm run dev # backend Go + Next.js en local (hot reload)
+
+En dev tu n'utilises Docker que pour la DB. Le go run se recompile à chaque restart, et Next.js a le hot reload automatique.
+
+Quand tu veux tester la version prod finale (ou livrer) :
+docker compose --profile prod up -d --build

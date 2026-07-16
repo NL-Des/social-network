@@ -1,8 +1,14 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import 'tailwindcss';
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* On définit tes variables hexadécimales ici */
+  --background: #000000;
+  --foreground: #ffffff;
+  --brand-blue: #49c7ff;
+  --light-blue-text: #cfe8ff;
+  --dark-bg: #081222;
+  --font-retro: 'Press Start 2P', system-ui, cursive;
 }
 
 @theme inline {
@@ -10,17 +16,24 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* syntaxe : x-offset | y-offset | blur | spread | color */
+  --shadow-neon: 0 0 30px 4px rgba(73, 199, 255, 1);
+  --shadow-neon-panel: 0 0 12px 1px rgba(73, 199, 255, 0.55), 0 0 40px 6px rgba(73, 199, 255, 0.18);
+
+  /* On lie les variables CSS à des noms utilisables dans Tailwind */
+  /*   brand fait référence à une convention de nommage pour dire que ce sont les couleurs personnalisées du projet. */
+  --color-brand-border: var(--brand-blue);
+  --color-brand-text: var(--light-blue-text);
+  --color-brand-card: var(--dark-bg);
+  --font-retro: var(--font-retro);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes pulseZoom {
+  0%,
+  100% {
+    transform: scale(1);
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  50% {
+    transform: scale(1.02);
+  }
 }

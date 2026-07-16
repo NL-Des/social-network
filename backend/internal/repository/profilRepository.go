@@ -1,0 +1,195 @@
+package repository
+
+import (
+	"database/sql"
+	"social-network/backend/internal/model"
+)
+
+type ProfilRepository struct {
+	db *sql.DB
+}
+
+func NewProfilRepository(db *sql.DB) *ProfilRepository {
+	return &ProfilRepository{db: db}
+}
+
+// récupère un utilisateur complet depuis la base de données en fonction de son ID
+func (r *ProfilRepository) GetUserByID(id int) (*model.User, error) {
+	query := `
+        SELECT ID, lastname, firstname, dateofbirth, email, pseudo, aboutme, avatar, isprivate
+        FROM users
+        WHERE id = $1
+    `
+
+	user := model.User{}
+	err := r.db.QueryRow(query, id).Scan(
+		&user.ID,
+		&user.Name,
+		&user.FirstName,
+		&user.Birthday,
+		&user.Email,
+		&user.Username,
+		&user.Description,
+		&user.ProfilePicture,
+		&user.IsPrivate,
+	)
+	if err == sql.ErrNoRows {
+		return nil, sql.ErrNoRows // utilisateur vraiment introuvable
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+// Followers
+func (r *ProfilRepository) GetFollowers(userID int) ([]model.Follower, error) {
+	rows, err := r.db.Query(`
+        SELECT u.ID, COALESCE(u.pseudo, u.firstname || ' ' || u.lastname)
+        FROM followers f
+        JOIN users u ON u.ID = f.followerID
+        WHERE f.followingID = $1 AND f.status = 'accepted'
+    `, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	followers := make([]model.Follower, 0)
+	for rows.Next() {
+		var f model.Follower
+		if err := rows.Scan(&f.ID, &f.Username); err != nil {
+			return nil, err
+		}
+		followers = append(followers, f)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return followers, nil
+}
+
+// Following
+func (r *ProfilRepository) GetFollowing(userID int) ([]model.Following, error) {
+	rows, err := r.db.Query(`
+        SELECT u.ID, COALESCE(u.pseudo, u.firstname || ' ' || u.lastname)
+        FROM followers f
+        JOIN users u ON u.ID = f.followingID
+        WHERE f.followerID = $1 AND f.status = 'accepted'
+    `, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	following := make([]model.Following, 0)
+	for rows.Next() {
+		var f model.Following
+		if err := rows.Scan(&f.ID, &f.Username); err != nil {
+			return nil, err
+		}
+		following = append(following, f)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return following, nil
+}
+
+// Posts
+func (r *ProfilRepository) GetPosts(userID int, viewerID int) ([]model.AllPosts, error) {
+	rows, err := r.db.Query(`
+    SELECT id, title, content, COALESCE(image, '')
+    FROM posts
+    WHERE authorID = $1
+    AND (
+        -- Post public : tout le monde peut voir
+        privacy = 'public'
+        -- L'auteur voit tous ses posts
+        OR authorID = $2
+        -- Post almost-private : seulement les followers de l'auteur
+        OR (privacy = 'almost-private' AND EXISTS (
+            SELECT 1 FROM followers
+            WHERE followerID = $2 AND followingID = $1 AND status = 'accepted'
+        ))
+        -- Post private : seulement les personnes choisies
+        OR (privacy = 'private' AND EXISTS (
+            SELECT 1 FROM post_allowed_viewers
+            WHERE post_id = posts.id AND user_id = $2
+        ))
+    )
+    ORDER BY createdat DESC
+`, userID, viewerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	posts := make([]model.AllPosts, 0)
+	for rows.Next() {
+		var p model.AllPosts
+		if err := rows.Scan(&p.ID, &p.Title, &p.Content, &p.Image); err != nil {
+			return nil, err
+		}
+		posts = append(posts, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return posts, nil
+}
+
+func (r *ProfilRepository) IsFollower(viewerID, profileID int) (bool, error) {
+	var exists bool
+	err := r.db.QueryRow(`
+        SELECT EXISTS (
+            SELECT 1 FROM followers
+            WHERE followerID = $1 AND followingID = $2 AND status = 'accepted'
+        )
+    `, viewerID, profileID).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (r *ProfilRepository) UpdateVisibility(userID int, isPrivate bool) error {
+	_, err := r.db.Exec(`
+        UPDATE users
+        SET isprivate = $1
+        WHERE id = $2
+    `, isPrivate, userID)
+	return err
+}
+
+func (r *ProfilRepository) UpdateProfile(userID int, firstName, lastName, pseudo, aboutMe string) error {
+	_, err := r.db.Exec(`
+        UPDATE users
+        SET firstname = $1, lastname = $2, pseudo = $3, aboutme = $4
+        WHERE id = $5
+    `, firstName, lastName, pseudo, aboutMe, userID)
+	return err
+}
+
+func (r *ProfilRepository) UpdateAvatar(userID int, avatarPath string) error {
+	_, err := r.db.Exec(`UPDATE users SET avatar = $1 WHERE id = $2`, avatarPath, userID)
+	return err
+}
+
+func (r *ProfilRepository) GetFollowStatus(followerID, followingID int) (string, error) {
+	var status string
+	err := r.db.QueryRow(`
+		SELECT status FROM followers
+		WHERE followerID = $1 AND followingID = $2
+	`, followerID, followingID).Scan(&status)
+	if err == sql.ErrNoRows {
+		return "none", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return status, nil
+}

@@ -1,0 +1,100 @@
+###################################################
+# Instructions de préparation de l'environnement Docker.
+#   # Mise à jour de l'ordinateur :
+#       # sudo apt update
+#   # Téléchargement et installation de docker depuis le terminal :
+#       # sudo apt install docker.io
+###################################################
+
+###################################################
+# Instruction de téléchargement de l'image Docker officielle de PostgreSQL.
+#   # Téléchargement de l'image depuis le terminal :
+#       # docker pull postgres
+###################################################
+
+###################################################
+# Instruction pour lancer Docker-Compose.
+#    # Commande à écrire dans le terminal :
+#        # docker compose up -d --build --remove-orphans --force-recreate
+#
+# Instruction pour effacer toutes les images, conteneurs, volumes et éléments de Docker liés au projet.
+# Attention ! Ceci est définitif et doit être utilisé avec précaution et après réflexion.
+#    # Commande à écrire dans le terminal :
+#        # docker compose down -v --rmi all
+###################################################
+
+###################################################
+# Instruction pour installer l'extension pour visualiser la BDD.
+#   # Commande à écrire dans le terminal :
+#       # code --install-extension cweijan.vscode-postgresql-client2
+###################################################
+
+###################################################
+# Pour accéder à la base de données.
+#    # Allez dans l'extension et entrez les informations contenues dans initdb.go ou dans le .env :
+#        # Username
+#        # Database
+#        # Password
+#    # Cliquez sur "Connect"
+###################################################
+
+services:
+    postgres-db:
+        image: postgres:18
+        container_name: postgres-db
+        environment:
+            - POSTGRES_USER=${DB_USER:-myuser}
+            - POSTGRES_PASSWORD=${DB_PASSWORD:-mypassword}
+            - POSTGRES_DB=${DB_NAME:-mydatabase}
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres-data:/var/lib/postgresql
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-myuser} -d ${DB_NAME:-mydatabase}"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
+    backend:
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+        ports:
+            - "5090:5090"
+        environment:
+            - DB_HOST=postgres-db
+            - DB_PORT=5432
+            - DB_USER=${DB_USER:-myuser}
+            - DB_PASSWORD=${DB_PASSWORD:-mypassword}
+            - DB_NAME=${DB_NAME:-mydatabase}
+        depends_on:
+            postgres-db:
+                condition: service_healthy
+        volumes:
+            - ./public:/public
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "wget", "-qO-", "http://localhost:5090/"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
+    frontend:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - "3000:3000"
+        environment:
+            - BACKEND_URL=http://backend:5090
+        depends_on:
+            backend:
+                condition: service_healthy
+        volumes:
+            - ./public:/app/public
+        restart: unless-stopped
+
+volumes:
+    postgres-data:

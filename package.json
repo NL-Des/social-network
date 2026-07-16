@@ -5,21 +5,21 @@
   "scripts": {
     "dev": "concurrently \"pnpm dev:next\" \"pnpm dev:go\"",
     "dev:next": "next dev",
-    "dev:go": "cd backend/cmd/server && go run main.go",
+    "dev:go": "cd backend && go run ./cmd/server",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "next": "16.2.1",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "concurrently": "^9.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
